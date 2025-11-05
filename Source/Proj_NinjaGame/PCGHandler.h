@@ -17,11 +17,14 @@ class PROJ_NINJAGAME_API APCGHandler : public AActor
 public:
 	APCGHandler();
 
-	UPROPERTY(VisibleAnywhere, Category = "PCGInfo")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "PCGInfo")
 	TArray<TSubclassOf<class APCGRoom>> PossibleRooms;
 	
-	UPROPERTY(EditAnywhere, Category = "PCGInfo")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PCGInfo")
 	int AmountOfRooms = 0;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "PCGInfo")
+	TArray<class UArrowComponent*> CurrentOpenEntrances;
 	
 protected:
 	// Called when the game starts or when spawned
@@ -30,5 +33,6 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
+private:
+	void RotateRoom(APCGRoom* Room, int RoomPlacement);
 };
