@@ -3,13 +3,32 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "PCGHandler.generated.h"
 
 /**
  * 
  */
-class PROJ_NINJAGAME_API PCGHandler
+UCLASS()
+class PROJ_NINJAGAME_API APCGHandler : public AActor
 {
+	GENERATED_BODY()
+	
 public:
-	PCGHandler();
-	~PCGHandler();
+	APCGHandler();
+
+	UPROPERTY(EditDefaultsOnly, Category = "PCGInfo")
+	TArray<TSubclassOf<class APCGRoom>> PossibleRooms;
+	
+	UPROPERTY(EditAnywhere, Category = "PCGInfo")
+	int AmountOfRooms = 0;
+	
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
 };

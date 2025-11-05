@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "PCGRoom.generated.h"
 
 /**
  * 
@@ -15,14 +17,36 @@ enum class ERoomType : uint8
 	End            UMETA(DisplayName = "End"),
 };
 
-class PROJ_NINJAGAME_API PCGRoom
+UCLASS()
+class PROJ_NINJAGAME_API APCGRoom : public AActor
 {
+	GENERATED_BODY()
+	
 public:
-	PCGRoom();
-	~PCGRoom();
+	APCGRoom();
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
+	ERoomType RoomType = ERoomType::None;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
 	int Entrances = 0;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
+	int EntranceWidth = 100;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "RoomInfo")
 	int Enemies = 0;
+
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "RoomInfo")
+	TArray<AActor*> DoorPoints;
 };
