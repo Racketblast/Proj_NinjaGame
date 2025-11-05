@@ -37,13 +37,15 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
 	ERoomType RoomType = ERoomType::None;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
-	int Entrances = 0;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "RoomInfo")
+	int AmountOfEntrances;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
 	int EntranceWidth = 100;
+
+	TArray<class UArrowComponent*> EntrancesArray;
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "RoomInfo")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
 	int Enemies = 0;
 
 private:

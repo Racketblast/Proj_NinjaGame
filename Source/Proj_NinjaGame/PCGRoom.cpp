@@ -3,6 +3,7 @@
 
 #include "PCGRoom.h"
 
+#include "Components/ArrowComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 APCGRoom::APCGRoom()
@@ -15,12 +16,16 @@ APCGRoom::APCGRoom()
 void APCGRoom::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	TArray<UArrowComponent*> Arrows;
+	GetComponents<UArrowComponent>(Arrows);
 
+	EntrancesArray.Append(Arrows);
+	AmountOfEntrances = EntrancesArray.Num();
 }
 
 // Called every frame
 void APCGRoom::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }

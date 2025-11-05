@@ -17,7 +17,7 @@ class PROJ_NINJAGAME_API APCGHandler : public AActor
 public:
 	APCGHandler();
 
-	UPROPERTY(EditDefaultsOnly, Category = "PCGInfo")
+	UPROPERTY(VisibleAnywhere, Category = "PCGInfo")
 	TArray<TSubclassOf<class APCGRoom>> PossibleRooms;
 	
 	UPROPERTY(EditAnywhere, Category = "PCGInfo")
