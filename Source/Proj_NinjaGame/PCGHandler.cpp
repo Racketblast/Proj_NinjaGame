@@ -64,6 +64,7 @@ void APCGHandler::BeginPlay()
 			//Every other Room except the first one
 			else
 			{
+				//Puts the room in the right place after getting a random spot
 				int RoomPlacement = UKismetMathLibrary::RandomIntegerInRange(0,CurrentOpenEntrances.Num()-1);
 				FTransform EntrancesTransform;
 
@@ -72,12 +73,15 @@ void APCGHandler::BeginPlay()
 				
 				EntrancesTransform.SetLocation(CurrentOpenEntrances[RoomPlacement]->GetComponentLocation() + RotatedOffset);
 				Room = GetWorld()->SpawnActor<APCGRoom>(RoomType, EntrancesTransform);
-				
+
+				//Sees if room exists, if the room has fewer entrances then there are rooms that are supposed to spawn and if there will be fewer entrances with every open entrance that exists
 				if (Room && Room->AmountOfEntrances <= AmountOfRoomsLeft && Room->AmountOfEntrances - 1 + CurrentOpenEntrances.Num() <= AmountOfRoomsLeft)
 				{
+					// Looks for a 0 entrance room and throws it out
 					if (Room->AmountOfEntrances != 0)
 					{
-						if (Room->AmountOfEntrances - CurrentOpenEntrances.Num() != 0)
+						//This is so the whole floor is not closed off and so that it gets closed off at the end
+						if (Room->AmountOfEntrances - CurrentOpenEntrances.Num() != 0 || AmountOfRoomsLeft - 1 == 0)
 						{
 							AmountOfRoomsLeft--;
 							bRightRoomType = true;
@@ -89,6 +93,7 @@ void APCGHandler::BeginPlay()
 							{
 								if (!Arrow->GetComponentLocation().Equals(CurrentOpenEntrances[RoomPlacement]->GetComponentLocation(), 0.1f))
 								{
+									//UE_LOG(LogTemp, Warning, TEXT("New Arrow %s, Old Arrow %s"),*Arrow->GetComponentLocation().ToString(),*CurrentOpenEntrances[RoomPlacement]->GetComponentLocation().ToString());
 									CurrentOpenEntrances.Add(Arrow);
 								}	
 							}
@@ -107,7 +112,6 @@ void APCGHandler::BeginPlay()
 							{
 								if (!Arrow->GetComponentLocation().Equals(CurrentOpenEntrances[RoomPlacement]->GetComponentLocation()))
 								{
-									//UE_LOG(LogTemp, Warning, TEXT("New Arrow %s, Old Arrow %s"),*Arrow->GetComponentLocation().ToString(),*CurrentOpenEntrances[RoomPlacement]->GetComponentLocation().ToString());
 									CurrentOpenEntrances.Add(Arrow);
 								}	
 							}

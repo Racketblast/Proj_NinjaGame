@@ -17,7 +17,7 @@ class PROJ_NINJAGAME_API APCGHandler : public AActor
 public:
 	APCGHandler();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "PCGInfo")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PCGInfo")
 	TArray<TSubclassOf<class APCGRoom>> PossibleRooms;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PCGInfo")
