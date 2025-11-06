@@ -45,5 +45,10 @@ private:
 	UPROPERTY()
 	APCGRoom* NewRoom;
 	void PCGRoomPlacement();
+	void EmptyVariables();
+
+	bool bCanRestart = true;
+	int Restarts = 0;
+	int MaxRestarts = 5;
 };
 

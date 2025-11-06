@@ -4,6 +4,7 @@
 #include "PCGHandler.h"
 
 #include "PCGRoom.h"
+#include "Algo/RandomShuffle.h"
 #include "Components/ArrowComponent.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -36,29 +37,21 @@ void APCGHandler::PCGRoomPlacement()
 		AmountOfRooms = UKismetMathLibrary::RandomIntegerInRange(1,PossibleRooms.Num()-1);
 	}
 	
+	UE_LOG(LogTemp, Warning, TEXT("Amount of doors that exist %i"), AmountOfRooms);
 	int AmountOfRoomsLeft = AmountOfRooms;
-
+	
+	//How many rooms I want
 	for (int i = 0; i < AmountOfRooms; i++)
 	{
 		bool bRightRoomType = false;
-		int Attempts = 0;
-		const int MaxAttempts = 200; // tune as necessary
 
-		do
+		
+		TArray<TSubclassOf<APCGRoom>> ShuffledRooms = PossibleRooms;
+		Algo::RandomShuffle(ShuffledRooms);
+
+		int RoomPlacement = UKismetMathLibrary::RandomIntegerInRange(0,CurrentOpenEntrances.Num()-1);
+		for (auto RoomType : ShuffledRooms)
 		{
-			++Attempts;
-			if (Attempts > MaxAttempts)
-			{
-				UE_LOG(LogTemp, Error, TEXT("Exceeded MaxAttempts (%d) for room %d, giving up on this placement. CurrentOpenEntrances: %d, AmountOfRoomsLeft: %d"),
-					MaxAttempts, i, CurrentOpenEntrances.Num(), AmountOfRoomsLeft);
-				// force exit the loop for this room to avoid hang; we don't successfully place a room in this iteration
-				bRightRoomType = true;
-				break;
-			}
-			
-			TSubclassOf<APCGRoom> RoomType = PossibleRooms[UKismetMathLibrary::RandomIntegerInRange(0,PossibleRooms.Num()-1)];
-			UE_LOG(LogTemp, Warning, TEXT("New RoomType"));
-
 			//First Room made
 			if (i == 0)
 			{
@@ -102,7 +95,6 @@ void APCGHandler::PCGRoomPlacement()
 			else
 			{
 				//Puts the room in the right place after getting a random spot
-				int RoomPlacement = UKismetMathLibrary::RandomIntegerInRange(0,CurrentOpenEntrances.Num()-1);
 				FTransform EntrancesTransform;
 
 				FRotator AlignRot = CurrentOpenEntrances[RoomPlacement]->GetForwardVector().Rotation();
@@ -111,6 +103,11 @@ void APCGHandler::PCGRoomPlacement()
 				EntrancesTransform.SetLocation(CurrentOpenEntrances[RoomPlacement]->GetComponentLocation() + RotatedOffset);
 				NewRoom = GetWorld()->SpawnActor<APCGRoom>(RoomType, EntrancesTransform);
 
+				//If the NewRoom touches several entrances
+				TArray<UArrowComponent*> OtherRooms = CheckForOtherRooms(NewRoom);
+
+				//Something with OtherRooms.Num()
+				
 				//Sees if room exists, if the room has fewer entrances then there are rooms that are supposed to spawn and if there will be fewer entrances with every open entrance that exists
 				if (NewRoom && NewRoom->AmountOfEntrances <= AmountOfRoomsLeft && NewRoom->AmountOfEntrances - 1 + CurrentOpenEntrances.Num() <= AmountOfRoomsLeft)
 				{
@@ -120,9 +117,6 @@ void APCGHandler::PCGRoomPlacement()
 						//This is so the whole floor is not closed off and so that it gets closed off at the end
 						if (NewRoom->AmountOfEntrances - CurrentOpenEntrances.Num() != 0 || AmountOfRoomsLeft - 1 == 0)
 						{
-							
-								//If the NewRoom touches several entrances
-								TArray<UArrowComponent*> OtherRooms = CheckForOtherRooms(NewRoom);
 								//OtherRooms.Num() > 1
 							
 								UE_LOG(LogTemp, Warning, TEXT("This Room %i This Many Entrances %i") , NewRoom->AmountOfEntrances, OtherRooms.Num());
@@ -148,6 +142,8 @@ void APCGHandler::PCGRoomPlacement()
 										
 										if (OverlappingRooms.Num() <= 1)
 										{
+											
+											UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
 											//What happens when there are several rooms touching the same spot
 											//Make it so that it fits the place
 											if (RotateRoomForSeveral(NewRoom, OtherRooms))
@@ -187,12 +183,15 @@ void APCGHandler::PCGRoomPlacement()
 											{
 												if (!OverlappedRoom) continue;
 												// Save the entrances to re-add
+												AmountOfRoomsLeft++;
+												AmountOfRooms--;
 												CurrentOpenEntrances.Append(OverlappedRoom->EntrancesArray);
 
 												PlacedRooms.Remove(OverlappedRoom);
 												OverlappedRoom->Destroy();
 											}
 											OverlappingRooms.Empty();
+											bRightRoomType = true;
 										}
 									}
 								}
@@ -224,14 +223,73 @@ void APCGHandler::PCGRoomPlacement()
 			if (!bRightRoomType && NewRoom)
 			{
 				NewRoom->Destroy();
+				NewRoom = nullptr;	
+				
 			}
-			
-			UE_LOG(LogTemp, Warning, TEXT("Loop done"));
+			if (bRightRoomType)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Loop done"));
+				break;
+			}
 		}
-		while (!bRightRoomType);
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Open doors %i"), CurrentOpenEntrances.Num());
-	UE_LOG(LogTemp, Warning, TEXT("AmountOfRoomsLeft %i"), CurrentOpenEntrances.Num());
+	UE_LOG(LogTemp, Warning, TEXT("AmountOfRoomsLeft %i"), AmountOfRoomsLeft);
+	
+	if (CurrentOpenEntrances.Num() != 0 || AmountOfRoomsLeft != 0)
+	{
+		
+		UE_LOG(LogTemp, Warning, TEXT("Restarts %i"), Restarts);
+		if (Restarts >= MaxRestarts)
+		{
+			Restarts = 0;
+			AmountOfRooms--;
+			if (AmountOfRooms <= 0)
+			{
+				bCanRestart = false;
+			}
+		}
+		
+		if (bCanRestart)
+		{
+			Restarts++;
+			EmptyVariables();
+			PCGRoomPlacement();
+		}
+	}
+}
+
+void APCGHandler::EmptyVariables()
+{
+	for (APCGRoom* Room : PlacedRooms)
+	{
+		if (IsValid(Room))
+		{
+			Room->Destroy();
+		}
+	}
+
+	for (UArrowComponent* Arrow : CurrentOpenEntrances)
+	{
+		if (IsValid(Arrow) && Arrow->GetOwner() == this)
+		{
+			Arrow->DestroyComponent();
+		}
+	}
+
+	for (UArrowComponent* Arrow : ExistingEntrances)
+	{
+		if (IsValid(Arrow) && Arrow->GetOwner() == this)
+		{
+			Arrow->DestroyComponent();
+		}
+	}
+
+	PlacedRooms.Empty();
+	CurrentOpenEntrances.Empty();
+	ExistingEntrances.Empty();
+
+	NewRoom = nullptr;
 }
 
 
