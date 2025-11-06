@@ -124,6 +124,7 @@ void AMeleeAIController::StartChasing()
 
 	if (ControlledEnemy)
 	{
+		ControlledEnemy->bIsChasing = true;
 		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetRunSpeed(); 
 	}
 	
@@ -135,6 +136,7 @@ void AMeleeAIController::StopChasing()
 	GetWorldTimerManager().ClearTimer(LoseSightTimerHandle);
 	if (ControlledEnemy)
 	{
+		ControlledEnemy->bIsChasing = false;
 		OnTargetLost(); 
 	}
 }

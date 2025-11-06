@@ -61,6 +61,9 @@ public:
 	void UpdateLastSeenPlayerLocation();
 	FVector GetLastSeenPlayerLocation() const { return LastSeenPlayerLocation; }
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
+	bool bIsChasing = false;
+
 private:
 	FVector LastSeenPlayerLocation;
 
