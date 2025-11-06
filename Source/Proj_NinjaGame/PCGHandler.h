@@ -35,4 +35,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 private:
 	void RotateRoom(APCGRoom* Room, int RoomPlacement);
+	bool CheckForOtherRooms(APCGRoom* Room);
+	UPROPERTY()
+	APCGRoom* NewRoom;
 };
