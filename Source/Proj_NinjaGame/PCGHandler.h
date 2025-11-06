@@ -26,6 +26,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "PCGInfo")
 	TArray<class UArrowComponent*> CurrentOpenEntrances;
 	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "PCGInfo")
+	TArray< APCGRoom*> PlacedRooms;
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -35,7 +38,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 private:
 	void RotateRoom(APCGRoom* Room, int RoomPlacement);
-	bool CheckForOtherRooms(APCGRoom* Room);
+	void RotateRoomForSeveral(APCGRoom* Room, TArray<UArrowComponent*> OtherRooms);
+	TArray<UArrowComponent*> CheckForOtherRooms(APCGRoom* Room);
 	UPROPERTY()
 	APCGRoom* NewRoom;
 };

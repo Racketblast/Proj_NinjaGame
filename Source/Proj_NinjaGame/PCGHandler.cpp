@@ -48,6 +48,7 @@ void APCGHandler::BeginPlay()
 							
 							UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
 							bRightRoomType = true;
+							PlacedRooms.Add(NewRoom);
 						}
 					}
 					else
@@ -56,6 +57,7 @@ void APCGHandler::BeginPlay()
 						CurrentOpenEntrances.Append(NewRoom->EntrancesArray);
 						UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
 						bRightRoomType = true;
+						PlacedRooms.Add(NewRoom);
 					}
 				}
 			}
@@ -83,15 +85,47 @@ void APCGHandler::BeginPlay()
 						if (NewRoom->AmountOfEntrances - CurrentOpenEntrances.Num() != 0 || AmountOfRoomsLeft - 1 == 0)
 						{
 							//If the NewRoom touches several entrances
-							if (CheckForOtherRooms(NewRoom))
+							TArray<UArrowComponent*> OtherRooms = CheckForOtherRooms(NewRoom);
+							if (false)
 							{
+								AmountOfRoomsLeft--;
+								bRightRoomType = true;
+								UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
+								PlacedRooms.Add(NewRoom);
+								
 								//What happens when there are several rooms touching the same spot
+								//Make it so that it fits the place
+								RotateRoomForSeveral(NewRoom, OtherRooms);
+								
+								TArray<UArrowComponent*> ClosedRooms;
+								for (auto Arrow : NewRoom->EntrancesArray)
+								{
+									for (auto OtherRoom : OtherRooms)
+									{
+										if (Arrow->GetComponentLocation().Equals(OtherRoom->GetComponentLocation(), 0.1f))
+										{
+											//UE_LOG(LogTemp, Warning, TEXT("New Arrow %s, Old Arrow %s"),*Arrow->GetComponentLocation().ToString(),*CurrentOpenEntrances[RoomPlacement]->GetComponentLocation().ToString());
+											ClosedRooms.Add(Arrow);
+										}
+									}
+								}
+								for (auto Arrow : ClosedRooms)
+								{
+									OtherRooms.Remove(Arrow);
+									CurrentOpenEntrances.Remove(Arrow);
+								}
+
+								for (auto Arrow : OtherRooms)
+								{
+									CurrentOpenEntrances.Add(Arrow);
+								}
 							}
 							else
 							{
 								AmountOfRoomsLeft--;
 								bRightRoomType = true;
 								UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
+								PlacedRooms.Add(NewRoom);
 							
 								RotateRoom(NewRoom, RoomPlacement);
 							
@@ -178,18 +212,68 @@ void APCGHandler::RotateRoom(APCGRoom* Room, int RoomPlacement)
 	}
 }
 
-//This Checks if there are more entrances then one that the room can take
-bool APCGHandler::CheckForOtherRooms(APCGRoom* Room)
+void APCGHandler::RotateRoomForSeveral(APCGRoom* Room, TArray<UArrowComponent*> OtherRooms)
 {
-	if (!Room || Room->EntrancesArray.Num() == 0) return false;
+	int RandomDirection = UKismetMathLibrary::RandomIntegerInRange(0,1);
+	//Rotate left
+	if (RandomDirection == 1)
+	{
+		for (int i = 0; i < 4; ++i)
+		{
+			for (auto Arrow : Room->EntrancesArray)
+			{
+				if (Arrow->GetComponentLocation().Equals(OtherRooms[0]->GetComponentLocation(), 0.1f))
+				{
+					i = 4;
+											
+					break;
+				}	
+			}
+
+			if (i != 4)
+			{
+				Room->SetActorRotation({Room->GetActorRotation().Pitch,Room->GetActorRotation().Yaw + 90, Room->GetActorRotation().Roll});
+			}
+		}
+								
+	}
+	//Rotate Right
+	else
+	{
+		for (int i = 0; i < 4; ++i)
+		{
+			for (auto Arrow : Room->EntrancesArray)
+			{
+				if (Arrow->GetComponentLocation().Equals(OtherRooms[0]->GetComponentLocation(), 0.1f))
+				{
+					i = 4;
+											
+					break;
+				}	
+			}
+
+			if (i != 4)
+			{
+				Room->SetActorRotation({Room->GetActorRotation().Pitch,Room->GetActorRotation().Yaw - 90, Room->GetActorRotation().Roll});
+			}
+		}
+	}
+}
+
+//This Checks if there are more entrances then one that the room can take
+TArray<UArrowComponent*> APCGHandler::CheckForOtherRooms(APCGRoom* Room)
+{
+	TArray<UArrowComponent*> OtherRoomsConnected;
+	
+	if (!Room || Room->EntrancesArray.Num() == 0) return OtherRoomsConnected;
 
 	FVector RoomLocation = Room->GetActorLocation();
 	FRotator OriginalRotation = Room->GetActorRotation();
 
 	UArrowComponent* RoomEntranceComp = Room->EntrancesArray[0];
-	if (!RoomEntranceComp) return false;
+	if (!RoomEntranceComp) return OtherRoomsConnected;
 
-	TArray<UArrowComponent*> OtherRoomsConnected;
+	
 
 	FVector LocalEntrance = RoomEntranceComp->GetRelativeLocation();
 
@@ -209,5 +293,5 @@ bool APCGHandler::CheckForOtherRooms(APCGRoom* Room)
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("CheckForOtherRooms %i") , OtherRoomsConnected.Num());
-	return OtherRoomsConnected.Num() > 1;
+	return OtherRoomsConnected;
 }
