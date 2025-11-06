@@ -33,6 +33,10 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
+	USceneComponent* RoomRootComponent;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
+	class UBoxComponent* OverlapComponent;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
 	ERoomType RoomType = ERoomType::None;
@@ -43,6 +47,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
 	int EntranceWidth = 100;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
 	TArray<class UArrowComponent*> EntrancesArray;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
