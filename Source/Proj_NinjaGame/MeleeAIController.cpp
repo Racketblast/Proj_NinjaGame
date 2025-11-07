@@ -122,7 +122,7 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 		else
 		{
 			// Misslyckad förflyttning 
-			UE_LOG(LogTemp, Error, TEXT("Patrol move failed at point index %d (%s). Restarting patrol route."),
+			UE_LOG(LogTemp, Warning, TEXT("Patrol move failed at point index %d (%s). Restarting patrol route."),
 				CurrentPatrolIndex,
 				*PatrolPoints[CurrentPatrolIndex]->GetName());
 
