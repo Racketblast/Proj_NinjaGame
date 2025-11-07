@@ -64,16 +64,17 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 		}
 	case EEnemyState::Searching:
 		{
+			// Om fienden ser spelaren igen så börjar den jaga direkt
 			if (ControlledEnemy->CanSeePlayer())
 			{
-				// Om fienden ser spelaren igen så börjar den jaga direkt
 				GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
 				GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
 				bIsLookingAround = false;
 				StartChasing();
 				break;
 			}
-			
+
+			// Börjar leta efter spelaren. Ser till att BeginSearch() inte kallas flera gånger. 
 			if (!bIsLookingAround && FVector::Dist(GetPawn()->GetActorLocation(), LastKnownPlayerLocation) < 150.f)
 			{
 				bIsLookingAround = true;
@@ -91,6 +92,8 @@ void AMeleeAIController::MoveToNextPatrolPoint()
 
 	const TArray<AActor*>& PatrolPoints = ControlledEnemy->GetPatrolPoints();
 	if (PatrolPoints.Num() == 0) return;
+
+	//UE_LOG(LogTemp, Warning, TEXT("PatrolPoints num: %d, index: %d"), ControlledEnemy->GetPatrolPoints().Num(), CurrentPatrolIndex);
 	
 	// Sätt den nuvarande target positionen att gå mott
 	MoveToActor(PatrolPoints[CurrentPatrolIndex]);
@@ -100,21 +103,43 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 {
 	Super::OnMoveCompleted(RequestID, Result);
 
-	if (CurrentState == EEnemyState::Patrolling && Result.IsSuccess())
+	const TArray<AActor*>& PatrolPoints = ControlledEnemy->GetPatrolPoints();
+	if (CurrentState == EEnemyState::Patrolling)
 	{
-		// När vi når en patrul punkt, växla till nästa
-		const TArray<AActor*>& PatrolPoints = ControlledEnemy->GetPatrolPoints();
-		if (PatrolPoints.Num() > 1)
+		if (Result.IsSuccess())
 		{
-			// Vänta lite innan vi går till nästa punkt
-			FTimerHandle WaitHandle;
-			GetWorldTimerManager().SetTimer(WaitHandle, [this]()
+			// Lyckad förflyttning 
+			if (PatrolPoints.Num() > 1)
 			{
-				CurrentPatrolIndex = (CurrentPatrolIndex + 1) % ControlledEnemy->GetPatrolPoints().Num();
+				FTimerHandle WaitHandle;
+				GetWorldTimerManager().SetTimer(WaitHandle, [this]()
+				{
+					CurrentPatrolIndex = (CurrentPatrolIndex + 1) % ControlledEnemy->GetPatrolPoints().Num();
+					MoveToNextPatrolPoint();
+				}, ControlledEnemy->GetWaitTimeAtPoint(), false);
+			}
+		}
+		else
+		{
+			// Misslyckad förflyttning 
+			UE_LOG(LogTemp, Error, TEXT("Patrol move failed at point index %d (%s). Restarting patrol route."),
+				CurrentPatrolIndex,
+				*PatrolPoints[CurrentPatrolIndex]->GetName());
+
+			// Starta om patrullen
+			CurrentPatrolIndex = 0;
+
+			// Säkerhetsfördröjning så att pathfinding hinner stabilisera sig
+			FTimerHandle RetryHandle;
+			GetWorldTimerManager().SetTimer(RetryHandle, [this]()
+			{
 				MoveToNextPatrolPoint();
-			}, ControlledEnemy->GetWaitTimeAtPoint(), false);
+			}, 0.5f, false);
 		}
 	}
+
+	/*UE_LOG(LogTemp, Warning, TEXT("PatrolPoints num: %d, index: %d, success: %d"),
+		PatrolPoints.Num(), CurrentPatrolIndex, Result.IsSuccess());*/
 }
 
 
