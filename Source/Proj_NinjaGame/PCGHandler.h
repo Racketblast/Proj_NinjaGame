@@ -9,6 +9,16 @@
 /**
  * 
  */
+USTRUCT(BlueprintType)
+struct FNodeInfo
+{
+	GENERATED_BODY()
+	UPROPERTY()
+	class UArrowComponent* Arrow = nullptr;
+	UPROPERTY()
+	class APCGRoom* Room = nullptr;
+};
+
 UCLASS()
 class PROJ_NINJAGAME_API APCGHandler : public AActor
 {
@@ -18,19 +28,21 @@ public:
 	APCGHandler();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PCGInfo")
-	TArray<TSubclassOf<class APCGRoom>> PossibleRooms;
+	TArray<TSubclassOf<APCGRoom>> PossibleRooms;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PCGInfo")
 	int AmountOfRooms = 0;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "PCGInfo")
-	TArray<class UArrowComponent*> ExistingEntrances;
+	TArray<UArrowComponent*> ExistingEntrances;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "PCGInfo")
-	TArray<UArrowComponent*> CurrentOpenEntrances;
+	TArray<FNodeInfo> CurrentOpenEntrances;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "PCGInfo")
 	TArray< APCGRoom*> PlacedRooms;
 	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "PCGInfo")
+	TArray<struct FPCGNodes> OccupiedNodes;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -45,8 +57,8 @@ private:
 	UPROPERTY()
 	APCGRoom* NewRoom;
 	void PCGRoomPlacement();
+	
 	void EmptyVariables();
-
 	bool bCanRestart = true;
 	int Restarts = 0;
 	int MaxRestarts = 5;

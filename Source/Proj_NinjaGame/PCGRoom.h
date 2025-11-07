@@ -17,6 +17,16 @@ enum class ERoomType : uint8
 	End            UMETA(DisplayName = "End"),
 };
 
+USTRUCT(BlueprintType)
+struct FPCGNodes
+{
+	GENERATED_BODY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "NodeInfo")
+	FVector Coordinates = FVector(0, 0, 0);
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "NodeInfo")
+	bool bOccupied = false;
+};
+
 UCLASS()
 class PROJ_NINJAGAME_API APCGRoom : public AActor
 {
@@ -34,24 +44,22 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
-	USceneComponent* RoomRootComponent;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
-	class UBoxComponent* OverlapComponent;
+	ERoomType RoomType = ERoomType::None;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
-	ERoomType RoomType = ERoomType::None;
+	USceneComponent* RoomRootComponent;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
+	class UBoxComponent* OverlapComponent;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "RoomInfo")
 	int AmountOfEntrances;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
-	int EntranceWidth = 100;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
 	TArray<class UArrowComponent*> EntrancesArray;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
-	int Enemies = 0;
+	FPCGNodes GridLocation;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "RoomInfo")
