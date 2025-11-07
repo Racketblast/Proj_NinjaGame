@@ -24,7 +24,9 @@ public:
 	int AmountOfRooms = 0;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "PCGInfo")
-	TArray<class UArrowComponent*> CurrentOpenEntrances;
+	TArray<class UArrowComponent*> ExistingEntrances;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "PCGInfo")
+	TArray<UArrowComponent*> CurrentOpenEntrances;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "PCGInfo")
 	TArray< APCGRoom*> PlacedRooms;
@@ -38,8 +40,15 @@ public:
 	virtual void Tick(float DeltaTime) override;
 private:
 	void RotateRoom(APCGRoom* Room, int RoomPlacement);
-	void RotateRoomForSeveral(APCGRoom* Room, TArray<UArrowComponent*> OtherRooms);
+	bool RotateRoomForSeveral(APCGRoom* Room, TArray<UArrowComponent*> OtherRooms);
 	TArray<UArrowComponent*> CheckForOtherRooms(APCGRoom* Room);
 	UPROPERTY()
 	APCGRoom* NewRoom;
+	void PCGRoomPlacement();
+	void EmptyVariables();
+
+	bool bCanRestart = true;
+	int Restarts = 0;
+	int MaxRestarts = 5;
 };
+

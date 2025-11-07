@@ -4,12 +4,17 @@
 #include "PCGRoom.h"
 
 #include "Components/ArrowComponent.h"
+#include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 APCGRoom::APCGRoom()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	RoomRootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RoomRootComponent"));
+	RootComponent = RoomRootComponent;
+	OverlapComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("OverlapComponent"));
+	OverlapComponent->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
