@@ -4,8 +4,6 @@
 #include "PCGRoom.h"
 
 #include "Components/ArrowComponent.h"
-#include "Components/BoxComponent.h"
-#include "Kismet/GameplayStatics.h"
 
 APCGRoom::APCGRoom()
 {
@@ -13,8 +11,6 @@ APCGRoom::APCGRoom()
 	PrimaryActorTick.bCanEverTick = true;
 	RoomRootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RoomRootComponent"));
 	RootComponent = RoomRootComponent;
-	OverlapComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("OverlapComponent"));
-	OverlapComponent->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned

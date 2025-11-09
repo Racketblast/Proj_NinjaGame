@@ -6,7 +6,6 @@
 #include "PCGRoom.h"
 #include "Algo/RandomShuffle.h"
 #include "Components/ArrowComponent.h"
-#include "Components/BoxComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 APCGHandler::APCGHandler()
@@ -30,6 +29,21 @@ void APCGHandler::Tick(float DeltaTime)
 
 }
 
+FVector APCGHandler::WorldToGrid(const FVector& EntranceWorldLocation,const FVector& GridLocation) const
+{
+	FVector RelativeLocation = EntranceWorldLocation - GridToWorld(GridLocation);
+	int32 X = FMath::RoundToInt((EntranceWorldLocation.X + RelativeLocation.X) / CellSize);
+	int32 Y = FMath::RoundToInt((EntranceWorldLocation.Y + RelativeLocation.Y) / CellSize);
+	int32 Z = FMath::RoundToInt((EntranceWorldLocation.Z + RelativeLocation.Z) / CellSize);
+	return FVector(X, Y, Z);
+}
+
+FVector APCGHandler::GridToWorld(const FVector& GridLocation) const
+{
+    return FVector(GridLocation.X * CellSize, GridLocation.Y * CellSize, GridLocation.Z * CellSize);
+}
+
+
 void APCGHandler::PCGRoomPlacement()
 {
 	if (AmountOfRooms <= 0)
@@ -40,203 +54,284 @@ void APCGHandler::PCGRoomPlacement()
 	UE_LOG(LogTemp, Warning, TEXT("Amount of doors that exist %i"), AmountOfRooms);
 	int AmountOfRoomsLeft = AmountOfRooms;
 	
-	//How many rooms I want
-	for (int i = 0; i < AmountOfRooms; i++)
+	CreateFirstRoom(AmountOfRoomsLeft);
+	CreateNextRooms(AmountOfRoomsLeft);
+}
+
+
+void APCGHandler::CreateFirstRoom(int &AmountOfRoomsLeft)
+{
+	UE_LOG(LogTemp, Warning, TEXT("AmountOfRoomsLeft: %i"), AmountOfRoomsLeft);
+	//First Room made
+	bool bRightRoomType = false;
+	TArray<TSubclassOf<APCGRoom>> ShuffledRooms = PossibleRooms;
+	Algo::RandomShuffle(ShuffledRooms);
+	
+	for (auto RoomType : ShuffledRooms)
+	{
+		NewRoom = GetWorld()->SpawnActor<APCGRoom>(RoomType, GetTransform());
+		if (NewRoom && NewRoom->AmountOfEntrances < AmountOfRoomsLeft)
+		{
+			if (NewRoom->AmountOfEntrances == 0)
+			{
+				if (AmountOfRoomsLeft == 1)
+				{
+					NewRoom->GridLocation.bOccupied = true;
+					NewRoom->GridLocation.Coordinates = {0,0,0};
+
+					//New open rooms
+					for (auto OpenRoom : NewRoom->EntrancesArray)
+					{
+						NewRoom->GridLocation.OpenDoors.Add(WorldToGrid(OpenRoom->GetComponentLocation(), NewRoom->GridLocation.Coordinates));
+					}
+			
+					AmountOfRoomsLeft--;
+
+					UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
+					bRightRoomType = true;
+					OccupiedNodeLocations.Add(NewRoom->GridLocation);
+					PlacedRooms.Add(NewRoom);
+				}
+			}
+			else
+			{
+				NewRoom->GridLocation.bOccupied = true;
+				NewRoom->GridLocation.Coordinates = {0,0,0};
+
+				//New open rooms
+				for (auto OpenRoom : NewRoom->EntrancesArray)
+				{
+					NewRoom->GridLocation.OpenDoors.Add(WorldToGrid(OpenRoom->GetComponentLocation(), NewRoom->GridLocation.Coordinates));
+					OpenNodeLocations.Add(WorldToGrid(OpenRoom->GetComponentLocation(), NewRoom->GridLocation.Coordinates));
+				}
+			
+				AmountOfRoomsLeft--;
+
+				UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
+				bRightRoomType = true;
+				OccupiedNodeLocations.Add(NewRoom->GridLocation);
+				PlacedRooms.Add(NewRoom);
+			}
+		}
+			
+		if (!bRightRoomType && NewRoom)
+		{
+			NewRoom->Destroy();
+			NewRoom = nullptr;
+		}
+		
+		if (bRightRoomType)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Loop done"));
+			break;
+		}
+	}
+}
+
+void APCGHandler::CreateNextRooms(int &AmountOfRoomsLeft)
+{
+	int AmountOfRoomsToPlace = AmountOfRoomsLeft;
+	
+	if (AmountOfRoomsToPlace == 0 || OpenNodeLocations.Num() == 0)
+	{
+		return;
+	}
+	
+	for (int i = 0; i < AmountOfRoomsToPlace; ++i)
 	{
 		bool bRightRoomType = false;
-
-		
 		TArray<TSubclassOf<APCGRoom>> ShuffledRooms = PossibleRooms;
 		Algo::RandomShuffle(ShuffledRooms);
 		
-		int RoomPlacement = UKismetMathLibrary::RandomIntegerInRange(0,CurrentOpenEntrances.Num()-1);
+		int RoomPlacement = UKismetMathLibrary::RandomIntegerInRange(0,OpenNodeLocations.Num()-1);
+
+		TArray<FVector> NeedsToConnectToNodes;
+		TArray<FVector> NeedsToNotConnectNodes;
+		for (auto OccupiedNodeLocation : OccupiedNodeLocations)
+		{
+			bool bHasConnection = false;
+			for(auto AdjacentRoom : OccupiedNodeLocation.OpenDoors)
+			{
+				if (AdjacentRoom.Equals(OpenNodeLocations[RoomPlacement], 0.01))
+				{
+					bHasConnection = true;
+				}
+			}
+			if (bHasConnection)
+			{
+				NeedsToConnectToNodes.Add(OccupiedNodeLocation.Coordinates);
+			}
+			else
+			{
+				NeedsToNotConnectNodes.Add(OccupiedNodeLocation.Coordinates);
+			}
+		}
 		
+		FTransform NewRoomTransform;
+		NewRoomTransform.SetLocation(GridToWorld(OpenNodeLocations[RoomPlacement]));
 		for (auto RoomType : ShuffledRooms)
 		{
-			//First Room made
-			if (i == 0)
+			NewRoom = GetWorld()->SpawnActor<APCGRoom>(RoomType, NewRoomTransform);
+			if (NewRoom && NewRoom->AmountOfEntrances >= NeedsToConnectToNodes.Num())
 			{
-				NewRoom = GetWorld()->SpawnActor<APCGRoom>(RoomType, GetTransform());
-				if (NewRoom && NewRoom->AmountOfEntrances < AmountOfRoomsLeft)
+				int TotalRoomsAdded = NewRoom->AmountOfEntrances - NeedsToConnectToNodes.Num();
+				
+				if (NewRoom && TotalRoomsAdded <= AmountOfRoomsLeft-1)
 				{
-					//So if Room only is one
-					if (NewRoom->AmountOfEntrances == 0)
+					int AmountOfOpeningsLeft = OpenNodeLocations.Num() - NeedsToConnectToNodes.Num() + TotalRoomsAdded;
+					if (AmountOfOpeningsLeft <= AmountOfRoomsLeft-1)
 					{
-						if ( AmountOfRooms == 1)
+						if (AmountOfOpeningsLeft == 0)
 						{
-							AmountOfRoomsLeft--;
-							for (auto Arrow : NewRoom->EntrancesArray)
+							if (AmountOfRoomsLeft == 1)
 							{
-								FNodeInfo NodeInfo;
-								NodeInfo.Arrow = Arrow;
-								NodeInfo.Room = NewRoom;
-								CurrentOpenEntrances.Add(NodeInfo);
-							}
-							
-							//ExistingEntrances.Append(NewRoom->EntrancesArray);
-							
-							UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
-							bRightRoomType = true;
+								
+								int RoomRandomRoomFlip = UKismetMathLibrary::RandomIntegerInRange(0,1);
+								for (int u = 0; u < 4; ++u)
+								{
+									int HitRightConnection = 0;
+									bool HitWrongConnection = false;
+									//New open rooms
+									for (auto Entrance : NewRoom->EntrancesArray)
+									{
+										FVector GridVector = WorldToGrid(Entrance->GetComponentLocation(), OpenNodeLocations[RoomPlacement]);
+										for (auto NeedsToConnectToNode : NeedsToConnectToNodes)
+										{
+											if (NeedsToConnectToNode.Equals(GridVector, 0.001))
+											{
+												HitRightConnection++;
+											}
+										}
+								
+										for (auto NeedsToNotConnectNode : NeedsToNotConnectNodes)
+										{
+											if (NeedsToNotConnectNode.Equals(GridVector, 0.001))
+											{
+												HitWrongConnection = true;
+											}	
+										}
+									}
 
-							NewRoom->GridLocation.bOccupied = true;
-							NewRoom->GridLocation.Coordinates = {0,0,0};
-							OccupiedNodes.Add(NewRoom->GridLocation);
-							PlacedRooms.Add(NewRoom);
+									if (!HitWrongConnection && HitRightConnection == NeedsToConnectToNodes.Num())
+									{
+										bRightRoomType = true;
+										break;
+									}
+
+									//Rotate left
+									if (RoomRandomRoomFlip == 1)
+									{
+										NewRoom->SetActorRotation({NewRoom->GetActorRotation().Pitch,NewRoom->GetActorRotation().Yaw + 90, NewRoom->GetActorRotation().Roll});
+									}
+									//Rotate Right
+									else
+									{
+										NewRoom->SetActorRotation({NewRoom->GetActorRotation().Pitch,NewRoom->GetActorRotation().Yaw - 90, NewRoom->GetActorRotation().Roll});
+									}
+								}
+							}
 						}
-					}
-					else
-					{
-						AmountOfRoomsLeft--;
-						for (auto Arrow : NewRoom->EntrancesArray)
+						else
 						{
-							FNodeInfo NodeInfo;
-							NodeInfo.Arrow = Arrow;
-							NodeInfo.Room = NewRoom;
-							CurrentOpenEntrances.Add(NodeInfo);
+							
+							int RoomRandomRoomFlip = UKismetMathLibrary::RandomIntegerInRange(0,1);
+							for (int u = 0; u < 4; ++u)
+							{
+								int HitRightConnection = 0;
+								bool HitWrongConnection = false;
+								//New open rooms
+								for (auto Entrance : NewRoom->EntrancesArray)
+								{
+									FVector GridVector = WorldToGrid(Entrance->GetComponentLocation(), OpenNodeLocations[RoomPlacement]);
+									for (auto NeedsToConnectToNode : NeedsToConnectToNodes)
+									{
+										if (NeedsToConnectToNode.Equals(GridVector, 0.001))
+										{
+											HitRightConnection++;
+										}
+									}
+								
+									for (auto NeedsToNotConnectNode : NeedsToNotConnectNodes)
+									{
+										if (NeedsToNotConnectNode.Equals(GridVector, 0.001))
+										{
+											HitWrongConnection = true;
+										}	
+									}
+								}
+
+								if (!HitWrongConnection && HitRightConnection == NeedsToConnectToNodes.Num())
+								{
+									bRightRoomType = true;
+									break;
+								}
+
+								//Rotate left
+								if (RoomRandomRoomFlip == 1)
+								{
+									NewRoom->SetActorRotation({NewRoom->GetActorRotation().Pitch,NewRoom->GetActorRotation().Yaw + 90, NewRoom->GetActorRotation().Roll});
+								}
+								//Rotate Right
+								else
+								{
+									NewRoom->SetActorRotation({NewRoom->GetActorRotation().Pitch,NewRoom->GetActorRotation().Yaw - 90, NewRoom->GetActorRotation().Roll});
+								}
+							}
 						}
-						//ExistingEntrances.Append(NewRoom->EntrancesArray);
-						UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
-						bRightRoomType = true;
-						
-						NewRoom->GridLocation.bOccupied = true;
-						NewRoom->GridLocation.Coordinates = {0,0,0};
-						OccupiedNodes.Add(NewRoom->GridLocation);
-						PlacedRooms.Add(NewRoom);
 					}
 				}
 			}
-			
-			//Every other Room except the first one
-			else
-			{
-				FTransform EntrancesTransform;
-				EntrancesTransform.SetLocation(CurrentOpenEntrances[RoomPlacement].Arrow->GetComponentLocation() - CurrentOpenEntrances[RoomPlacement].Room->GetActorLocation() + CurrentOpenEntrances[RoomPlacement].Arrow->GetComponentLocation());
-				NewRoom = GetWorld()->SpawnActor<APCGRoom>(RoomType, EntrancesTransform);
-				bRightRoomType = true;
-				/*//Puts the room in the right place after getting a random spot
-				FTransform EntrancesTransform;
-
-				APCGRoom* RoomThatItsCommingFrom = nullptr;
-				for (auto RoomPlacedUpon : PlacedRooms)
-				{
-					if (RoomPlacedUpon->EntrancesArray.Contains(CurrentOpenEntrances[RoomPlacement]))
-					{
-						RoomThatItsCommingFrom = RoomPlacedUpon;
-					}
-				}
-				FRotator AlignRot = CurrentOpenEntrances[RoomPlacement]->GetForwardVector().Rotation();
-				FVector RotatedOffset = AlignRot.RotateVector(CurrentOpenEntrances[RoomPlacement]->GetRelativeLocation());
-
-				//If the NewRoom touches several entrances
-				TArray<UArrowComponent*> OtherRooms = CheckForOtherRooms(NewRoom);
-
-				//Something with OtherRooms.Num()
 				
-				//Sees if room exists, if the room has fewer entrances then there are rooms that are supposed to spawn and if there will be fewer entrances with every open entrance that exists
-				if (NewRoom && NewRoom->AmountOfEntrances <= AmountOfRoomsLeft && NewRoom->AmountOfEntrances - 1 + CurrentOpenEntrances.Num() <= AmountOfRoomsLeft)
-				{
-					// Looks for a 0 entrance room and throws it out
-					if (NewRoom->AmountOfEntrances != 0)
-					{
-						//This is so the whole floor is not closed off and so that it gets closed off at the end
-						if (NewRoom->AmountOfEntrances - CurrentOpenEntrances.Num() != 0 || AmountOfRoomsLeft - 1 == 0)
-						{
-								//OtherRooms.Num() > 1
-							
-								UE_LOG(LogTemp, Warning, TEXT("This Room %i This Many Entrances %i") , NewRoom->AmountOfEntrances, OtherRooms.Num());
-								if (OtherRooms.Num() > 1)
-								{
-									UE_LOG(LogTemp, Warning, TEXT("Room %i Need to be %i") , NewRoom->AmountOfEntrances, OtherRooms.Num());
-									if (NewRoom->AmountOfEntrances == OtherRooms.Num())
-									{
-										UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
-										//What happens when there are several rooms touching the same spot
-										//Make it so that it fits the place
-										if (RotateRoomForSeveral(NewRoom, OtherRooms))
-										{
-											AmountOfRoomsLeft--;
-											bRightRoomType = true;
-											UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
-											NewRoom->GridLocation.bOccupied = true;
-											if (RoomThatItsCommingFrom)
-											{
-												NewRoom->GridLocation.Coordinates = {CurrentOpenEntrances[RoomPlacement]->GetForwardVector() + RoomThatItsCommingFrom->GridLocation.Coordinates};
-											}
-											OccupiedNodes.Add(NewRoom->GridLocation);
-											PlacedRooms.Add(NewRoom);
-								
-											TArray<UArrowComponent*> ClosedRooms;
-											for (auto Arrow : NewRoom->EntrancesArray)
-											{
-												for (auto OtherRoom : OtherRooms)
-												{
-													if (Arrow->GetComponentLocation().Equals(OtherRoom->GetComponentLocation(), 0.1f))
-													{
-														//UE_LOG(LogTemp, Warning, TEXT("New Arrow %s, Old Arrow %s"),*Arrow->GetComponentLocation().ToString(),*CurrentOpenEntrances[RoomPlacement]->GetComponentLocation().ToString());
-														ClosedRooms.Add(Arrow);
-													}
-												}
-											}
-											for (auto Arrow : ClosedRooms)
-											{
-												OtherRooms.Remove(Arrow);
-												CurrentOpenEntrances.Remove(Arrow);
-											}
-
-											CurrentOpenEntrances.Append(OtherRooms);
-											ExistingEntrances.Append(OtherRooms);
-										}
-									}
-								}
-								else
-								{
-									AmountOfRoomsLeft--;
-									bRightRoomType = true;
-									UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
-									NewRoom->GridLocation.bOccupied = true;
-									if (RoomThatItsCommingFrom)
-									{
-										NewRoom->GridLocation.Coordinates = {CurrentOpenEntrances[RoomPlacement]->GetForwardVector() + RoomThatItsCommingFrom->GridLocation.Coordinates};
-									}
-									OccupiedNodes.Add(NewRoom->GridLocation);
-									PlacedRooms.Add(NewRoom);
-							
-									RotateRoom(NewRoom, RoomPlacement);
-							
-									for (auto Arrow : NewRoom->EntrancesArray)
-									{
-										if (!Arrow->GetComponentLocation().Equals(CurrentOpenEntrances[RoomPlacement]->GetComponentLocation(), 0.1f))
-										{
-											//UE_LOG(LogTemp, Warning, TEXT("New Arrow %s, Old Arrow %s"),*Arrow->GetComponentLocation().ToString(),*CurrentOpenEntrances[RoomPlacement]->GetComponentLocation().ToString());
-											CurrentOpenEntrances.Add(Arrow);
-											ExistingEntrances.Add(Arrow);
-										}	
-									}
-									CurrentOpenEntrances.RemoveAt(RoomPlacement);
-								}
-							}
-						}
-					}*/
-				}
-			
 			if (!bRightRoomType && NewRoom)
 			{
 				NewRoom->Destroy();
 				NewRoom = nullptr;
 			}
+			
 			if (bRightRoomType)
 			{
+				NewRoom->GridLocation.bOccupied = true;
+				NewRoom->GridLocation.Coordinates = {OpenNodeLocations[RoomPlacement]};
+				
+				//New open rooms
+				for (auto OpenRoom : NewRoom->EntrancesArray)
+				{
+					FVector AdjacentRoomCoordinate = WorldToGrid(OpenRoom->GetComponentLocation(), NewRoom->GridLocation.Coordinates);
+					NewRoom->GridLocation.OpenDoors.Add(AdjacentRoomCoordinate);
+					bool bFound = false;
+				
+					for (auto OccupiedNode : OccupiedNodeLocations)
+					{
+						if (OccupiedNode.Coordinates.Equals(AdjacentRoomCoordinate))
+						{
+							bFound = true;
+						}
+					}
+					
+					if (!bFound)
+					{
+						UE_LOG(LogTemp, Warning, TEXT("GridVector: %s"), *AdjacentRoomCoordinate.ToString());
+						OpenNodeLocations.Add(AdjacentRoomCoordinate);
+					}
+				}
+				
+				OpenNodeLocations.Remove(NewRoom->GridLocation.Coordinates);
+				
+				AmountOfRoomsLeft--;
+
+				UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
+				bRightRoomType = true;
+				OccupiedNodeLocations.Add(NewRoom->GridLocation);
+				PlacedRooms.Add(NewRoom);
+				
 				UE_LOG(LogTemp, Warning, TEXT("Loop done"));
 				break;
 			}
 		}
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Open doors %i"), CurrentOpenEntrances.Num());
-	UE_LOG(LogTemp, Warning, TEXT("AmountOfRoomsLeft %i"), AmountOfRoomsLeft);
 	
-	/*if (CurrentOpenEntrances.Num() != 0 || AmountOfRoomsLeft != 0)
+	if (OpenNodeLocations.Num() != 0 || AmountOfRoomsLeft != 0)
 	{
-		
 		UE_LOG(LogTemp, Warning, TEXT("Restarts %i"), Restarts);
 		if (Restarts >= MaxRestarts)
 		{
@@ -254,7 +349,7 @@ void APCGHandler::PCGRoomPlacement()
 			EmptyVariables();
 			PCGRoomPlacement();
 		}
-	}*/
+	}
 }
 
 void APCGHandler::EmptyVariables()
@@ -266,131 +361,10 @@ void APCGHandler::EmptyVariables()
 			Room->Destroy();
 		}
 	}
-
-	for (UArrowComponent* Arrow : ExistingEntrances)
-	{
-		if (IsValid(Arrow) && Arrow->GetOwner() == this)
-		{
-			Arrow->DestroyComponent();
-		}
-	}
-	OccupiedNodes.Empty();
+	
+	OccupiedNodeLocations.Empty();
+	OpenNodeLocations.Empty();
 	PlacedRooms.Empty();
-	CurrentOpenEntrances.Empty();
-	ExistingEntrances.Empty();
 
 	NewRoom = nullptr;
-}
-
-
-//Kanske kan använda "FRotator RoomRot = Room->GetActorRotation();" Istället för att faktsikt rotera
-void APCGHandler::RotateRoom(APCGRoom* Room, int RoomPlacement)
-{
-	/*int RandomDirection = UKismetMathLibrary::RandomIntegerInRange(0,1);
-	
-	for (int i = 0; i < 4; ++i)
-	{
-		for (auto Arrow : Room->EntrancesArray)
-		{
-			if (Arrow->GetComponentLocation().Equals(CurrentOpenEntrances[RoomPlacement]->GetComponentLocation(), 0.1f))
-			{
-				i = 4;
-				break;
-			}	
-		}
-		
-		if (i != 4)
-		{
-			//Rotate left
-			if (RandomDirection == 1)
-			{
-				Room->SetActorRotation({Room->GetActorRotation().Pitch,Room->GetActorRotation().Yaw + 90, Room->GetActorRotation().Roll});
-			}
-			//Rotate Right
-			else
-			{
-				Room->SetActorRotation({Room->GetActorRotation().Pitch,Room->GetActorRotation().Yaw - 90, Room->GetActorRotation().Roll});
-			}
-		}
-	}*/
-}
-
-bool APCGHandler::RotateRoomForSeveral(APCGRoom* Room, TArray<UArrowComponent*> OtherRooms)
-{
-	if (OtherRooms.Num() == 0)
-	{
-		return false;
-	}
-	
-	int RandomDirection = UKismetMathLibrary::RandomIntegerInRange(0,1);
-
-	
-	//UE_LOG(LogTemp, Warning, TEXT("Connections = %i, entrances = %i"), OtherRooms.Num(), Room->AmountOfEntrances);
-	for (int i = 0; i < 4; ++i)
-	{
-			int ConnectionsOccupied = 0;
-			for (int u = 0; u < OtherRooms.Num()-1; ++u)
-			{
-				for (auto Arrow : Room->EntrancesArray)
-				{
-					if (Arrow->GetComponentLocation().Equals(OtherRooms[u]->GetComponentLocation(), 0.1f))
-					{
-						ConnectionsOccupied++;
-					}
-					if (ConnectionsOccupied == OtherRooms.Num())
-					{
-						//UE_LOG(LogTemp, Warning, TEXT("Connections have been Occupied %i"), ConnectionsOccupied);
-						return true;
-					}
-				}	
-			}
-
-		if (i != 4)
-		{
-			//Rotate left
-			if (RandomDirection == 1)
-			{
-				Room->SetActorRotation({Room->GetActorRotation().Pitch,Room->GetActorRotation().Yaw + 90, Room->GetActorRotation().Roll});
-			}
-			//Rotate Right
-			else
-			{
-				Room->SetActorRotation({Room->GetActorRotation().Pitch,Room->GetActorRotation().Yaw - 90, Room->GetActorRotation().Roll});
-			}
-		}
-	}
-	
-	UE_LOG(LogTemp, Warning, TEXT("Connections have not been Occupied"));
-	return false;
-}
-
-//This Checks if there are more entrances then one that the room can take
-TArray<UArrowComponent*> APCGHandler::CheckForOtherRooms(APCGRoom* Room)
-{
-	TArray<UArrowComponent*> OtherRoomsConnected;
-	if (!Room || Room->EntrancesArray.Num() == 0) return OtherRoomsConnected;
-
-	// Cache world transform once
-	const FVector RoomLocation = Room->GetActorLocation();
-	const FRotator OriginalRotation = Room->GetActorRotation();
-
-	UArrowComponent* RoomEntranceComp = Room->EntrancesArray[0];
-	if (!RoomEntranceComp) return OtherRoomsConnected;
-	FVector LocalEntrance = RoomEntranceComp->GetRelativeLocation();
-	for (int i = 0; i < 4; ++i)
-	{
-		FRotator TestRotation = OriginalRotation + FRotator(0.f, i * 90.f, 0.f);
-		FVector RotatedEntrance = TestRotation.RotateVector(LocalEntrance) + RoomLocation;
-		// Compare against all open entrances
-		for (auto Entrance : ExistingEntrances)
-		{
-			if (RotatedEntrance.Equals(Entrance->GetComponentLocation(), 0.1f))
-			{
-				OtherRoomsConnected.Add(Entrance);
-			}
-		}
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("CheckForOtherRooms %d"), OtherRoomsConnected.Num());
-	return OtherRoomsConnected;
 }

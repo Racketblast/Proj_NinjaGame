@@ -25,6 +25,8 @@ struct FPCGNodes
 	FVector Coordinates = FVector(0, 0, 0);
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "NodeInfo")
 	bool bOccupied = false;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "NodeInfo")
+	TArray<FVector> OpenDoors;
 };
 
 UCLASS()
@@ -49,9 +51,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
 	USceneComponent* RoomRootComponent;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
-	class UBoxComponent* OverlapComponent;
-	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "RoomInfo")
 	int AmountOfEntrances;
 
@@ -61,7 +60,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "RoomInfo")
 	FPCGNodes GridLocation;
 
+	int RoomWidthInBlocks = 1;
+	int RoomHeightInBlocks = 1;
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "RoomInfo")
 	TArray<AActor*> DoorPoints;
+	
 };
