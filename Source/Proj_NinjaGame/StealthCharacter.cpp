@@ -6,6 +6,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -135,3 +136,26 @@ void AStealthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	}
 }
 
+
+float AStealthCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	Health -= ActualDamage;
+
+	UE_LOG(LogTemp, Warning, TEXT("Player took damage. Player Health: %f"), Health);
+
+	if (Health <= 0.0f)
+	{
+		Die();
+	}
+
+	return ActualDamage;
+}
+
+void AStealthCharacter::Die()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Player died!"));
+
+	UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), false);
+}
