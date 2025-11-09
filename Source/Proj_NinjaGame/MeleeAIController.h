@@ -35,8 +35,9 @@ protected:
 	EEnemyState CurrentState = EEnemyState::Patrolling;
 
 	FTimerHandle LoseSightTimerHandle;
-
+	
 	void MoveToNextPatrolPoint();
+	
 	void StartChasing();
 	void StopChasing();
 
