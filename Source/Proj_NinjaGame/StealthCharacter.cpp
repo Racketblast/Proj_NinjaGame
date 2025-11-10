@@ -10,6 +10,8 @@
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Proj_NinjaGame.h"
+#include "StealthGameInstance.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AStealthCharacter::AStealthCharacter()
@@ -70,6 +72,12 @@ void AStealthCharacter::DoAim(float Yaw, float Pitch)
 {
 	if (GetController())
 	{
+		
+		if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+		{
+			Yaw *= GI->SensitivityScale;
+			Pitch *= GI->SensitivityScale;
+		}
 		// pass the rotation inputs
 		AddControllerYawInput(Yaw);
 		AddControllerPitchInput(Pitch);

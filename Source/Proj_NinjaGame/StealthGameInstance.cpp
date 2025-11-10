@@ -2,17 +2,19 @@
 
 
 #include "StealthGameInstance.h"
+#include "Kismet/GameplayStatics.h"
+#include "StealthSaveGame.h"
 
 void UStealthGameInstance::Init()
 {
 	Super::Init();
 	
-	UGameUserSettings* Settings = GEngine->GetGameUserSettings();
+	/*UGameUserSettings* Settings = GEngine->GetGameUserSettings();
 	if (Settings)
 	{
 		Settings->SetOverallScalabilityLevel(0);
 		Settings->ApplySettings(false);
-	}
+	}*/
 	
 	//Loads the saved game
 	LoadGame();
@@ -27,7 +29,7 @@ void UStealthGameInstance::SaveGame()
 	}
 	else if (SaveGameObject)
 	{
-		Save = Cast<UGhostCatchersSaveGame>(UGameplayStatics::CreateSaveGameObject(SaveGameObject));
+		Save = Cast<UStealthSaveGame>(UGameplayStatics::CreateSaveGameObject(SaveGameObject));
 		if (Save)
 		{
 			FillSaveGame();
@@ -36,19 +38,30 @@ void UStealthGameInstance::SaveGame()
 	}
 }
 
+
+void UStealthGameInstance::SaveOptions()
+{
+	if (UGameplayStatics::DoesSaveGameExist("Save1", 0))
+	{
+		FillSaveOptions();
+		UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
+	}
+}
+
 void UStealthGameInstance::FillSaveGame()
 {
+	//Saves Gameplay data
 	Save->SavedCurrentGameFlag = CurrentGameFlag;
-	Save->SavedCurrentFloor = CurrentFloor;
-	Save->SavedFloorsUnlocked = FloorsUnlocked;
+	Save->SavedLevelsUnlocked = LevelsUnlocked;
 	
+	//Saves options data
+	FillSaveOptions();
+}
+
+void UStealthGameInstance::FillSaveOptions()
+{
 	Save->SavedMasterVolumeScale = MasterVolumeScale;
-	Save->SavedFootStepsVolumeScale = FootStepsVolumeScale;
-	Save->SavedSpotVolumeScale = SpotVolumeScale;
-	Save->SavedGhostVolumeScale = GhostVolumeScale;
-	Save->SavedRhythmVolumeScale = RhythmVolumeScale;
-	Save->SavedDialogueVolumeScale = DialogueVolumeScale;
-	Save->SavedTextReaderVolumeScale = TextReaderVolumeScale;
+	Save->SavedSensitivityScale = SensitivityScale;
 }
 
 void UStealthGameInstance::LoadGame()
@@ -56,22 +69,17 @@ void UStealthGameInstance::LoadGame()
 	//Loads the saved game
 	if (UGameplayStatics::DoesSaveGameExist("Save1",0))
 	{
-		Save = Cast<UGhostCatchersSaveGame>(UGameplayStatics::LoadGameFromSlot("Save1",0));
+		Save = Cast<UStealthSaveGame>(UGameplayStatics::LoadGameFromSlot("Save1",0));
 		if (Save)
 		{
 			CurrentGameFlag = Save->SavedCurrentGameFlag;
-			CurrentFloor = Save->SavedCurrentFloor;
-			FloorsUnlocked = Save->SavedFloorsUnlocked;
-	
+			LevelsUnlocked = Save->SavedLevelsUnlocked;
+			
+			SensitivityScale = Save->SavedSensitivityScale;
 			MasterVolumeScale = Save->SavedMasterVolumeScale;
-			FootStepsVolumeScale = Save->SavedFootStepsVolumeScale;
-			SpotVolumeScale = Save->SavedSpotVolumeScale;
-			GhostVolumeScale = Save->SavedGhostVolumeScale;
-			RhythmVolumeScale = Save->SavedRhythmVolumeScale;
-			DialogueVolumeScale = Save->SavedDialogueVolumeScale;
-			TextReaderVolumeScale = Save->SavedTextReaderVolumeScale;
 		}
 	}
+	
 	//For Graphics if needed
 	/*else
 	{
@@ -80,40 +88,40 @@ void UStealthGameInstance::LoadGame()
 	}*/
 }
 
+void UStealthGameInstance::LoadOptions()
+{
+	if (UGameplayStatics::DoesSaveGameExist("Save1",0))
+	{
+		Save = Cast<UStealthSaveGame>(UGameplayStatics::LoadGameFromSlot("Save1",0));
+		if (Save)
+		{
+			SensitivityScale = Save->SavedSensitivityScale;
+			MasterVolumeScale = Save->SavedMasterVolumeScale;
+		}
+	}
+}
+
 void UStealthGameInstance::RestartGame()
 {
 	CurrentGameFlag = 0;
-	CurrentFloor = 1;  // Ändrar från 0 till 1
-	FloorsUnlocked = {1}; // Lägger till 1, så vi startar på level 1
+	LevelsUnlocked = {};
 }
 
 bool UStealthGameInstance::HasGameChanged()
 {
 	if (UGameplayStatics::DoesSaveGameExist("Save1",0))
 	{
-		Save = Cast<UGhostCatchersSaveGame>(UGameplayStatics::LoadGameFromSlot("Save1",0));
+		Save = Cast<UStealthSaveGame>(UGameplayStatics::LoadGameFromSlot("Save1",0));
 		if (Save)
 		{
 			if (CurrentGameFlag != Save->SavedCurrentGameFlag)
 				return true;
-			if (CurrentFloor != Save->SavedCurrentFloor)
+			if (LevelsUnlocked != Save->SavedLevelsUnlocked)
 				return true;
-			if (FloorsUnlocked != Save->SavedFloorsUnlocked)
+			
+			if (SensitivityScale != Save->SavedSensitivityScale)
 				return true;
-
 			if (MasterVolumeScale != Save->SavedMasterVolumeScale)
-				return true;
-			if (FootStepsVolumeScale != Save->SavedFootStepsVolumeScale)
-				return true;
-			if (SpotVolumeScale != Save->SavedSpotVolumeScale)
-				return true;
-			if (GhostVolumeScale != Save->SavedGhostVolumeScale)
-				return true;
-			if (RhythmVolumeScale != Save->SavedRhythmVolumeScale)
-				return true;
-			if (DialogueVolumeScale != Save->SavedDialogueVolumeScale)
-				return true;
-			if (TextReaderVolumeScale != Save->SavedTextReaderVolumeScale)
 				return true;
 		}
 		return false;

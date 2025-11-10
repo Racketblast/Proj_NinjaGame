@@ -18,12 +18,20 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool bUsingGamepad = false;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	int CurrentGameFlag;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TArray<int> LevelsUnlocked;
 	
 	//Sound
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Sound")
 	USoundMix* SoundMix;
+	
+	//Sound Options
 	UPROPERTY(BlueprintReadWrite, Category="Options")
 	float MasterVolumeScale = 1.0f;
+	
+	//Player Options
 	UPROPERTY(BlueprintReadWrite, Category="Options")
 	float SensitivityScale = 1.0f;
 	
@@ -35,9 +43,16 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void SaveGame();
+	UFUNCTION(BlueprintCallable)
+	void SaveOptions();
+	
 	void FillSaveGame();
+	void FillSaveOptions();
+	
 	UFUNCTION(BlueprintCallable)
 	void LoadGame();
+	UFUNCTION(BlueprintCallable)
+	void LoadOptions();
 	UFUNCTION(BlueprintCallable)
 	void RestartGame();
 	UFUNCTION(BlueprintCallable)
