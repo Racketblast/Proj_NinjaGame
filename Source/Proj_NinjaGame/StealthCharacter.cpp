@@ -9,6 +9,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
+#include "PlayerUseInterface.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Proj_NinjaGame.h"
 #include "StealthGameInstance.h"
@@ -119,6 +120,7 @@ void AStealthCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	CheckforUse();
 }
 
 // Called to bind functionality to input
@@ -137,6 +139,9 @@ void AStealthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 		// Looking/Aiming
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AStealthCharacter::LookInput);
+
+		//Use
+		EnhancedInputComponent->BindAction(UseAction, ETriggerEvent::Triggered, this, &AStealthCharacter::Use);
 	}
 	else
 	{
@@ -166,4 +171,60 @@ void AStealthCharacter::Die()
 	UE_LOG(LogTemp, Warning, TEXT("Player died!"));
 
 	UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), false);
+}
+
+void AStealthCharacter::Use()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Player use"));
+	FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+	FVector End = Start + FirstPersonCameraComponent->GetForwardVector() * UseDistance;
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, TRACE_CHANNEL_INTERACT, Params))
+	{
+		if (AActor* Actor = HitResult.GetActor())
+		{
+			if (Actor->GetClass()->ImplementsInterface(UPlayerUseInterface::StaticClass()))
+			{
+				IPlayerUseInterface::Execute_Use(Actor, this);
+			}
+		}
+	}
+}
+
+void AStealthCharacter::CheckforUse()
+{
+	FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+	FVector End = Start + FirstPersonCameraComponent->GetForwardVector() * UseDistance;
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, TRACE_CHANNEL_INTERACT, Params))
+	{
+		if (AActor* Actor = HitResult.GetActor())
+		{
+			if (Actor->GetClass()->ImplementsInterface(UPlayerUseInterface::StaticClass()))
+			{
+				if (LastUseTarget != Actor)
+				{
+					LastUseTarget = Actor;
+					IPlayerUseInterface::Execute_ShowInteractable(LastUseTarget, true);
+					bShowUseWidget = true;
+				}
+				return;
+			}
+		}
+	}
+
+	if (bShowUseWidget)
+	{
+		IPlayerUseInterface::Execute_ShowInteractable(LastUseTarget, false);
+		bShowUseWidget = false;
+	}
+
+	LastUseTarget = nullptr;
 }

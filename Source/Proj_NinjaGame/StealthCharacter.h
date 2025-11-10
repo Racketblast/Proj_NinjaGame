@@ -15,6 +15,8 @@ struct FInputActionValue;
 
 //DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
+#define TRACE_CHANNEL_INTERACT ECC_GameTraceChannel3
+
 UCLASS()
 class PROJ_NINJAGAME_API AStealthCharacter : public ACharacter
 {
@@ -42,7 +44,10 @@ protected:
 
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, Category ="Input")
-	class UInputAction* LookAction;
+	UInputAction* LookAction;
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* UseAction;
 	
 
 	/** Called from Input Actions for movement input */
@@ -78,9 +83,32 @@ protected:
 
 	void Die();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+	void Use();
+	void CheckforUse();
+	
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	float Health = 3.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	float MaxHealth = 3.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	int32 UseDistance = 300;
+	
+	UPROPERTY(BlueprintReadWrite)
+	bool bShowUseWidget = false;
+	
+	UPROPERTY(BlueprintReadWrite)
+	AActor* LastUseTarget;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
+	int32 MeleeDistance = 150;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
+	float MeleeDamage = 40;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
+	float MeleeHitsPerSecond = 0.8;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -90,5 +118,9 @@ public:
 
 	/** Returns first person camera component **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
-
+	
+	UPROPERTY(BlueprintReadWrite)
+	bool bHasCompletedTheMission = false;
+	UPROPERTY(BlueprintReadWrite)
+	bool bIsInCombat = false;
 };

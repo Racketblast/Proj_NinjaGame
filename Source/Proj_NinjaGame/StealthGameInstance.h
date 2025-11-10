@@ -22,6 +22,10 @@ public:
 	int CurrentGameFlag;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TArray<int> LevelsUnlocked;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FString CurrentInteractText;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FName StartLocation;
 	
 	//Sound
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Sound")
