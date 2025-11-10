@@ -51,9 +51,20 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 		}
 	case EEnemyState::Chasing:
 		{
+			APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(),0);
+			
 			if (ControlledEnemy->CanSeePlayer())
 			{
-				MoveToActor(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+				float Dist = FVector::Dist(GetPawn()->GetActorLocation(), Player->GetActorLocation());
+				if (Dist <= ControlledEnemy->GetAttackRange())
+				{
+					StopMovement();
+					ControlledEnemy->StartAttack();
+				}
+				else
+				{
+					MoveToActor(Player);
+				}
 				GetWorldTimerManager().ClearTimer(LoseSightTimerHandle);
 			}
 			else if (!GetWorldTimerManager().IsTimerActive(LoseSightTimerHandle))
@@ -93,10 +104,20 @@ void AMeleeAIController::MoveToNextPatrolPoint()
 	const TArray<AActor*>& PatrolPoints = ControlledEnemy->GetPatrolPoints();
 	if (PatrolPoints.Num() == 0) return;
 
-	//UE_LOG(LogTemp, Warning, TEXT("PatrolPoints num: %d, index: %d"), ControlledEnemy->GetPatrolPoints().Num(), CurrentPatrolIndex);
-	
 	// Sätt den nuvarande target positionen att gå mott
-	MoveToActor(PatrolPoints[CurrentPatrolIndex]);
+	AActor* TargetPoint = PatrolPoints[CurrentPatrolIndex];
+	if (!TargetPoint) return;
+	
+	const float Distance = FVector::Dist(GetPawn()->GetActorLocation(), TargetPoint->GetActorLocation());
+	if (Distance < 300.f) 
+	{
+		// Gå vidare till nästa punkt i stället för att fastna
+		CurrentPatrolIndex = (CurrentPatrolIndex + 1) % PatrolPoints.Num();
+		TargetPoint = PatrolPoints[CurrentPatrolIndex];
+	}
+	
+	//UE_LOG(LogTemp, Warning, TEXT("PatrolPoints num: %d, index: %d"), ControlledEnemy->GetPatrolPoints().Num(), CurrentPatrolIndex);
+	MoveToActor(TargetPoint);
 }
 
 void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
@@ -106,6 +127,21 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 	const TArray<AActor*>& PatrolPoints = ControlledEnemy->GetPatrolPoints();
 	if (CurrentState == EEnemyState::Patrolling)
 	{
+		static int32 FailCount = 0;
+		if (!Result.IsSuccess())
+		{
+			FailCount++;
+			if (FailCount > 3)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Too many failed patrol moves, aborting patrol temporarily."));
+				return;
+			}
+		}
+		else
+		{
+			FailCount = 0; 
+		}
+		
 		if (Result.IsSuccess())
 		{
 			// Lyckad förflyttning 

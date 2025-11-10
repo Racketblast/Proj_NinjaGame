@@ -6,6 +6,9 @@
 #include "GameFramework/Character.h"
 #include "MeleeEnemy.generated.h"
 
+class UBoxComponent;
+class UAnimMontage;
+
 UCLASS()
 class PROJ_NINJAGAME_API AMeleeEnemy : public ACharacter
 {
@@ -42,12 +45,47 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float RunSpeed = 500.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+	float Health = 5.f;
+	
+	float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
+
+	void Die();
+
 	UPROPERTY()
 	APawn* PlayerPawn;
 
 	bool bCanSeePlayer = false;
 
 	void CheckPlayerVisibility();
+
+	
+	// För Attack 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
+	float AttackRange = 100.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
+	float AttackDamage = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
+	float AttackCooldown = 1.2f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
+	UAnimMontage* AttackMontage;
+	
+	UPROPERTY(VisibleAnywhere, Category="Combat")
+	UBoxComponent* MeleeHitBox;
+	
+	bool bCanAttack = true;
+	bool bHitRegisteredThisSwing = false;
+
+	FTimerHandle AttackCooldownHandle;
+	FTimerHandle HitboxWindowHandle;
+	
+	UFUNCTION()
+	void OnMeleeOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+							 UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+							 bool bFromSweep, const FHitResult& SweepResult);
 
 public:
 	FORCEINLINE const TArray<AActor*>& GetPatrolPoints() const { return PatrolPoints; }
@@ -63,6 +101,17 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	bool bIsChasing = false;
+
+	
+	UFUNCTION(BlueprintCallable)
+	void StartAttack();
+	
+	FORCEINLINE float GetAttackRange() const { return AttackRange; }
+	
+	void EnableHitbox(float WindowSeconds = 0.15f);
+	void DisableHitbox();
+	
+	virtual void ApplyDamageTo(AActor* Target);
 
 private:
 	FVector LastSeenPlayerLocation;
