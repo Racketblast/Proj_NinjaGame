@@ -18,7 +18,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int SavedCurrentGameFlag;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TArray<int> SavedLevelsUnlocked;
+	TArray<EMission> SavedMissionsCleared;
 
 	//Options saved
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

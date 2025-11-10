@@ -52,7 +52,7 @@ void UStealthGameInstance::FillSaveGame()
 {
 	//Saves Gameplay data
 	Save->SavedCurrentGameFlag = CurrentGameFlag;
-	Save->SavedLevelsUnlocked = LevelsUnlocked;
+	Save->SavedMissionsCleared = MissionsCleared;
 	
 	//Saves options data
 	FillSaveOptions();
@@ -73,7 +73,7 @@ void UStealthGameInstance::LoadGame()
 		if (Save)
 		{
 			CurrentGameFlag = Save->SavedCurrentGameFlag;
-			LevelsUnlocked = Save->SavedLevelsUnlocked;
+			MissionsCleared = Save->SavedMissionsCleared;
 			
 			SensitivityScale = Save->SavedSensitivityScale;
 			MasterVolumeScale = Save->SavedMasterVolumeScale;
@@ -104,7 +104,7 @@ void UStealthGameInstance::LoadOptions()
 void UStealthGameInstance::RestartGame()
 {
 	CurrentGameFlag = 0;
-	LevelsUnlocked = {};
+	MissionsCleared = {};
 }
 
 bool UStealthGameInstance::HasGameChanged()
@@ -116,7 +116,7 @@ bool UStealthGameInstance::HasGameChanged()
 		{
 			if (CurrentGameFlag != Save->SavedCurrentGameFlag)
 				return true;
-			if (LevelsUnlocked != Save->SavedLevelsUnlocked)
+			if (MissionsCleared != Save->SavedMissionsCleared)
 				return true;
 			
 			if (SensitivityScale != Save->SavedSensitivityScale)
