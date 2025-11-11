@@ -12,10 +12,13 @@
 #include "Kismet/GameplayStatics.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
+#include "KunaiWeapon.h"
+#include "PlayerUseInterface.h"
 #include "MeleeAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Proj_NinjaGame.h"
 #include "StealthGameInstance.h"
+#include "ThrowableWeapon.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -54,6 +57,7 @@ AStealthCharacter::AStealthCharacter()
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 	GetCharacterMovement()->AirControl = 0.5f;
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
+	GetCharacterMovement()->MaxWalkSpeedCrouched = SneakWalkSpeed;
 }
 
 void AStealthCharacter::MoveInput(const FInputActionValue& Value)
@@ -62,7 +66,7 @@ void AStealthCharacter::MoveInput(const FInputActionValue& Value)
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	// pass the axis values to the move input
-	DoMove(MovementVector.X, MovementVector.Y);
+	Move(MovementVector.X, MovementVector.Y);
 }
 
 void AStealthCharacter::LookInput(const FInputActionValue& Value)
@@ -71,10 +75,10 @@ void AStealthCharacter::LookInput(const FInputActionValue& Value)
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
 	// pass the axis values to the aim input
-	DoAim(LookAxisVector.X, LookAxisVector.Y);
+	Look(LookAxisVector.X, LookAxisVector.Y);
 }
 
-void AStealthCharacter::DoAim(float Yaw, float Pitch)
+void AStealthCharacter::Look(float Yaw, float Pitch)
 {
 	if (GetController())
 	{
@@ -90,7 +94,7 @@ void AStealthCharacter::DoAim(float Yaw, float Pitch)
 	}
 }
 
-void AStealthCharacter::DoMove(float Right, float Forward)
+void AStealthCharacter::Move(float Right, float Forward)
 {
 	if (GetController())
 	{
@@ -98,15 +102,15 @@ void AStealthCharacter::DoMove(float Right, float Forward)
 		AddMovementInput(GetActorRightVector(), Right);
 		AddMovementInput(GetActorForwardVector(), Forward);
 		
-		float NoiseLevel;
+		float NoiseLevel = 1.0f;
 		
 		if (bIsSneaking)
 		{
 			NoiseLevel = 1.0f * SneakNoiseMultiplier;
 		}
-		else
+		else if (bIsSprinting)
 		{
-			NoiseLevel = 1.0f;
+			NoiseLevel *= SprintNoiseMultiplier;
 		}
 
 		USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel); 
@@ -137,19 +141,124 @@ void AStealthCharacter::DoJumpEnd()
 	USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel);
 }
 
+void AStealthCharacter::Attack()
+{
+	if (bIsAiming)
+	{
+		UE_LOG(LogTemp, Display, TEXT("Aiming"));
+		//ThrowingWeapon
+		if (HeldThrowableWeapon)
+		{
+			HeldThrowableWeapon->Throw(this);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Display, TEXT("No Aiming"));
+		//MeleeWeapon
+	}
+}
+
+void AStealthCharacter::EquipKunai()
+{
+	if (AmountOfKunai > 0)
+	{
+		if (AKunaiWeapon* Kunai = Cast<AKunaiWeapon>(HeldThrowableWeapon))
+		{
+			if (LastHeldWeapon != nullptr)
+			{
+				if (HeldThrowableWeapon)
+				{
+					HeldThrowableWeapon->Destroy();
+				}
+				UE_LOG(LogTemp, Display, TEXT("Unequipping Kunai"));
+				HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(LastHeldWeapon);
+				HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
+			}
+		}
+		else
+		{
+			if (KunaiWeapon != nullptr)
+			{
+				if (HeldThrowableWeapon)
+				{
+					HeldThrowableWeapon->Destroy();
+				}
+				UE_LOG(LogTemp, Display, TEXT("Equipping Kunai"));
+				HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(KunaiWeapon);
+				HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
+			}
+		}
+	}
+}
+
+void AStealthCharacter::AimStart()
+{
+	bIsAiming = true;
+}
+
+void AStealthCharacter::AimEnd()
+{
+	bIsAiming = false;
+}
+
 // Called when the game starts or when spawned
 void AStealthCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	if (FirstPersonCameraComponent)
+	{
+		DefaultCameraRelativeLocation = FirstPersonCameraComponent->GetRelativeLocation();
+		TargetCameraBaseLocation = DefaultCameraRelativeLocation;
+		NormalFOV = FirstPersonCameraComponent->FieldOfView;
+	}
 }
 
-// Called every frame
 void AStealthCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	CheckForUse();
+
+	if (FirstPersonCameraComponent)
+	{
+		// Ändrar FOV när spelaren springer 
+		float TargetFOV = bIsSprinting ? SprintFOV : NormalFOV;
+		
+		float NewFOV = FMath::FInterpTo(
+			FirstPersonCameraComponent->FieldOfView,
+			TargetFOV,
+			DeltaTime,
+			FOVInterpSpeed
+		);
+		FirstPersonCameraComponent->SetFieldOfView(NewFOV);
+		
+		// övergång mellan stå och crouch 
+		FVector SmoothedBaseLocation = FMath::VInterpTo(
+			FirstPersonCameraComponent->GetRelativeLocation(),
+			TargetCameraBaseLocation,
+			DeltaTime,
+			8.0f 
+		);
+
+		FVector FinalCameraLocation = SmoothedBaseLocation;
+		
+		// Skakar kameran lite när spelaren springer
+		if (bIsSprinting && GetVelocity().Size() > 100.f)
+		{
+			BobTimer += DeltaTime * CameraBobSpeed;
+			FinalCameraLocation.Z += FMath::Sin(BobTimer) * CameraBobAmplitude;
+		}
+		else
+		{
+			BobTimer = 0.0f;
+		}
+		
+		FirstPersonCameraComponent->SetRelativeLocation(FinalCameraLocation);
+	}
 }
+
 
 // Called to bind functionality to input
 void AStealthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -168,8 +277,23 @@ void AStealthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		// Looking/Aiming
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AStealthCharacter::LookInput);
 
+		//Use
+		EnhancedInputComponent->BindAction(UseAction, ETriggerEvent::Triggered, this, &AStealthCharacter::Use);
+
+		//Attacks
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AStealthCharacter::Attack);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &AStealthCharacter::AimStart);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AStealthCharacter::AimEnd);
+		
+		EnhancedInputComponent->BindAction(KunaiAction, ETriggerEvent::Triggered, this, &AStealthCharacter::EquipKunai);
+		
 		//Sneak
 		EnhancedInputComponent->BindAction(StealthCrouch, ETriggerEvent::Started, this, &AStealthCharacter::ToggleSneak);
+
+		// Sprint
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &AStealthCharacter::StartSprint);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &AStealthCharacter::StopSprint);
+
 	}
 	else
 	{
@@ -177,6 +301,61 @@ void AStealthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	}
 }
 
+void AStealthCharacter::Use()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Player use"));
+	FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+	FVector End = Start + FirstPersonCameraComponent->GetForwardVector() * UseDistance;
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, TRACE_CHANNEL_INTERACT, Params))
+	{
+		if (AActor* Actor = HitResult.GetActor())
+		{
+			if (Actor->GetClass()->ImplementsInterface(UPlayerUseInterface::StaticClass()))
+			{
+				IPlayerUseInterface::Execute_Use(Actor, this);
+			}
+		}
+	}
+}
+
+void AStealthCharacter::CheckForUse()
+{
+	FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+	FVector End = Start + FirstPersonCameraComponent->GetForwardVector() * UseDistance;
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, TRACE_CHANNEL_INTERACT, Params))
+	{
+		if (AActor* Actor = HitResult.GetActor())
+		{
+			if (Actor->GetClass()->ImplementsInterface(UPlayerUseInterface::StaticClass()))
+			{
+				if (LastUseTarget != Actor)
+				{
+					LastUseTarget = Actor;
+					IPlayerUseInterface::Execute_ShowInteractable(LastUseTarget, true);
+					bShowUseWidget = true;
+				}
+				return;
+			}
+		}
+	}
+
+	if (bShowUseWidget)
+	{
+		IPlayerUseInterface::Execute_ShowInteractable(LastUseTarget, false);
+		bShowUseWidget = false;
+	}
+
+	LastUseTarget = nullptr;
+}
 
 float AStealthCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
@@ -222,8 +401,8 @@ void AStealthCharacter::ToggleSneak()
 		// Crouchläge
 		Crouch();
 		GetCharacterMovement()->MaxWalkSpeed = SneakWalkSpeed;
-		UE_LOG(LogTemp, Warning, TEXT("Player is now sneaking."));
-		FirstPersonCameraComponent->SetRelativeLocation(FVector(-42.8f, 5.89f, -30.0f));
+		//UE_LOG(LogTemp, Warning, TEXT("Player is now sneaking."));
+		TargetCameraBaseLocation = DefaultCameraRelativeLocation + CrouchCameraOffset;
 
 	}
 	else
@@ -231,7 +410,29 @@ void AStealthCharacter::ToggleSneak()
 		// Normalläge 
 		UnCrouch();
 		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
-		UE_LOG(LogTemp, Warning, TEXT("Player stopped sneaking."));
-		FirstPersonCameraComponent->SetRelativeLocation(FVector(-2.8f, 5.89f, 0.0f));
+		//UE_LOG(LogTemp, Warning, TEXT("Player stopped sneaking."));
+		TargetCameraBaseLocation = DefaultCameraRelativeLocation;
+	}
+}
+
+
+
+void AStealthCharacter::StartSprint()
+{
+	if (!bIsSneaking) // för att inte kunna springa när man är i Crouch läge 
+	{
+		bIsSprinting = true;
+		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+		//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
+	}
+}
+
+void AStealthCharacter::StopSprint()
+{
+	if (bIsSprinting)
+	{
+		bIsSprinting = false;
+		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
+		//UE_LOG(LogTemp, Warning, TEXT("Player stopped sprinting."));
 	}
 }

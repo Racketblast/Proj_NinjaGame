@@ -1,0 +1,45 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "InteractableObject.h"
+#include "ThrowableObject.generated.h"
+
+class AThrowableWeapon;
+/**
+ * 
+ */
+UCLASS()
+class PROJ_NINJAGAME_API AThrowableObject : public AInteractableObject
+{
+	GENERATED_BODY()
+public:	
+	// Sets default values for this actor's properties
+	AThrowableObject();
+
+	virtual void Use_Implementation(class AStealthCharacter* Player) override;
+	virtual void ShowInteractable_Implementation(bool bShow) override;
+
+	UPROPERTY(BlueprintReadWrite)
+	bool Thrown = false;
+	UPROPERTY(BlueprintReadWrite)
+	float DealtDamage = 5.f;
+	UPROPERTY(BlueprintReadWrite)
+	bool bBreaksOnImpact = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<AThrowableWeapon> ThrowableWeapon;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	class UProjectileMovementComponent* ProjectileComponent;
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+	
+	UFUNCTION()
+	void  ThrowableOnComponentHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	virtual void ThrowableOnComponentHitFunction(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
+
+	virtual void HandlePickup(class AStealthCharacter* Player);
+};
