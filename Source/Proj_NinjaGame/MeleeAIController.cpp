@@ -47,6 +47,18 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 			{
 				StartChasing();
 			}
+			else if (ControlledEnemy->bHeardSoundRecently && !bIsInvestigatingSound)
+			{
+				//UE_LOG(LogTemp, Warning, TEXT("Patrolling: Heard sound at %s"), *ControlledEnemy->LastHeardSoundLocation.ToString());
+				OnHeardSound(ControlledEnemy->LastHeardSoundLocation);
+				bIsInvestigatingSound = true;
+
+				GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, [this]()
+				{
+					bIsInvestigatingSound = false;
+					ControlledEnemy->bHeardSoundRecently = false;
+				}, 0.5f, false);
+			}
 			break;
 		}
 	case EEnemyState::Chasing:
@@ -97,11 +109,18 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 	}
 	
 	// Om fienden nyligen hört ett ljud
-	if (ControlledEnemy->bHeardSoundRecently && CurrentState != EEnemyState::Chasing)
+	if (!bIsInvestigatingSound && ControlledEnemy->bHeardSoundRecently && CurrentState != EEnemyState::Chasing)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Enemy heard sound at %s"), *ControlledEnemy->LastHeardSoundLocation.ToString());
+		//UE_LOG(LogTemp, Warning, TEXT("Enemy heard sound at %s"), *ControlledEnemy->LastHeardSoundLocation.ToString());
 		OnHeardSound(ControlledEnemy->LastHeardSoundLocation);
-		ControlledEnemy->bHeardSoundRecently = false;
+		
+		bIsInvestigatingSound = true;
+		
+		GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, [this]()
+		{
+			bIsInvestigatingSound = false;
+			ControlledEnemy->bHeardSoundRecently = false;
+		}, 0.5f, false);
 	}
 }
 
@@ -143,7 +162,7 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 {
 	Super::OnMoveCompleted(RequestID, Result);
 
-	const TArray<AActor*>& PatrolPoints = ControlledEnemy->GetPatrolPoints();
+	/*const TArray<AActor*>& PatrolPoints = ControlledEnemy->GetPatrolPoints();
 	if (CurrentState == EEnemyState::Patrolling)
 	{
 		static int32 FailCount = 0;
@@ -191,6 +210,69 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 				MoveToNextPatrolPoint();
 			}, 0.5f, false);
 		}
+	}*/
+
+	if (!ControlledEnemy)
+		return;
+
+	// Kolla att detta inte är ett gammalt move som avbrutits av ett nytt
+	/*if (Result.Code == EPathFollowingResult::Aborted)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Move aborted (ignored old move)."));
+		return;
+	}*/
+
+	if (Result.Code == EPathFollowingResult::Aborted)
+	{
+		// Endast ignorera aborter från gamla patrull-moves, inte ljud-moves
+		if (CurrentState == EEnemyState::Patrolling)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Move aborted (ignored patrol move)."));
+			return;
+		}
+		else
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("Move aborted but new sound may override it."));
+		}
+	}
+
+	const TArray<AActor*>& PatrolPoints = ControlledEnemy->GetPatrolPoints();
+	
+	if (CurrentState == EEnemyState::Patrolling)
+	{
+		if (Result.IsSuccess())
+		{
+			// Gå vidare till nästa patrullpunkt
+			if (PatrolPoints.Num() > 1)
+			{
+				FTimerHandle WaitHandle;
+				GetWorldTimerManager().SetTimer(WaitHandle, [this]()
+				{
+					CurrentPatrolIndex = (CurrentPatrolIndex + 1) % ControlledEnemy->GetPatrolPoints().Num();
+					MoveToNextPatrolPoint();
+				}, ControlledEnemy->GetWaitTimeAtPoint(), false);
+			}
+		}
+		else
+		{
+			// försök igen på samma punkt efter liten delay
+			UE_LOG(LogTemp, Warning, TEXT("Patrol move failed at point index %d (%s). Retrying..."),
+				CurrentPatrolIndex,
+				*PatrolPoints[CurrentPatrolIndex]->GetName());
+
+			FTimerHandle RetryHandle;
+			GetWorldTimerManager().SetTimer(RetryHandle, [this]()
+			{
+				MoveToNextPatrolPoint();
+			}, 1.0f, false);
+		}
+	}
+
+	// när fienden nått ljudkällan 
+	if (CurrentState == EEnemyState::Searching && bIsMovingToSound)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("AI finished moving to sound, starting search."));
+		bIsMovingToSound = false;
 	}
 
 	/*UE_LOG(LogTemp, Warning, TEXT("PatrolPoints num: %d, index: %d, success: %d"),
@@ -280,10 +362,14 @@ void AMeleeAIController::EndSearch()
 	}
 	
 	bIsLookingAround = false;
+	//bIsInvestigatingSound = false;
 
-	// Gå tillbaka till patrull
-	CurrentState = EEnemyState::Patrolling;
-	MoveToNextPatrolPoint();
+	// Endast återgå till patrull om fienden inte hört något nytt nyligen
+	if (!ControlledEnemy->bHeardSoundRecently)
+	{
+		CurrentState = EEnemyState::Patrolling;
+		MoveToNextPatrolPoint();
+	}
 }
 
 
@@ -291,17 +377,58 @@ void AMeleeAIController::OnHeardSound(FVector SoundLocation)
 {
 	if (!ControlledEnemy) return;
 
+	// Om den redan letar eller hör ett nytt ljud mitt i en undersökning så rensar den alla tidigare timers
+	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
+	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
+	bIsLookingAround = false;
+	bIsMovingToSound = false;
+	bIsInvestigatingSound = false;
+
 	// Bara reagera om fienden inte redan jagar spelaren
 	if (CurrentState == EEnemyState::Chasing) return;
 
-	UE_LOG(LogTemp, Warning, TEXT("AI heard a sound and is investigating"));
+	//UE_LOG(LogTemp, Warning, TEXT("Enemy heard a sound and is investigating"));
+	
+	//DrawDebugSphere(GetWorld(), SoundLocation, 25.f, 12, FColor::Yellow, false, 5.f); 	// För att se vart ljudet som fienden hör är i världen. 
 
 	StopMovement();
 
 	CurrentState = EEnemyState::Searching;
+	//bIsInvestigatingSound = true;
 	LastKnownPlayerLocation = SoundLocation;
 
-	MoveToLocation(SoundLocation);
+	
+
+
+	// Justera ljudets position till marknivån 
+	FVector GroundedSoundLocation = SoundLocation;
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(ControlledEnemy);
+
+	//  skjuter en linetrace rakt ner från ovanför ljudkällan för att hitta marken
+	FVector Start = SoundLocation + FVector(0.f, 0.f, 200.f);
+	FVector End = SoundLocation - FVector(0.f, 0.f, 500.f);
+
+	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+	{
+		GroundedSoundLocation = Hit.ImpactPoint;
+		//UE_LOG(LogTemp, Warning, TEXT("Adjusted sound location to ground: %s"), *GroundedSoundLocation.ToString());
+	}
+	else
+	{
+		// Om ingen mark hittas, använd fiendens egen Z-höjd som fallback
+		GroundedSoundLocation.Z = ControlledEnemy->GetActorLocation().Z;
+		UE_LOG(LogTemp, Warning, TEXT("Using fallback grounded sound location: %s"), *GroundedSoundLocation.ToString());
+	}
+	
+	DrawDebugSphere(GetWorld(), SoundLocation, 25.f, 12, FColor::Yellow, false, 5.f);  
+	DrawDebugSphere(GetWorld(), GroundedSoundLocation, 25.f, 12, FColor::Green, false, 5.f); 
+
+	bIsMovingToSound = true;
+	UE_LOG(LogTemp, Warning, TEXT("OnHeardSound triggered: Enemy moving toward sound at %s"), *SoundLocation.ToString());
+	//MoveToLocation(GroundedSoundLocation);
+	MoveToLocation(GroundedSoundLocation, -1.0f, true, true, false, false, 0, true);
 }
 
 void AMeleeAIController::OnUnPossess()

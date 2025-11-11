@@ -50,8 +50,11 @@ private:
 	FTimerHandle StartPatrolTimerHandle;
 	FTimerHandle LookAroundTimerHandle;
 	FTimerHandle EndSearchTimerHandle;
+	FTimerHandle ResetSoundFlagHandle;
 	FVector LastKnownPlayerLocation;
 	bool bIsLookingAround = false;
+	bool bIsInvestigatingSound = false;
+	bool bIsMovingToSound = false;
 
 	void BeginSearch();
 	void LookAround();
