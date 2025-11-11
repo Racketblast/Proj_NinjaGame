@@ -150,6 +150,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
 	float MeleeHitsPerSecond = 0.8;*/
+	
 	// Sneak 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stealth", meta = (AllowPrivateAccess = "true"))
 	bool bIsSneaking = false;
@@ -159,11 +160,27 @@ protected:
 
 	void ToggleSneak();
 
+	// Sprint  
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
+	float SprintSpeed = 900.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
+	float SprintNoiseMultiplier = 4.0f;
+
+	bool bIsSprinting = false;
+
+	void StartSprint();
+
+	void StopSprint();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
+	UInputAction* SprintAction;
+
 	// speed 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stealth")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float NormalWalkSpeed = 600.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stealth")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float SneakWalkSpeed = 250.0f;
 
 	// för SoundUtility

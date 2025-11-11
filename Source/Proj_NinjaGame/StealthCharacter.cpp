@@ -101,15 +101,15 @@ void AStealthCharacter::Move(float Right, float Forward)
 		AddMovementInput(GetActorRightVector(), Right);
 		AddMovementInput(GetActorForwardVector(), Forward);
 		
-		float NoiseLevel;
+		float NoiseLevel = 1.0f;
 		
 		if (bIsSneaking)
 		{
 			NoiseLevel = 1.0f * SneakNoiseMultiplier;
 		}
-		else
+		else if (bIsSprinting)
 		{
-			NoiseLevel = 1.0f;
+			NoiseLevel *= SprintNoiseMultiplier;
 		}
 
 		USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel); 
@@ -242,8 +242,14 @@ void AStealthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AStealthCharacter::AimEnd);
 		
 		EnhancedInputComponent->BindAction(KunaiAction, ETriggerEvent::Triggered, this, &AStealthCharacter::EquipKunai);
+		
 		//Sneak
 		EnhancedInputComponent->BindAction(StealthCrouch, ETriggerEvent::Started, this, &AStealthCharacter::ToggleSneak);
+
+		// Sprint
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &AStealthCharacter::StartSprint);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &AStealthCharacter::StopSprint);
+
 	}
 	else
 	{
@@ -362,5 +368,27 @@ void AStealthCharacter::ToggleSneak()
 		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
 		UE_LOG(LogTemp, Warning, TEXT("Player stopped sneaking."));
 		FirstPersonCameraComponent->SetRelativeLocation(FVector(-2.8f, 5.89f, 0.0f));
+	}
+}
+
+
+
+void AStealthCharacter::StartSprint()
+{
+	if (!bIsSneaking) // för att inte kunna springa när man är i Crouch läge 
+	{
+		bIsSprinting = true;
+		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+		UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
+	}
+}
+
+void AStealthCharacter::StopSprint()
+{
+	if (bIsSprinting)
+	{
+		bIsSprinting = false;
+		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
+		UE_LOG(LogTemp, Warning, TEXT("Player stopped sprinting."));
 	}
 }
