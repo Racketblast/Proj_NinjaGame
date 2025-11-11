@@ -2,6 +2,9 @@
 
 
 #include "StealthCharacter.h"
+
+#include "EngineUtils.h"
+#include "SoundUtility.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -9,6 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
+#include "MeleeAIController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Proj_NinjaGame.h"
 #include "StealthGameInstance.h"
@@ -49,6 +53,7 @@ AStealthCharacter::AStealthCharacter()
 	// Configure character movement
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 	GetCharacterMovement()->AirControl = 0.5f;
+	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
 }
 
 void AStealthCharacter::MoveInput(const FInputActionValue& Value)
@@ -92,6 +97,19 @@ void AStealthCharacter::DoMove(float Right, float Forward)
 		// pass the move inputs
 		AddMovementInput(GetActorRightVector(), Right);
 		AddMovementInput(GetActorForwardVector(), Forward);
+		
+		float NoiseLevel;
+		
+		if (bIsSneaking)
+		{
+			NoiseLevel = 1.0f * SneakNoiseMultiplier;
+		}
+		else
+		{
+			NoiseLevel = 1.0f;
+		}
+
+		USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel); 
 	}
 }
 
@@ -105,6 +123,18 @@ void AStealthCharacter::DoJumpEnd()
 {
 	// pass StopJumping to the character
 	StopJumping();
+
+	float NoiseLevel;
+		
+	if (bIsSneaking)
+	{
+		NoiseLevel = 1.0f * SneakNoiseMultiplier;
+	}
+	else
+	{
+		NoiseLevel = 1.5f;
+	}
+	USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel);
 }
 
 // Called when the game starts or when spawned
@@ -137,6 +167,9 @@ void AStealthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 		// Looking/Aiming
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AStealthCharacter::LookInput);
+
+		//Sneak
+		EnhancedInputComponent->BindAction(StealthCrouch, ETriggerEvent::Started, this, &AStealthCharacter::ToggleSneak);
 	}
 	else
 	{
@@ -165,5 +198,40 @@ void AStealthCharacter::Die()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Player died!"));
 
-	UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), false);
+	GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
+	{
+		// Säkerhetsstopp innan leveln laddas om, hade en krash tidigare så lade till detta för att stopa krasshen. 
+		for (TActorIterator<AAIController> It(GetWorld()); It; ++It)
+		{
+			if (AAIController* AICon = *It)
+			{
+				AICon->StopMovement();
+			}
+		}
+
+		UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), true);
+	});
+}
+
+void AStealthCharacter::ToggleSneak()
+{
+	bIsSneaking = !bIsSneaking;
+
+	if (bIsSneaking)
+	{
+		// Crouchläge
+		Crouch();
+		GetCharacterMovement()->MaxWalkSpeed = SneakWalkSpeed;
+		UE_LOG(LogTemp, Warning, TEXT("Player is now sneaking."));
+		FirstPersonCameraComponent->SetRelativeLocation(FVector(-42.8f, 5.89f, -30.0f));
+
+	}
+	else
+	{
+		// Normalläge 
+		UnCrouch();
+		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
+		UE_LOG(LogTemp, Warning, TEXT("Player stopped sneaking."));
+		FirstPersonCameraComponent->SetRelativeLocation(FVector(-2.8f, 5.89f, 0.0f));
+	}
 }

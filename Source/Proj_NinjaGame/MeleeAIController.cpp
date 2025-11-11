@@ -95,6 +95,14 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 			break;
 		}
 	}
+	
+	// Om fienden nyligen hört ett ljud
+	if (ControlledEnemy->bHeardSoundRecently && CurrentState != EEnemyState::Chasing)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Enemy heard sound at %s"), *ControlledEnemy->LastHeardSoundLocation.ToString());
+		OnHeardSound(ControlledEnemy->LastHeardSoundLocation);
+		ControlledEnemy->bHeardSoundRecently = false;
+	}
 }
 
 void AMeleeAIController::MoveToNextPatrolPoint()
@@ -102,18 +110,29 @@ void AMeleeAIController::MoveToNextPatrolPoint()
 	if (!ControlledEnemy) return;
 
 	const TArray<AActor*>& PatrolPoints = ControlledEnemy->GetPatrolPoints();
-	if (PatrolPoints.Num() == 0) return;
+	const int32 NumPoints = PatrolPoints.Num();
+	if (NumPoints == 0) return;
 
+	// Säkerställ att index är inom intervallet
+	if (CurrentPatrolIndex < 0 || CurrentPatrolIndex >= NumPoints)
+	{
+		CurrentPatrolIndex = 0;
+	}
+
+	APawn* MyPawn = GetPawn();
+	if (!MyPawn) return;
+	
 	// Sätt den nuvarande target positionen att gå mott
 	AActor* TargetPoint = PatrolPoints[CurrentPatrolIndex];
 	if (!TargetPoint) return;
 	
-	const float Distance = FVector::Dist(GetPawn()->GetActorLocation(), TargetPoint->GetActorLocation());
+	const float Distance = FVector::Dist(MyPawn->GetActorLocation(), TargetPoint->GetActorLocation());
 	if (Distance < 300.f) 
 	{
 		// Gå vidare till nästa punkt i stället för att fastna
 		CurrentPatrolIndex = (CurrentPatrolIndex + 1) % PatrolPoints.Num();
 		TargetPoint = PatrolPoints[CurrentPatrolIndex];
+		if (!TargetPoint) return;
 	}
 	
 	//UE_LOG(LogTemp, Warning, TEXT("PatrolPoints num: %d, index: %d"), ControlledEnemy->GetPatrolPoints().Num(), CurrentPatrolIndex);
@@ -265,4 +284,35 @@ void AMeleeAIController::EndSearch()
 	// Gå tillbaka till patrull
 	CurrentState = EEnemyState::Patrolling;
 	MoveToNextPatrolPoint();
+}
+
+
+void AMeleeAIController::OnHeardSound(FVector SoundLocation)
+{
+	if (!ControlledEnemy) return;
+
+	// Bara reagera om fienden inte redan jagar spelaren
+	if (CurrentState == EEnemyState::Chasing) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("AI heard a sound and is investigating"));
+
+	StopMovement();
+
+	CurrentState = EEnemyState::Searching;
+	LastKnownPlayerLocation = SoundLocation;
+
+	MoveToLocation(SoundLocation);
+}
+
+void AMeleeAIController::OnUnPossess()
+{
+	Super::OnUnPossess();
+
+	// Rensa timers 
+	GetWorldTimerManager().ClearTimer(StartPatrolTimerHandle);
+	GetWorldTimerManager().ClearTimer(LoseSightTimerHandle);
+	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
+	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
+
+	ControlledEnemy = nullptr;
 }

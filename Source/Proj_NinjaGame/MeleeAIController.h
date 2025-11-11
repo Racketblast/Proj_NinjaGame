@@ -21,6 +21,9 @@ class PROJ_NINJAGAME_API AMeleeAIController : public AAIController
 
 public:
 	AMeleeAIController();
+
+	// Kallas när fienden hör ett ljud
+	void OnHeardSound(FVector SoundLocation);
 	
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
@@ -40,6 +43,8 @@ protected:
 	
 	void StartChasing();
 	void StopChasing();
+
+	virtual void OnUnPossess() override;
 
 private:
 	FTimerHandle StartPatrolTimerHandle;
