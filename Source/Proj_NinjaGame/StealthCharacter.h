@@ -187,6 +187,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
 	float SprintNoiseMultiplier = 4.0f;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bIsSprinting = false;
 
 	void StartSprint();

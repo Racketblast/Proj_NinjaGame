@@ -201,15 +201,18 @@ void AStealthCharacter::EquipKunai()
 
 void AStealthCharacter::AimStart()
 {
-	if (HeldThrowableWeapon)
+	if (!bIsSprinting)
 	{
-		bIsAiming = true;
-	
-		if (MarkerClass && !SpawnedMarker)
+		if (HeldThrowableWeapon)
 		{
-			FVector SpawnLoc = GetActorLocation();
-			FRotator SpawnRot = FRotator::ZeroRotator;
-			SpawnedMarker = GetWorld()->SpawnActor<AActor>(MarkerClass, SpawnLoc, SpawnRot);
+			bIsAiming = true;
+	
+			if (MarkerClass && !SpawnedMarker)
+			{
+				FVector SpawnLoc = GetActorLocation();
+				FRotator SpawnRot = FRotator::ZeroRotator;
+				SpawnedMarker = GetWorld()->SpawnActor<AActor>(MarkerClass, SpawnLoc, SpawnRot);
+			}
 		}
 	}
 }
@@ -483,6 +486,8 @@ void AStealthCharacter::StartSprint()
 {
 	if (!bIsSneaking) // för att inte kunna springa när man är i Crouch läge 
 	{
+		AimEnd();
+		
 		bIsSprinting = true;
 		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 		//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
