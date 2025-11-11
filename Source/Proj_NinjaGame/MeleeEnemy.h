@@ -113,6 +113,22 @@ public:
 	
 	virtual void ApplyDamageTo(AActor* Target);
 
+
+	/* Hearing system */
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI|Perception")
+	float HearingRange = 800.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI|Perception")
+	float HearingMemoryTime = 5.f;
+	
+	FVector LastHeardSoundLocation;
+	
+	bool bHeardSoundRecently = false;
+
+	// Anropas när ett ljud hörs
+	void HearSoundAtLocation(FVector SoundLocation);
+
 private:
 	FVector LastSeenPlayerLocation;
 

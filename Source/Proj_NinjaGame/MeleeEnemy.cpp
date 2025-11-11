@@ -291,3 +291,28 @@ void AMeleeEnemy::ApplyDamageTo(AActor* Target)
 	UGameplayStatics::ApplyDamage(Target, AttackDamage, GetController(), this, nullptr);
 }
 
+
+
+void AMeleeEnemy::HearSoundAtLocation(FVector SoundLocation)
+{
+	// Kontrollera avstånd
+	const float Distance = FVector::Dist(GetActorLocation(), SoundLocation);
+	if (Distance <= HearingRange)
+	{
+		bHeardSoundRecently = true;
+		LastHeardSoundLocation = SoundLocation;
+
+		//UE_LOG(LogTemp, Warning, TEXT("Enemy heard sound at %s"), *SoundLocation.ToString());
+
+		// Starta timer för att glömma ljudet efter ett tag
+		GetWorldTimerManager().SetTimerForNextTick([this]()
+		{
+			FTimerHandle ForgetSoundHandle;
+			GetWorldTimerManager().SetTimer(ForgetSoundHandle, [this]()
+			{
+				bHeardSoundRecently = false;
+			}, HearingMemoryTime, false);
+		});
+	}
+}
+
