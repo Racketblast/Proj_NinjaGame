@@ -7,6 +7,8 @@
 #include "Logging/LogMacros.h"
 #include "StealthCharacter.generated.h"
 
+class AKunaiWeapon;
+class AThrowableWeapon;
 class UInputComponent;
 class USkeletalMeshComponent;
 class UCameraComponent;
@@ -48,8 +50,16 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* UseAction;
-	
 
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* AttackAction;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* KunaiAction;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* AimAction;
+	
 	/** Called from Input Actions for movement input */
 	void MoveInput(const FInputActionValue& Value);
 
@@ -58,11 +68,11 @@ protected:
 
 	/** Handles aim inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoAim(float Yaw, float Pitch);
+	virtual void Look(float Yaw, float Pitch);
 
 	/** Handles move inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoMove(float Right, float Forward);
+	virtual void Move(float Right, float Forward);
 
 	/** Handles jump start inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
@@ -71,6 +81,18 @@ protected:
 	/** Handles jump end inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void Attack();
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void EquipKunai();
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void AimStart();
+	
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void AimEnd();
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -83,7 +105,9 @@ protected:
 
 	void Die();
 
+	UFUNCTION(BlueprintCallable, Category="Input")
 	void Use();
+	
 	void CheckforUse();
 	
 	
@@ -92,15 +116,32 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	float MaxHealth = 3.f;
 
+	//Use Variables
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	int32 UseDistance = 300;
-	
 	UPROPERTY(BlueprintReadWrite)
 	bool bShowUseWidget = false;
-	
 	UPROPERTY(BlueprintReadWrite)
 	AActor* LastUseTarget;
+
+	//Weapon variables
+	UPROPERTY(BlueprintReadWrite)
+	bool bIsAiming;
+public:
+	UPROPERTY(BlueprintReadWrite)
+	AThrowableWeapon* HeldThrowableWeapon = nullptr;
 	
+	UPROPERTY(BlueprintReadWrite)
+	TSubclassOf<AThrowableWeapon> LastHeldWeapon;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Stats")
+	int AmountOfKunai = 3;
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<AKunaiWeapon> KunaiWeapon;
+	
+	//Melee maybe
+	/*
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
 	int32 MeleeDistance = 150;
 
@@ -108,7 +149,7 @@ protected:
 	float MeleeDamage = 40;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
-	float MeleeHitsPerSecond = 0.8;
+	float MeleeHitsPerSecond = 0.8;*/
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

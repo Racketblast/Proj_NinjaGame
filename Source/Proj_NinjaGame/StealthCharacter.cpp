@@ -9,10 +9,12 @@
 #include "Kismet/GameplayStatics.h"
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
+#include "KunaiWeapon.h"
 #include "PlayerUseInterface.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Proj_NinjaGame.h"
 #include "StealthGameInstance.h"
+#include "ThrowableWeapon.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -58,7 +60,7 @@ void AStealthCharacter::MoveInput(const FInputActionValue& Value)
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	// pass the axis values to the move input
-	DoMove(MovementVector.X, MovementVector.Y);
+	Move(MovementVector.X, MovementVector.Y);
 }
 
 void AStealthCharacter::LookInput(const FInputActionValue& Value)
@@ -67,10 +69,10 @@ void AStealthCharacter::LookInput(const FInputActionValue& Value)
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
 	// pass the axis values to the aim input
-	DoAim(LookAxisVector.X, LookAxisVector.Y);
+	Look(LookAxisVector.X, LookAxisVector.Y);
 }
 
-void AStealthCharacter::DoAim(float Yaw, float Pitch)
+void AStealthCharacter::Look(float Yaw, float Pitch)
 {
 	if (GetController())
 	{
@@ -86,7 +88,7 @@ void AStealthCharacter::DoAim(float Yaw, float Pitch)
 	}
 }
 
-void AStealthCharacter::DoMove(float Right, float Forward)
+void AStealthCharacter::Move(float Right, float Forward)
 {
 	if (GetController())
 	{
@@ -106,6 +108,67 @@ void AStealthCharacter::DoJumpEnd()
 {
 	// pass StopJumping to the character
 	StopJumping();
+}
+
+void AStealthCharacter::Attack()
+{
+	if (bIsAiming)
+	{
+		UE_LOG(LogTemp, Display, TEXT("Aiming"));
+		//ThrowingWeapon
+		if (HeldThrowableWeapon)
+		{
+			HeldThrowableWeapon->Throw(this);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Display, TEXT("No Aiming"));
+		//MeleeWeapon
+	}
+}
+
+void AStealthCharacter::EquipKunai()
+{
+	if (AmountOfKunai > 0)
+	{
+		if (AKunaiWeapon* Kunai = Cast<AKunaiWeapon>(HeldThrowableWeapon))
+		{
+			if (LastHeldWeapon != nullptr)
+			{
+				if (HeldThrowableWeapon)
+				{
+					HeldThrowableWeapon->Destroy();
+				}
+				UE_LOG(LogTemp, Display, TEXT("Unequipping Kunai"));
+				HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(LastHeldWeapon);
+				HeldThrowableWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
+			}
+		}
+		else
+		{
+			if (KunaiWeapon != nullptr)
+			{
+				if (HeldThrowableWeapon)
+				{
+					HeldThrowableWeapon->Destroy();
+				}
+				UE_LOG(LogTemp, Display, TEXT("Equipping Kunai"));
+				HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(KunaiWeapon);
+				HeldThrowableWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
+			}
+		}
+	}
+}
+
+void AStealthCharacter::AimStart()
+{
+	bIsAiming = true;
+}
+
+void AStealthCharacter::AimEnd()
+{
+	bIsAiming = false;
 }
 
 // Called when the game starts or when spawned
@@ -142,6 +205,13 @@ void AStealthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 		//Use
 		EnhancedInputComponent->BindAction(UseAction, ETriggerEvent::Triggered, this, &AStealthCharacter::Use);
+
+		//Attacks
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AStealthCharacter::Attack);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &AStealthCharacter::AimStart);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AStealthCharacter::AimEnd);
+		
+		EnhancedInputComponent->BindAction(KunaiAction, ETriggerEvent::Triggered, this, &AStealthCharacter::EquipKunai);
 	}
 	else
 	{
