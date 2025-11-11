@@ -90,10 +90,10 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void AimStart();
-	
+public:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void AimEnd();
-	
+protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -127,7 +127,13 @@ protected:
 	//Weapon variables
 	UPROPERTY(BlueprintReadWrite)
 	bool bIsAiming;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	USoundBase* ThrowSound;
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float CameraForwardMultiplier = 100.f;
+	
 	UPROPERTY(BlueprintReadWrite)
 	AThrowableWeapon* HeldThrowableWeapon = nullptr;
 	
@@ -139,6 +145,15 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<AKunaiWeapon> KunaiWeapon;
+
+	//Projectile marker
+	UPROPERTY()
+	AActor* SpawnedMarker;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+	TSubclassOf<AActor> MarkerClass;
+	
+    void UpdateProjectilePrediction(float DeltaSeconds);
 	
 	//Melee maybe
 	/*

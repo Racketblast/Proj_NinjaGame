@@ -19,20 +19,22 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void Throw(AStealthCharacter* Player);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ThrowDamage = 5.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ThrowSpeed = 1000.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bBreakOnImpact = true;
+	
+	UPROPERTY(EditDefaultsOnly)
+	UStaticMeshComponent* StaticMeshComponent;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class AThrowableObject> ThrownWeaponObject;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float ThrowDamage = 5.f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bBreakOnImpact = true;
-	
-	UPROPERTY(EditDefaultsOnly)
-	UStaticMeshComponent* StaticMeshComponent;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

@@ -21,6 +21,8 @@ public:
 	virtual void Use_Implementation(class AStealthCharacter* Player) override;
 	virtual void ShowInteractable_Implementation(bool bShow) override;
 
+	UPROPERTY(EditDefaultsOnly)
+	UStaticMeshComponent* StaticMeshComponent;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -32,7 +34,4 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category="Interact")
 	FString InteractText;
-
-	UPROPERTY(EditDefaultsOnly)
-	UStaticMeshComponent* StaticMeshComponent;
 };

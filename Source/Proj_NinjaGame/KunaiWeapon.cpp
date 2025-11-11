@@ -5,6 +5,8 @@
 #include "StealthCharacter.h"
 #include "ThrowableObject.h"
 #include "Camera/CameraComponent.h"
+#include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 AKunaiWeapon::AKunaiWeapon()
 {
@@ -12,13 +14,15 @@ AKunaiWeapon::AKunaiWeapon()
 
 void AKunaiWeapon::Throw(AStealthCharacter* Player)
 {
-	FVector SpawnLocation = Player->FirstPersonCameraComponent->GetComponentLocation() + Player->FirstPersonCameraComponent->GetForwardVector() * 100.f;
+	FVector SpawnLocation = Player->FirstPersonCameraComponent->GetComponentLocation() + Player->FirstPersonCameraComponent->GetForwardVector() * Player->CameraForwardMultiplier;
 	FRotator SpawnRotation =  Player->FirstPersonCameraComponent->GetComponentRotation();
 	if (ThrownWeaponObject)
 	{
 		AThrowableObject* ThrownObject = GetWorld()->SpawnActor<AThrowableObject>(ThrownWeaponObject, SpawnLocation, SpawnRotation);
 		ThrownObject->Thrown = true;
 		ThrownObject->bBreaksOnImpact = bBreakOnImpact;
+		ThrownObject->ThrowVelocity = Player->FirstPersonCameraComponent->GetForwardVector() * ThrowSpeed + Player->GetVelocity();
+		ThrownObject->StaticMeshComponent->SetPhysicsLinearVelocity(ThrownObject->ThrowVelocity, false);
 	}
 
 	Player->AmountOfKunai--;
@@ -34,6 +38,7 @@ void AKunaiWeapon::Throw(AStealthCharacter* Player)
 		else
 		{
 			Player->HeldThrowableWeapon = nullptr;
+			Player->AimEnd();
 			Destroy();
 		}
 	}

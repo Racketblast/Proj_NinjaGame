@@ -13,11 +13,10 @@
 
 AThrowableObject::AThrowableObject()
 {
-	ProjectileComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComponent"));
-
 	StaticMeshComponent->OnComponentHit.AddDynamic(this, &AThrowableObject::ThrowableOnComponentHit);
 	StaticMeshComponent->SetGenerateOverlapEvents(false);
 	StaticMeshComponent->SetNotifyRigidBodyCollision(true);
+	StaticMeshComponent->SetSimulatePhysics(true);
 }
 
 void AThrowableObject::Use_Implementation(class AStealthCharacter* Player)
@@ -71,10 +70,11 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 {
 	if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(OtherActor))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Throwable OnComponentHit %s"), *GetVelocity().GetSafeNormal().ToString());
 		UGameplayStatics::ApplyPointDamage(
 						Enemy,
 						DealtDamage,
-						ProjectileComponent->Velocity.GetSafeNormal(),
+						GetVelocity().GetSafeNormal(),
 						Hit,
 						UGameplayStatics::GetPlayerController(this,0),
 						this,

@@ -19,7 +19,7 @@
 #include "Proj_NinjaGame.h"
 #include "StealthGameInstance.h"
 #include "ThrowableWeapon.h"
-#include "Kismet/GameplayStatics.h"
+
 
 // Sets default values
 AStealthCharacter::AStealthCharacter()
@@ -148,6 +148,10 @@ void AStealthCharacter::Attack()
 		//ThrowingWeapon
 		if (HeldThrowableWeapon)
 		{
+			if (ThrowSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), ThrowSound, GetActorLocation());
+			}
 			HeldThrowableWeapon->Throw(this);
 		}
 	}
@@ -160,32 +164,35 @@ void AStealthCharacter::Attack()
 
 void AStealthCharacter::EquipKunai()
 {
-	if (AmountOfKunai > 0)
+	if (!bIsAiming)
 	{
-		if (AKunaiWeapon* Kunai = Cast<AKunaiWeapon>(HeldThrowableWeapon))
+		if (AmountOfKunai > 0)
 		{
-			if (LastHeldWeapon != nullptr)
+			if (AKunaiWeapon* Kunai = Cast<AKunaiWeapon>(HeldThrowableWeapon))
 			{
-				if (HeldThrowableWeapon)
+				if (LastHeldWeapon != nullptr)
 				{
-					HeldThrowableWeapon->Destroy();
+					if (HeldThrowableWeapon)
+					{
+						HeldThrowableWeapon->Destroy();
+					}
+					UE_LOG(LogTemp, Display, TEXT("Unequipping Kunai"));
+					HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(LastHeldWeapon);
+					HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
 				}
-				UE_LOG(LogTemp, Display, TEXT("Unequipping Kunai"));
-				HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(LastHeldWeapon);
-				HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
 			}
-		}
-		else
-		{
-			if (KunaiWeapon != nullptr)
+			else
 			{
-				if (HeldThrowableWeapon)
+				if (KunaiWeapon != nullptr)
 				{
-					HeldThrowableWeapon->Destroy();
+					if (HeldThrowableWeapon)
+					{
+						HeldThrowableWeapon->Destroy();
+					}
+					UE_LOG(LogTemp, Display, TEXT("Equipping Kunai"));
+					HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(KunaiWeapon);
+					HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
 				}
-				UE_LOG(LogTemp, Display, TEXT("Equipping Kunai"));
-				HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(KunaiWeapon);
-				HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
 			}
 		}
 	}
@@ -193,12 +200,62 @@ void AStealthCharacter::EquipKunai()
 
 void AStealthCharacter::AimStart()
 {
-	bIsAiming = true;
+	if (HeldThrowableWeapon)
+	{
+		bIsAiming = true;
+	
+		if (MarkerClass && !SpawnedMarker)
+		{
+			FVector SpawnLoc = GetActorLocation();
+			FRotator SpawnRot = FRotator::ZeroRotator;
+			SpawnedMarker = GetWorld()->SpawnActor<AActor>(MarkerClass, SpawnLoc, SpawnRot);
+		}
+	}
 }
 
 void AStealthCharacter::AimEnd()
 {
 	bIsAiming = false;
+	
+	// Clean up
+	if (SpawnedMarker)
+	{
+		SpawnedMarker->Destroy();
+		SpawnedMarker = nullptr;
+	}
+}
+
+void AStealthCharacter::UpdateProjectilePrediction(float DeltaSeconds)
+{
+	if (!FirstPersonCameraComponent)
+        return;
+
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(this);
+	
+	
+    FPredictProjectilePathParams PredictParams;
+    PredictParams.StartLocation = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector() * CameraForwardMultiplier;
+    PredictParams.LaunchVelocity = FirstPersonCameraComponent->GetForwardVector() * HeldThrowableWeapon->ThrowSpeed + GetVelocity();
+	if (UStaticMesh* WeaponMesh = HeldThrowableWeapon->StaticMeshComponent->GetStaticMesh())
+	{
+		FVector BoundsExtent = WeaponMesh->GetBounds().BoxExtent;
+		PredictParams.ProjectileRadius = BoundsExtent.GetAbsMax();
+	}
+	else
+	{
+		PredictParams.ProjectileRadius = 5.f;
+	}
+    PredictParams.MaxSimTime = 1.f; // Max simulated tim of travel per second
+    PredictParams.bTraceWithCollision = true; //If hit something
+    PredictParams.SimFrequency = 15.f; //How many checks per second
+    PredictParams.TraceChannel = ECC_Visibility;
+    PredictParams.ActorsToIgnore.Add(this);
+
+    FPredictProjectilePathResult PredictResult;
+    UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult);
+
+	SpawnedMarker->SetActorLocation(PredictResult.HitResult.Location);
 }
 
 // Called when the game starts or when spawned
@@ -214,6 +271,11 @@ void AStealthCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	CheckForUse();
+	
+	if (bIsAiming && HeldThrowableWeapon)
+	{
+		UpdateProjectilePrediction(DeltaTime);
+	}
 }
 
 // Called to bind functionality to input

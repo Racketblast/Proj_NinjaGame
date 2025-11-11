@@ -19,7 +19,7 @@ AThrowableWeapon::AThrowableWeapon()
 
 void AThrowableWeapon::Throw(AStealthCharacter* Player)
 {
-	FVector SpawnLocation = Player->FirstPersonCameraComponent->GetComponentLocation() + Player->FirstPersonCameraComponent->GetForwardVector() * 100.f;
+	FVector SpawnLocation = Player->FirstPersonCameraComponent->GetComponentLocation() + Player->FirstPersonCameraComponent->GetForwardVector() * Player->CameraForwardMultiplier;
 	FRotator SpawnRotation =  Player->FirstPersonCameraComponent->GetComponentRotation();
 	if (ThrownWeaponObject)
 	{
@@ -27,10 +27,13 @@ void AThrowableWeapon::Throw(AStealthCharacter* Player)
 		ThrownObject->Thrown = true;
 		ThrownObject->bBreaksOnImpact = bBreakOnImpact;
 		ThrownObject->DealtDamage = ThrowDamage;
+		ThrownObject->ThrowVelocity = Player->FirstPersonCameraComponent->GetForwardVector() * ThrowSpeed + Player->GetVelocity();
+		ThrownObject->StaticMeshComponent->SetPhysicsLinearVelocity(ThrownObject->ThrowVelocity, false);
 	}
 	
 	Player->HeldThrowableWeapon = nullptr;
 	Player->LastHeldWeapon = nullptr;
+	Player->AimEnd();
 	Destroy();
 }
 

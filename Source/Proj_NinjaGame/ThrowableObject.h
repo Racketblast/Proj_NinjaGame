@@ -26,12 +26,12 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	float DealtDamage = 5.f;
 	UPROPERTY(BlueprintReadWrite)
+	FVector ThrowVelocity = {0,0,0};
+	UPROPERTY(BlueprintReadWrite)
 	bool bBreaksOnImpact = true;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<AThrowableWeapon> ThrowableWeapon;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	class UProjectileMovementComponent* ProjectileComponent;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
