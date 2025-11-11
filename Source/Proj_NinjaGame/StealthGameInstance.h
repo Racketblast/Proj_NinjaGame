@@ -9,6 +9,18 @@
 /**
  * 
  */
+
+
+UENUM(BlueprintType)
+enum class EMission : uint8
+{
+	None				UMETA(DisplayName = "None"),
+	FirstMission		UMETA(DisplayName = "FirstMission"),
+	SecondMission		UMETA(DisplayName = "SecondMission"),
+	ThirdMission		UMETA(DisplayName = "ThirdMission"),
+	FourthMission		UMETA(DisplayName = "FourthMission"),
+};
+
 UCLASS()
 class PROJ_NINJAGAME_API UStealthGameInstance : public UGameInstance
 {
@@ -21,7 +33,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int CurrentGameFlag;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TArray<int> LevelsUnlocked;
+	TArray<EMission> MissionsCleared;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FString CurrentInteractText;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FName StartLocation;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	EMission CurrentMission;
 	
 	//Sound
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Sound")

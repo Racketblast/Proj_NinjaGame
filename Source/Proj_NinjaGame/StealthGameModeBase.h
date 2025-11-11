@@ -16,4 +16,8 @@ class PROJ_NINJAGAME_API AStealthGameModeBase : public AGameModeBase
 	
 public:
 	AStealthGameModeBase();
+protected:
+	virtual void BeginPlay() override;
+
+	void SetPlayerStart();
 };

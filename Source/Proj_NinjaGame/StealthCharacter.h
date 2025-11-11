@@ -7,6 +7,8 @@
 #include "Logging/LogMacros.h"
 #include "StealthCharacter.generated.h"
 
+class AKunaiWeapon;
+class AThrowableWeapon;
 class UInputComponent;
 class USkeletalMeshComponent;
 class UCameraComponent;
@@ -14,6 +16,8 @@ class UInputAction;
 struct FInputActionValue;
 
 //DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
+
+#define TRACE_CHANNEL_INTERACT ECC_GameTraceChannel3
 
 UCLASS()
 class PROJ_NINJAGAME_API AStealthCharacter : public ACharacter
@@ -42,9 +46,20 @@ protected:
 
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, Category ="Input")
-	class UInputAction* LookAction;
-	
+	UInputAction* LookAction;
 
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* UseAction;
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* AttackAction;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* KunaiAction;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* AimAction;
+	
 	/** Called from Input Actions for movement input */
 	void MoveInput(const FInputActionValue& Value);
 
@@ -53,11 +68,11 @@ protected:
 
 	/** Handles aim inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoAim(float Yaw, float Pitch);
+	virtual void Look(float Yaw, float Pitch);
 
 	/** Handles move inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoMove(float Right, float Forward);
+	virtual void Move(float Right, float Forward);
 
 	/** Handles jump start inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
@@ -66,6 +81,18 @@ protected:
 	/** Handles jump end inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void Attack();
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void EquipKunai();
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void AimStart();
+	
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void AimEnd();
 	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -78,8 +105,114 @@ protected:
 
 	void Die();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void Use();
+	
+	void CheckForUse();
+	
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	float Health = 3.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	float MaxHealth = 3.f;
+
+	//Use Variables
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	int32 UseDistance = 300;
+	UPROPERTY(BlueprintReadWrite)
+	bool bShowUseWidget = false;
+	UPROPERTY(BlueprintReadWrite)
+	AActor* LastUseTarget;
+
+	//Weapon variables
+	UPROPERTY(BlueprintReadWrite)
+	bool bIsAiming;
+public:
+	UPROPERTY(BlueprintReadWrite)
+	AThrowableWeapon* HeldThrowableWeapon = nullptr;
+	
+	UPROPERTY(BlueprintReadWrite)
+	TSubclassOf<AThrowableWeapon> LastHeldWeapon;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Stats")
+	int AmountOfKunai = 3;
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<AKunaiWeapon> KunaiWeapon;
+	
+	//Melee maybe
+	/*
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
+	int32 MeleeDistance = 150;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
+	float MeleeDamage = 40;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
+	float MeleeHitsPerSecond = 0.8;*/
+	
+	// Sneak 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stealth", meta = (AllowPrivateAccess = "true"))
+	bool bIsSneaking = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* StealthCrouch;
+
+	void ToggleSneak();
+
+	UPROPERTY(EditAnywhere, Category = "Camera")
+	FVector CrouchCameraOffset = FVector(-40.f, 0.f, -30.f);
+
+	FVector TargetCameraBaseLocation;
+
+	// Sprint  
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
+	float SprintSpeed = 900.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
+	float SprintNoiseMultiplier = 4.0f;
+
+	bool bIsSprinting = false;
+
+	void StartSprint();
+
+	void StopSprint();
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
+	UInputAction* SprintAction;
+
+	// Sprint FOV
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float SprintFOV = 80.0f; 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float NormalFOV = 70.0f; 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float FOVInterpSpeed = 5.0f; // hur snabbt kameran övergår mellan FOV-värden
+
+	// Sprint Kamera
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float CameraBobAmplitude = 1.1f; // hur mycket kameran gungar/skakar
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float CameraBobSpeed = 8.0f; // hur snabbt gungningen sker
+
+	float BobTimer = 0.0f;
+	FVector DefaultCameraRelativeLocation;
+
+
+	// speed 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float NormalWalkSpeed = 600.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float SneakWalkSpeed = 450.0f;
+
+	// för SoundUtility
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stealth")
+	float SneakNoiseMultiplier = 0.1f;
+	
 
 public:	
 	// Called every frame
@@ -90,5 +223,9 @@ public:
 
 	/** Returns first person camera component **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
-
+	
+	UPROPERTY(BlueprintReadWrite)
+	bool bHasCompletedTheMission = false;
+	UPROPERTY(BlueprintReadWrite)
+	bool bIsInCombat = false;
 };
