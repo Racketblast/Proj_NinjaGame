@@ -160,6 +160,11 @@ protected:
 
 	void ToggleSneak();
 
+	UPROPERTY(EditAnywhere, Category = "Camera")
+	FVector CrouchCameraOffset = FVector(-40.f, 0.f, -30.f);
+
+	FVector TargetCameraBaseLocation;
+
 	// Sprint  
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
 	float SprintSpeed = 900.0f;
@@ -176,16 +181,38 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
 	UInputAction* SprintAction;
 
+	// Sprint FOV
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float SprintFOV = 80.0f; 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float NormalFOV = 70.0f; 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float FOVInterpSpeed = 5.0f; // hur snabbt kameran övergår mellan FOV-värden
+
+	// Sprint Kamera
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float CameraBobAmplitude = 1.1f; // hur mycket kameran gungar/skakar
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float CameraBobSpeed = 8.0f; // hur snabbt gungningen sker
+
+	float BobTimer = 0.0f;
+	FVector DefaultCameraRelativeLocation;
+
+
 	// speed 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float NormalWalkSpeed = 600.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float SneakWalkSpeed = 250.0f;
+	float SneakWalkSpeed = 450.0f;
 
 	// för SoundUtility
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stealth")
 	float SneakNoiseMultiplier = 0.1f;
+	
 
 public:	
 	// Called every frame
