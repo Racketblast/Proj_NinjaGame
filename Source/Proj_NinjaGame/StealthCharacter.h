@@ -153,7 +153,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 	TSubclassOf<AActor> MarkerClass;
 	
-    void UpdateProjectilePrediction(float DeltaSeconds);
+    void UpdateProjectilePrediction();
 	
 	//Melee maybe
 	/*
