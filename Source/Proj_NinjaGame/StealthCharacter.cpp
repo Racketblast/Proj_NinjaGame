@@ -172,7 +172,7 @@ void AStealthCharacter::EquipKunai()
 				}
 				UE_LOG(LogTemp, Display, TEXT("Unequipping Kunai"));
 				HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(LastHeldWeapon);
-				HeldThrowableWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
+				HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
 			}
 		}
 		else
@@ -185,7 +185,7 @@ void AStealthCharacter::EquipKunai()
 				}
 				UE_LOG(LogTemp, Display, TEXT("Equipping Kunai"));
 				HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(KunaiWeapon);
-				HeldThrowableWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
+				HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
 			}
 		}
 	}
@@ -213,7 +213,7 @@ void AStealthCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	CheckforUse();
+	CheckForUse();
 }
 
 // Called to bind functionality to input
@@ -273,7 +273,7 @@ void AStealthCharacter::Use()
 	}
 }
 
-void AStealthCharacter::CheckforUse()
+void AStealthCharacter::CheckForUse()
 {
 	FVector Start = FirstPersonCameraComponent->GetComponentLocation();
 	FVector End = Start + FirstPersonCameraComponent->GetForwardVector() * UseDistance;

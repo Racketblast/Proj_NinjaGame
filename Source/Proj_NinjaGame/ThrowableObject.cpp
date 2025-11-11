@@ -28,11 +28,6 @@ void AThrowableObject::Use_Implementation(class AStealthCharacter* Player)
 	
 	if (Thrown) return;
 	
-	if (InteractSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), InteractSound, GetActorLocation());
-	}
-	
 	HandlePickup(Player);
 }
 
@@ -98,13 +93,20 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 
 void AThrowableObject::HandlePickup(AStealthCharacter* Player)
 {
-	if (!Player->HeldThrowableWeapon)
+	if (!Player->LastHeldWeapon)
 	{
+		if (InteractSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), InteractSound, GetActorLocation());
+		}
 		if (ThrowableWeapon)
 		{
-			Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
+			if (!Player->HeldThrowableWeapon)
+			{
+				Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
+				Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
+			}
 			Player->LastHeldWeapon = ThrowableWeapon;
-			Player->HeldThrowableWeapon->AttachToComponent(Player->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
 		}
 		
 		Destroy();

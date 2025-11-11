@@ -108,7 +108,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void Use();
 	
-	void CheckforUse();
+	void CheckForUse();
 	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")

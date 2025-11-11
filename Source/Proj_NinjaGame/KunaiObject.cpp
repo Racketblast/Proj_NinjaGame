@@ -5,6 +5,7 @@
 
 #include "StealthCharacter.h"
 #include "ThrowableWeapon.h"
+#include "Kismet/GameplayStatics.h"
 
 AKunaiObject::AKunaiObject()
 {
@@ -12,12 +13,17 @@ AKunaiObject::AKunaiObject()
 
 void AKunaiObject::HandlePickup(class AStealthCharacter* Player)
 {
+	if (InteractSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), InteractSound, GetActorLocation());
+	}
+	
 	if (!Player->HeldThrowableWeapon)
 	{
 		if (ThrowableWeapon)
 		{
 			Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
-			Player->HeldThrowableWeapon->AttachToComponent(Player->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
+			Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
 		}
 	}
 

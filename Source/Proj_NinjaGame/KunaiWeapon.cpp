@@ -28,7 +28,7 @@ void AKunaiWeapon::Throw(AStealthCharacter* Player)
 		if (Player->LastHeldWeapon != nullptr)
 		{
 			Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(Player->LastHeldWeapon);
-			Player->HeldThrowableWeapon->AttachToComponent(Player->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
+			Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
 			Destroy();
 		}
 		else
