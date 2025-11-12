@@ -7,6 +7,7 @@
 #include "StealthCharacter.h"
 #include "StealthGameInstance.h"
 #include "ThrowableWeapon.h"
+#include "SoundUtility.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/DamageType.h"
@@ -89,6 +90,11 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 			Destroy();
 		}
 	}
+
+	//Sound för fienden
+	float NoiseLevel = 4.0f;
+
+	USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel);
 }
 
 void AThrowableObject::HandlePickup(AStealthCharacter* Player)
