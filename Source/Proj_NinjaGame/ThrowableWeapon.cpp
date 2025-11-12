@@ -27,7 +27,7 @@ void AThrowableWeapon::Throw(AStealthCharacter* Player)
 		ThrownObject->Thrown = true;
 		ThrownObject->bBreaksOnImpact = bBreakOnImpact;
 		ThrownObject->DealtDamage = ThrowDamage;
-		ThrownObject->ThrowVelocity = Player->FirstPersonCameraComponent->GetForwardVector() * ThrowSpeed + Player->GetVelocity();
+		ThrownObject->ThrowVelocity = Player->FirstPersonCameraComponent->GetForwardVector() * ThrowSpeed;
 		ThrownObject->StaticMeshComponent->SetPhysicsLinearVelocity(ThrownObject->ThrowVelocity, false);
 	}
 	

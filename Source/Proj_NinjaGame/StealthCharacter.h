@@ -228,8 +228,16 @@ protected:
 	// för SoundUtility
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stealth")
 	float SneakNoiseMultiplier = 0.1f;
-	
 
+	//Climbing
+	UPROPERTY(BlueprintReadWrite, Category = "Climb")
+	bool bIsClimbing = false;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Climb")
+	bool bCanClimb = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	float Stamina = 100.f;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

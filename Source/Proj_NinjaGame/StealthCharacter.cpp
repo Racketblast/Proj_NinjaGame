@@ -99,8 +99,16 @@ void AStealthCharacter::Move(float Right, float Forward)
 	if (GetController())
 	{
 		// pass the move inputs
-		AddMovementInput(GetActorRightVector(), Right);
-		AddMovementInput(GetActorForwardVector(), Forward);
+		if (bIsClimbing)
+		{
+			AddMovementInput(GetActorRightVector(), Right);
+			AddMovementInput(GetActorUpVector(), Forward);
+		}
+		else
+		{
+			AddMovementInput(GetActorRightVector(), Right);
+			AddMovementInput(GetActorForwardVector(), Forward);
+		}
 		
 		float NoiseLevel = 1.0f;
 		
@@ -127,7 +135,7 @@ void AStealthCharacter::DoJumpEnd()
 {
 	// pass StopJumping to the character
 	StopJumping();
-
+	
 	float NoiseLevel;
 		
 	if (bIsSneaking)
@@ -281,9 +289,33 @@ void AStealthCharacter::Tick(float DeltaTime)
 
 	CheckForUse();
 	
+	//Gives a reticle for where the throwable object will go
 	if (bIsAiming && HeldThrowableWeapon)
 	{
 		UpdateProjectilePrediction();
+	}
+
+	FVector Start = GetCapsuleComponent()->GetComponentLocation();
+	FVector End = Start + GetCapsuleComponent()->GetForwardVector() * 45;
+	DrawDebugLine(GetWorld(), Start, End, FColor::Cyan, false, 0.0f, 0, 5.0f);
+	if (GetMovementComponent()->IsFalling())
+	{
+
+		FHitResult HitResult;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+		if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Is Climbing"));
+			bIsClimbing = true;
+			GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Is Not Climbing"));
+			bIsClimbing = false;
+			GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+		}
 	}
 
 	if (FirstPersonCameraComponent)
