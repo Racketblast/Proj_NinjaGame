@@ -112,13 +112,16 @@ void AStealthCharacter::Move(float Right, float Forward)
 		
 		float NoiseLevel = 1.0f;
 		
-		if (bIsSneaking)
+		switch (CurrentMovementState)
 		{
-			NoiseLevel = 1.0f * SneakNoiseMultiplier;
-		}
-		else if (bIsSprinting)
-		{
+		case EPlayerMovementState::Crouch:
+			NoiseLevel *= SneakNoiseMultiplier;
+			break;
+		case EPlayerMovementState::Run:
 			NoiseLevel *= SprintNoiseMultiplier;
+			break;
+		default:
+			break;
 		}
 
 		USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel); 
@@ -138,7 +141,7 @@ void AStealthCharacter::DoJumpEnd()
 	
 	float NoiseLevel;
 		
-	if (bIsSneaking)
+	if (CurrentMovementState == EPlayerMovementState::Crouch)
 	{
 		NoiseLevel = 1.0f * SneakNoiseMultiplier;
 	}
@@ -209,7 +212,7 @@ void AStealthCharacter::EquipKunai()
 
 void AStealthCharacter::AimStart()
 {
-	if (!bIsSprinting)
+	if (CurrentMovementState != EPlayerMovementState::Run ) 
 	{
 		if (HeldThrowableWeapon)
 		{
@@ -321,7 +324,7 @@ void AStealthCharacter::Tick(float DeltaTime)
 	if (FirstPersonCameraComponent)
 	{
 		// Ändrar FOV när spelaren springer 
-		float TargetFOV = bIsSprinting ? SprintFOV : NormalFOV;
+		float TargetFOV = (CurrentMovementState == EPlayerMovementState::Run) ? SprintFOV : NormalFOV;
 		
 		float NewFOV = FMath::FInterpTo(
 			FirstPersonCameraComponent->FieldOfView,
@@ -342,7 +345,7 @@ void AStealthCharacter::Tick(float DeltaTime)
 		FVector FinalCameraLocation = SmoothedBaseLocation;
 		
 		// Skakar kameran lite när spelaren springer
-		if (bIsSprinting && GetVelocity().Size() > 100.f)
+		if (CurrentMovementState == EPlayerMovementState::Run && GetVelocity().Size() > 100.f)
 		{
 			BobTimer += DeltaTime * CameraBobSpeed;
 			FinalCameraLocation.Z += FMath::Sin(BobTimer) * CameraBobAmplitude;
@@ -492,46 +495,47 @@ void AStealthCharacter::Die()
 void AStealthCharacter::ToggleSneak()
 {
 	bIsSneaking = !bIsSneaking;
-
-	if (bIsSneaking)
+	
+	if (CurrentMovementState == EPlayerMovementState::Crouch)
 	{
-		// Crouchläge
-		Crouch();
-		GetCharacterMovement()->MaxWalkSpeed = SneakWalkSpeed;
-		//UE_LOG(LogTemp, Warning, TEXT("Player is now sneaking."));
-		TargetCameraBaseLocation = DefaultCameraRelativeLocation + CrouchCameraOffset;
-
+		// Gå tillbaka till gångläge
+		UnCrouch();
+		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
+		TargetCameraBaseLocation = DefaultCameraRelativeLocation;
+		CurrentMovementState = EPlayerMovementState::Walk;
+		//UE_LOG(LogTemp, Warning, TEXT("Player stopped sneaking."));
 	}
 	else
 	{
-		// Normalläge 
-		UnCrouch();
-		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
-		//UE_LOG(LogTemp, Warning, TEXT("Player stopped sneaking."));
-		TargetCameraBaseLocation = DefaultCameraRelativeLocation;
+		// Aktivera crouch-läge
+		Crouch();
+		GetCharacterMovement()->MaxWalkSpeedCrouched = SneakWalkSpeed;
+		GetCharacterMovement()->MaxWalkSpeed = SneakWalkSpeed;
+		TargetCameraBaseLocation = DefaultCameraRelativeLocation + CrouchCameraOffset;
+		CurrentMovementState = EPlayerMovementState::Crouch;
+		//UE_LOG(LogTemp, Warning, TEXT("Player is now sneaking."));
 	}
 }
 
-
-
 void AStealthCharacter::StartSprint()
 {
-	if (!bIsSneaking) // för att inte kunna springa när man är i Crouch läge 
+	if (CurrentMovementState != EPlayerMovementState::Crouch) // för att inte kunna springa när man är i Crouch läge 
 	{
 		AimEnd();
-		
-		bIsSprinting = true;
 		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+		CurrentMovementState = EPlayerMovementState::Run;
 		//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
+		bIsSprinting = true;
 	}
 }
 
 void AStealthCharacter::StopSprint()
 {
-	if (bIsSprinting)
+	if (CurrentMovementState == EPlayerMovementState::Run)
 	{
-		bIsSprinting = false;
 		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
+		CurrentMovementState = EPlayerMovementState::Walk;
 		//UE_LOG(LogTemp, Warning, TEXT("Player stopped sprinting."));
+		bIsSprinting = false;
 	}
 }
