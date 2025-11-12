@@ -28,6 +28,8 @@ void AMeleeAIController::OnPossess(APawn* InPawn)
 
 		//UE_LOG(LogTemp, Warning, TEXT("AMeleeAIController OnPossess"));
 
+		ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
+
 		// Vänta en liten stund innan patrullering startar (Det fungerade inte utan denna delay)
 		GetWorldTimerManager().SetTimer(StartPatrolTimerHandle, this, &AMeleeAIController::MoveToNextPatrolPoint, 0.2f, false);
 	}
@@ -286,6 +288,7 @@ void AMeleeAIController::StartChasing()
 
 	if (ControlledEnemy)
 	{
+		ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
 		ControlledEnemy->bIsChasing = true;
 		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetRunSpeed(); 
 	}
@@ -312,6 +315,7 @@ void AMeleeAIController::OnTargetLost()
 		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
 		LastKnownPlayerLocation = ControlledEnemy->GetLastSeenPlayerLocation();
 		CurrentState = EEnemyState::Searching;
+		ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
 		MoveToLocation(LastKnownPlayerLocation);
 	}
 }
@@ -368,6 +372,7 @@ void AMeleeAIController::EndSearch()
 	if (!ControlledEnemy->bHeardSoundRecently)
 	{
 		CurrentState = EEnemyState::Patrolling;
+		ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
 		MoveToNextPatrolPoint();
 	}
 }
@@ -394,6 +399,7 @@ void AMeleeAIController::OnHeardSound(FVector SoundLocation)
 	StopMovement();
 
 	CurrentState = EEnemyState::Searching;
+	ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
 	//bIsInvestigatingSound = true;
 	LastKnownPlayerLocation = SoundLocation;
 

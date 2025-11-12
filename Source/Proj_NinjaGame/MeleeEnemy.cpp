@@ -25,6 +25,11 @@ AMeleeEnemy::AMeleeEnemy()
 	MeleeHitBox->SetCollisionObjectType(ECC_WorldDynamic);
 	MeleeHitBox->SetCollisionResponseToAllChannels(ECR_Ignore);
 	MeleeHitBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
+
+	StateVFXComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("StateVFX"));
+	StateVFXComponent->SetupAttachment(GetMesh());
+	StateVFXComponent->SetRelativeLocation(FVector(0.f, 0.f, 120.f)); 
 }
 
 
@@ -313,6 +318,42 @@ void AMeleeEnemy::HearSoundAtLocation(FVector SoundLocation)
 				bHeardSoundRecently = false;
 			}, HearingMemoryTime, false);
 		});
+	}
+}
+
+void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
+{
+	if (!StateVFXComponent) return;
+
+	switch (NewState)
+	{
+	case EEnemyState::Patrolling:
+		// Stäng av VFX
+		StateVFXComponent->SetAsset(nullptr);
+		StateVFXComponent->Deactivate();
+		break;
+
+	case EEnemyState::Chasing:
+		if (ChaseVFX)
+		{
+			StateVFXComponent->SetAsset(ChaseVFX);
+			StateVFXComponent->Activate(true);
+		}
+		break;
+
+	case EEnemyState::Searching:
+		if (SearchVFX)
+		{
+			StateVFXComponent->SetAsset(SearchVFX);
+			StateVFXComponent->Activate(true);
+		}
+		break;
+
+	default:
+		// Stäng av VFX
+		StateVFXComponent->SetAsset(nullptr);
+		StateVFXComponent->Deactivate();
+		break;
 	}
 }
 
