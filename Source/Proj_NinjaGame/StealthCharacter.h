@@ -19,6 +19,14 @@ struct FInputActionValue;
 
 #define TRACE_CHANNEL_INTERACT ECC_GameTraceChannel3
 
+UENUM(BlueprintType)
+enum class EPlayerMovementState : uint8
+{
+	Walk    UMETA(DisplayName = "Walk"),
+	Run     UMETA(DisplayName = "Run"),
+	Crouch  UMETA(DisplayName = "Crouch")
+};
+
 UCLASS()
 class PROJ_NINJAGAME_API AStealthCharacter : public ACharacter
 {
@@ -35,6 +43,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
 protected:
+
+	UPROPERTY(BlueprintReadOnly, Category = "Player State")
+	EPlayerMovementState CurrentMovementState = EPlayerMovementState::Walk;
 
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, Category ="Input")
@@ -166,10 +177,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
 	float MeleeHitsPerSecond = 0.8;*/
 	
-	// Sneak 
+	// Sneak
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stealth", meta = (AllowPrivateAccess = "true"))
-	bool bIsSneaking = false;
-
+	bool bIsSneaking = false; // Ta bort detta när inga blueprints/ animationer använder boolen längre
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* StealthCrouch;
 
@@ -180,15 +191,15 @@ protected:
 
 	FVector TargetCameraBaseLocation;
 
-	// Sprint  
+	// Sprint
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	bool bIsSprinting = false; // Ta bort detta när inga blueprints/ animationer använder boolen längre
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
 	float SprintSpeed = 900.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
 	float SprintNoiseMultiplier = 4.0f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
-	bool bIsSprinting = false;
 
 	void StartSprint();
 
