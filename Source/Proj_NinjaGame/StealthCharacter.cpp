@@ -487,14 +487,23 @@ void AStealthCharacter::ToggleSneak()
 
 void AStealthCharacter::StartSprint()
 {
-	if (CurrentMovementState != EPlayerMovementState::Crouch) // för att inte kunna springa när man är i Crouch läge 
+	AimEnd();
+	
+	// Om spelaren är i crouch så lämna det läget först
+	if (CurrentMovementState == EPlayerMovementState::Crouch)
 	{
-		AimEnd();
-		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
-		CurrentMovementState = EPlayerMovementState::Run;
-		//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
-		bIsSprinting = true;
+		UnCrouch();
+		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
+		TargetCameraBaseLocation = DefaultCameraRelativeLocation;
+		CurrentMovementState = EPlayerMovementState::Walk;
+		bIsSneaking = false;
 	}
+	
+	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+	CurrentMovementState = EPlayerMovementState::Run;
+	bIsSprinting = true;
+	
+	//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
 }
 
 void AStealthCharacter::StopSprint()
