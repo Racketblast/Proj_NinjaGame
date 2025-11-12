@@ -24,7 +24,8 @@ enum class EPlayerMovementState : uint8
 {
 	Walk    UMETA(DisplayName = "Walk"),
 	Run     UMETA(DisplayName = "Run"),
-	Crouch  UMETA(DisplayName = "Crouch")
+	Crouch  UMETA(DisplayName = "Crouch"),
+	Climb  UMETA(DisplayName = "Climb")
 };
 
 UCLASS()
@@ -179,23 +180,12 @@ protected:
 	float MeleeHitsPerSecond = 0.8;*/
 	
 	// Sneak
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stealth", meta = (AllowPrivateAccess = "true"))
-	bool bIsSneaking = false; // Ta bort detta när inga blueprints/ animationer använder boolen längre
-	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* StealthCrouch;
 
 	void ToggleSneak();
 
-	UPROPERTY(EditAnywhere, Category = "Camera")
-	FVector CrouchCameraOffset = FVector(-40.f, 0.f, 0.f);
-
-	FVector TargetCameraBaseLocation;
-
 	// Sprint
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
-	bool bIsSprinting = false; // Ta bort detta när inga blueprints/ animationer använder boolen längre
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
 	float SprintSpeed = 900.0f;
 
@@ -227,7 +217,6 @@ protected:
 	float CameraBobSpeed = 8.0f; // hur snabbt gungningen sker
 
 	float BobTimer = 0.0f;
-	FVector DefaultCameraRelativeLocation;
 
 
 	// speed 
@@ -243,13 +232,13 @@ protected:
 
 	//Climbing
 	UPROPERTY(BlueprintReadWrite, Category = "Climb")
-	bool bIsClimbing = false;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Climb")
-	bool bCanClimb = false;
+	bool bCanClimb = true;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Climb")
 	bool bMovingForward = false;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Climb")
+	bool bHoldingJump = false;
 
 	void Climb(float Seconds);
 	
@@ -258,6 +247,8 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Stats")
 	float ClimbStaminaSecondsPassed = 0;
+
+	virtual void Landed(const FHitResult& Hit) override;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

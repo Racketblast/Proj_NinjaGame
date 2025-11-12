@@ -108,7 +108,7 @@ void AStealthCharacter::Move(float Right, float Forward)
 	if (GetController())
 	{
 		// pass the move inputs
-		if (bIsClimbing)
+		if (CurrentMovementState == EPlayerMovementState::Climb)
 		{
 			AddMovementInput(GetActorRightVector(), Right);
 			AddMovementInput(GetActorUpVector(), Forward);
@@ -142,12 +142,15 @@ void AStealthCharacter::DoJumpStart()
 {
 	// pass Jump to the character
 	Jump();
+	bHoldingJump = true;
 }
 
 void AStealthCharacter::DoJumpEnd()
 {
 	// pass StopJumping to the character
 	StopJumping();
+	
+	bHoldingJump = false;
 	
 	float NoiseLevel;
 		
@@ -290,10 +293,17 @@ void AStealthCharacter::BeginPlay()
 
 	if (FirstPersonCameraComponent)
 	{
-		DefaultCameraRelativeLocation = FirstPersonCameraComponent->GetRelativeLocation();
-		TargetCameraBaseLocation = DefaultCameraRelativeLocation;
 		NormalFOV = FirstPersonCameraComponent->FieldOfView;
 	}
+}
+
+void AStealthCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+	UE_LOG(LogTemp, Display, TEXT("Landed"));
+	
+	ClimbStaminaSecondsPassed = 0;
+	bCanClimb = true;
 }
 
 void AStealthCharacter::Tick(float DeltaTime)
@@ -310,10 +320,6 @@ void AStealthCharacter::Tick(float DeltaTime)
 
 	//Climbing
 	Climb(DeltaTime);
-	if (GetCharacterMovement()->IsMovingOnGround())
-	{
-		ClimbStaminaSecondsPassed = 0;
-	}
 
 	if (FirstPersonCameraComponent)
 	{
@@ -327,29 +333,6 @@ void AStealthCharacter::Tick(float DeltaTime)
 			FOVInterpSpeed
 		);
 		FirstPersonCameraComponent->SetFieldOfView(NewFOV);
-		
-		// övergång mellan stå och crouch 
-		FVector SmoothedBaseLocation = FMath::VInterpTo(
-			FirstPersonCameraComponent->GetRelativeLocation(),
-			TargetCameraBaseLocation,
-			DeltaTime,
-			8.0f 
-		);
-
-		FVector FinalCameraLocation = SmoothedBaseLocation;
-		
-		// Skakar kameran lite när spelaren springer
-		if (CurrentMovementState == EPlayerMovementState::Run && GetVelocity().Size() > 100.f)
-		{
-			BobTimer += DeltaTime * CameraBobSpeed;
-			FinalCameraLocation.Z += FMath::Sin(BobTimer) * CameraBobAmplitude;
-		}
-		else
-		{
-			BobTimer = 0.0f;
-		}
-		
-		FirstPersonCameraComponent->SetRelativeLocation(FinalCameraLocation);
 	}
 }
 
@@ -454,57 +437,80 @@ void AStealthCharacter::CheckForUse()
 
 void AStealthCharacter::Climb(float Seconds)
 {
-	if (ClimbStaminaSeconds >= ClimbStaminaSecondsPassed)
+	if (bCanClimb)
 	{
-		FVector Start = GetCapsuleComponent()->GetComponentLocation();
-		FVector End = Start + GetCapsuleComponent()->GetForwardVector() * 45;
-		
-		FHitResult HitResult;
-		FCollisionQueryParams Params;
-		Params.AddIgnoredActor(this);
-		DrawDebugLine(GetWorld(), Start, End, FColor::Cyan, false, 0.0f, 0, 1.0f);
-		if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+		if (ClimbStaminaSeconds >= ClimbStaminaSecondsPassed)
 		{
-			if (bMovingForward)
+			FVector Start = GetActorLocation();
+			FVector End = Start + GetActorForwardVector() * 45;
+			
+			FHitResult HitResult;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(this);
+			DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.0f, 0, 1.0f);
+			
+			//If we are at a wall
+			if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 			{
-				ClimbStaminaSecondsPassed += Seconds;
-				if (!bIsClimbing)
+				if (CurrentMovementState == EPlayerMovementState::Climb)
 				{
-					if (GetMovementComponent()->IsFalling())
+					//If we are at a ledge
+					FVector HalfCapsuleHeight = {0,0,GetCapsuleComponent()->GetScaledCapsuleHalfHeight()};
+					FVector StartEdge = GetActorLocation();
+					FVector EndEdge = StartEdge + HalfCapsuleHeight + GetActorForwardVector() * 45;
+					DrawDebugLine(GetWorld(), StartEdge, EndEdge, FColor::Cyan, false, 0.0f, 0, 1.0f);
+					if (!GetWorld()->LineTraceSingleByChannel(HitResult, StartEdge, EndEdge, ECC_Visibility, Params))
 					{
-						GetMovementComponent()->Velocity = {};
-						bIsClimbing = true;
-						GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+						ToggleSneak();
+						GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+						LaunchCharacter({0,0,500},true, true);
+						bCanClimb = false;
+						return;
+					}
+				}
+				
+				if (bMovingForward && bHoldingJump)
+				{
+					ClimbStaminaSecondsPassed += Seconds;
+					if (CurrentMovementState != EPlayerMovementState::Climb)
+					{
+						if (GetMovementComponent()->IsFalling())
+						{
+							GetMovementComponent()->Velocity = {};
+							CurrentMovementState = EPlayerMovementState::Climb;
+							GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+						}
+					}
+				}
+				else
+				{
+					if (CurrentMovementState == EPlayerMovementState::Climb)
+					{
+						CurrentMovementState = EPlayerMovementState::Walk;
+						GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+						LaunchCharacter({0,0,500},true, true);
 					}
 				}
 			}
 			else
 			{
-				if (bIsClimbing)
+				if (CurrentMovementState == EPlayerMovementState::Climb)
 				{
-					bIsClimbing = false;
+					CurrentMovementState = EPlayerMovementState::Walk;
 					GetCharacterMovement()->SetMovementMode(MOVE_Falling);
 					LaunchCharacter({0,0,500},true, true);
 				}
 			}
 		}
+		//Drop if stamina is not enough
 		else
 		{
-			if (bIsClimbing)
+			if (CurrentMovementState == EPlayerMovementState::Climb)
 			{
-				bIsClimbing = false;
+				CurrentMovementState = EPlayerMovementState::Walk;
 				GetCharacterMovement()->SetMovementMode(MOVE_Falling);
 				LaunchCharacter({0,0,500},true, true);
 			}
-		}
-	}
-	else
-	{
-		if (bIsClimbing)
-		{
-			bIsClimbing = false;
-			GetCharacterMovement()->SetMovementMode(MOVE_Falling);
-			LaunchCharacter({0,0,500},true, true);
 		}
 	}
 }
@@ -545,15 +551,12 @@ void AStealthCharacter::Die()
 }
 
 void AStealthCharacter::ToggleSneak()
-{
-	bIsSneaking = !bIsSneaking;
-	
+{	
 	if (CurrentMovementState == EPlayerMovementState::Crouch)
 	{
 		// Gå tillbaka till gångläge
 		UnCrouch();
 		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
-		TargetCameraBaseLocation = DefaultCameraRelativeLocation;
 		CurrentMovementState = EPlayerMovementState::Walk;
 		//UE_LOG(LogTemp, Warning, TEXT("Player stopped sneaking."));
 	}
@@ -563,7 +566,6 @@ void AStealthCharacter::ToggleSneak()
 		Crouch();
 		GetCharacterMovement()->MaxWalkSpeedCrouched = SneakWalkSpeed;
 		GetCharacterMovement()->MaxWalkSpeed = SneakWalkSpeed;
-		TargetCameraBaseLocation = DefaultCameraRelativeLocation + CrouchCameraOffset;
 		CurrentMovementState = EPlayerMovementState::Crouch;
 		//UE_LOG(LogTemp, Warning, TEXT("Player is now sneaking."));
 	}
@@ -577,7 +579,6 @@ void AStealthCharacter::StartSprint()
 		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 		CurrentMovementState = EPlayerMovementState::Run;
 		//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
-		bIsSprinting = true;
 	}
 }
 
@@ -588,6 +589,5 @@ void AStealthCharacter::StopSprint()
 		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
 		CurrentMovementState = EPlayerMovementState::Walk;
 		//UE_LOG(LogTemp, Warning, TEXT("Player stopped sprinting."));
-		bIsSprinting = false;
 	}
 }
