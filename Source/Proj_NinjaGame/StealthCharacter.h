@@ -73,6 +73,7 @@ protected:
 	
 	/** Called from Input Actions for movement input */
 	void MoveInput(const FInputActionValue& Value);
+	void EndMoveInput();
 
 	/** Called from Input Actions for looking input */
 	void LookInput(const FInputActionValue& Value);
@@ -246,9 +247,17 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Climb")
 	bool bCanClimb = false;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Climb")
+	bool bMovingForward = false;
+
+	void Climb(float Seconds);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-	float Stamina = 100.f;
+	float ClimbStaminaSeconds = 1.f;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Stats")
+	float ClimbStaminaSecondsPassed = 0;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -264,3 +273,5 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	bool bIsInCombat = false;
 };
+
+

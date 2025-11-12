@@ -65,8 +65,17 @@ void AStealthCharacter::MoveInput(const FInputActionValue& Value)
 	// get the Vector2D move axis
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
+	if (MovementVector.Y > 0.0f)
+	{
+		bMovingForward = true;
+	}
 	// pass the axis values to the move input
 	Move(MovementVector.X, MovementVector.Y);
+}
+
+void AStealthCharacter::EndMoveInput()
+{
+	bMovingForward = false;
 }
 
 void AStealthCharacter::LookInput(const FInputActionValue& Value)
@@ -103,6 +112,7 @@ void AStealthCharacter::Move(float Right, float Forward)
 		{
 			AddMovementInput(GetActorRightVector(), Right);
 			AddMovementInput(GetActorUpVector(), Forward);
+			AddMovementInput(GetActorForwardVector(), Forward);
 		}
 		else
 		{
@@ -251,7 +261,7 @@ void AStealthCharacter::UpdateProjectilePrediction()
 	
     FPredictProjectilePathParams PredictParams;
     PredictParams.StartLocation = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector() * CameraForwardMultiplier;
-    PredictParams.LaunchVelocity = FirstPersonCameraComponent->GetForwardVector() * HeldThrowableWeapon->ThrowSpeed + GetVelocity();
+    PredictParams.LaunchVelocity = FirstPersonCameraComponent->GetForwardVector() * HeldThrowableWeapon->ThrowSpeed;
 	if (UStaticMesh* WeaponMesh = HeldThrowableWeapon->StaticMeshComponent->GetStaticMesh())
 	{
 		FVector BoundsExtent = WeaponMesh->GetBounds().BoxExtent;
@@ -298,27 +308,11 @@ void AStealthCharacter::Tick(float DeltaTime)
 		UpdateProjectilePrediction();
 	}
 
-	FVector Start = GetCapsuleComponent()->GetComponentLocation();
-	FVector End = Start + GetCapsuleComponent()->GetForwardVector() * 45;
-	DrawDebugLine(GetWorld(), Start, End, FColor::Cyan, false, 0.0f, 0, 5.0f);
-	if (GetMovementComponent()->IsFalling())
+	//Climbing
+	Climb(DeltaTime);
+	if (GetCharacterMovement()->IsMovingOnGround())
 	{
-
-		FHitResult HitResult;
-		FCollisionQueryParams Params;
-		Params.AddIgnoredActor(this);
-		if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Is Climbing"));
-			bIsClimbing = true;
-			GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Is Not Climbing"));
-			bIsClimbing = false;
-			GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-		}
+		ClimbStaminaSecondsPassed = 0;
 	}
 
 	if (FirstPersonCameraComponent)
@@ -373,6 +367,7 @@ void AStealthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AStealthCharacter::MoveInput);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AStealthCharacter::EndMoveInput);
 
 		// Looking/Aiming
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AStealthCharacter::LookInput);
@@ -455,6 +450,63 @@ void AStealthCharacter::CheckForUse()
 	}
 
 	LastUseTarget = nullptr;
+}
+
+void AStealthCharacter::Climb(float Seconds)
+{
+	if (ClimbStaminaSeconds >= ClimbStaminaSecondsPassed)
+	{
+		FVector Start = GetCapsuleComponent()->GetComponentLocation();
+		FVector End = Start + GetCapsuleComponent()->GetForwardVector() * 45;
+		
+		FHitResult HitResult;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+		DrawDebugLine(GetWorld(), Start, End, FColor::Cyan, false, 0.0f, 0, 1.0f);
+		if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+		{
+			if (bMovingForward)
+			{
+				ClimbStaminaSecondsPassed += Seconds;
+				if (!bIsClimbing)
+				{
+					if (GetMovementComponent()->IsFalling())
+					{
+						GetMovementComponent()->Velocity = {};
+						bIsClimbing = true;
+						GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+					}
+				}
+			}
+			else
+			{
+				if (bIsClimbing)
+				{
+					bIsClimbing = false;
+					GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+					LaunchCharacter({0,0,500},true, true);
+				}
+			}
+		}
+		else
+		{
+			if (bIsClimbing)
+			{
+				bIsClimbing = false;
+				GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+				LaunchCharacter({0,0,500},true, true);
+			}
+		}
+	}
+	else
+	{
+		if (bIsClimbing)
+		{
+			bIsClimbing = false;
+			GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+			LaunchCharacter({0,0,500},true, true);
+		}
+	}
 }
 
 float AStealthCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
