@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
+#include "MeleeAIController.h"
 #include "MeleeEnemy.generated.h"
 
 class UBoxComponent;
@@ -128,6 +131,21 @@ public:
 
 	// Anropas när ett ljud hörs
 	void HearSoundAtLocation(FVector SoundLocation);
+
+
+	// VFX
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="VFX")
+	UNiagaraComponent* StateVFXComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
+	UNiagaraSystem* ChaseVFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
+	UNiagaraSystem* SearchVFX;
+
+	UFUNCTION(BlueprintCallable, Category="VFX")
+	void UpdateStateVFX(EEnemyState NewState);
+	
 
 private:
 	FVector LastSeenPlayerLocation;
