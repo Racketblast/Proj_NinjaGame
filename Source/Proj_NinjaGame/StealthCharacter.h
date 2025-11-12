@@ -187,7 +187,7 @@ protected:
 	void ToggleSneak();
 
 	UPROPERTY(EditAnywhere, Category = "Camera")
-	FVector CrouchCameraOffset = FVector(-40.f, 0.f, -30.f);
+	FVector CrouchCameraOffset = FVector(-40.f, 0.f, 0.f);
 
 	FVector TargetCameraBaseLocation;
 
