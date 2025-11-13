@@ -23,7 +23,6 @@ AMeleeWeapon::AMeleeWeapon()
 
 void AMeleeWeapon::StartMeleeAttack()
 {
-	UE_LOG(LogTemp, Error, TEXT("Started attack"));
 	bCanMeleeAttack = false;
 	GetWorld()->GetTimerManager().SetTimer(MeleeAttackingTimer, this, &AMeleeWeapon::MeleeAttackLoop, 0.01, true);
 	bMeleeAttacking = true;
@@ -31,8 +30,7 @@ void AMeleeWeapon::StartMeleeAttack()
 
 void AMeleeWeapon::MeleeAttackLoop()
 {
-	UE_LOG(LogTemp, Error, TEXT("Swinging"));
-	DrawDebugLine(GetWorld(), StartOfBladePos->GetComponentLocation(), EndOfBladePos->GetComponentLocation(), FColor::Red, true);
+	//DrawDebugLine(GetWorld(), StartOfBladePos->GetComponentLocation(), EndOfBladePos->GetComponentLocation(), FColor::Red, true);
 
 	FHitResult HitResult;
 	FCollisionQueryParams Params;
@@ -44,21 +42,35 @@ void AMeleeWeapon::MeleeAttackLoop()
 		Params.AddIgnoredActor(HitResult.GetActor());
 		if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(HitResult.GetActor()))
 		{
-			ActorsHit.Add(Enemy);
-			UGameplayStatics::ApplyDamage(
-				Enemy,
-				MeleeDamage,
-				UGameplayStatics::GetPlayerController(this,0),
-				UGameplayStatics::GetPlayerCharacter(this,0),
-				UDamageType::StaticClass()
-				);
+			if (Enemy->bCanBeAssassinated && !Enemy->CanSeePlayer())
+			{
+				ActorsHit.Add(Enemy);
+				UGameplayStatics::ApplyDamage(
+					Enemy,
+					Enemy->GetHealth(),
+					UGameplayStatics::GetPlayerController(this,0),
+					UGameplayStatics::GetPlayerCharacter(this,0),
+					UDamageType::StaticClass()
+					);
+			}
+			else
+			{
+				
+				ActorsHit.Add(Enemy);
+				UGameplayStatics::ApplyDamage(
+					Enemy,
+					MeleeDamage,
+					UGameplayStatics::GetPlayerController(this,0),
+					UGameplayStatics::GetPlayerCharacter(this,0),
+					UDamageType::StaticClass()
+					);
+			}
 		}
 	}
 }
 
 void AMeleeWeapon::MeleeAttackEnd()
 {
-	UE_LOG(LogTemp, Error, TEXT("Ended attack"));
 	GetWorld()->GetTimerManager().ClearTimer(MeleeAttackingTimer);
 	ActorsHit={};
 	bCanMeleeAttack = true;

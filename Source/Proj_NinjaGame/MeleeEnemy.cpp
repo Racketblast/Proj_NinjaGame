@@ -8,7 +8,9 @@
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
 #include "MeleeAIController.h"
+#include "StealthCharacter.h"
 #include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 
@@ -25,6 +27,10 @@ AMeleeEnemy::AMeleeEnemy()
 	MeleeHitBox->SetCollisionObjectType(ECC_WorldDynamic);
 	MeleeHitBox->SetCollisionResponseToAllChannels(ECR_Ignore);
 	MeleeHitBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
+	
+	AssassinationCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("AssassinationCapsule"));
+	AssassinationCapsule->SetupAttachment(GetMesh());
 
 
 	StateVFXComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("StateVFX"));
@@ -44,6 +50,11 @@ void AMeleeEnemy::BeginPlay()
 	if (MeleeHitBox)
 	{
 		MeleeHitBox->OnComponentBeginOverlap.AddDynamic(this, &AMeleeEnemy::OnMeleeOverlapBegin);
+	}
+	if (AssassinationCapsule)
+	{
+		AssassinationCapsule->OnComponentBeginOverlap.AddDynamic(this, &AMeleeEnemy::OnAssasinationOverlapBegin);
+		AssassinationCapsule->OnComponentEndOverlap.AddDynamic(this, &AMeleeEnemy::OnAssasinationOverlapEnd);
 	}
 }
 
@@ -270,9 +281,27 @@ void AMeleeEnemy::DisableHitbox()
 	GetWorldTimerManager().ClearTimer(HitboxWindowHandle);
 }
 
+void AMeleeEnemy::OnAssasinationOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (AStealthCharacter* Player = Cast<AStealthCharacter>(OtherActor))
+	{
+		bCanBeAssassinated = true;
+	}
+}
+
+void AMeleeEnemy::OnAssasinationOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (AStealthCharacter* Player = Cast<AStealthCharacter>(OtherActor))
+	{
+		bCanBeAssassinated = false;
+	}
+}
+
 void AMeleeEnemy::OnMeleeOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-                                     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
-                                     bool bFromSweep, const FHitResult& SweepResult)
+                                      UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+                                      bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (!OtherActor || OtherActor == this) return;
 	if (bHitRegisteredThisSwing) return; // för att se till att det bara blir en hit per sving 

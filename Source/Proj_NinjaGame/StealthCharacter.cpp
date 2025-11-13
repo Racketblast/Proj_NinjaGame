@@ -642,9 +642,12 @@ void AStealthCharacter::StartSprint()
 	// Om spelaren är i crouch så lämna det läget först
 	if (CurrentMovementState == EPlayerMovementState::Crouch)
 	{
-		UnCrouch();
-		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
-		CurrentMovementState = EPlayerMovementState::Walk;
+		if (CanUnCrouch())
+		{
+			UnCrouch();
+			GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
+			CurrentMovementState = EPlayerMovementState::Walk;
+		}
 	}
 	
 	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
