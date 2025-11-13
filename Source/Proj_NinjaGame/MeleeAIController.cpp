@@ -72,14 +72,14 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 		}
 	case EEnemyState::Alert:
 		{
-			// Om fienden ser spelaren tillräckligt tydligt — börja jaga
+			// Om fienden ser spelaren tillräckligt tydligt så börja jaga
 			if (ControlledEnemy->CanSeePlayer())
 			{
 				StartChasing();
 			}
 			else
 			{
-				// Annars fortsätt att titta mot spelaren ett tag
+				// titta mot spelaren 
 				APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 				if (Player)
 				{

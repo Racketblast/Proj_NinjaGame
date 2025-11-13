@@ -142,19 +142,19 @@ void AMeleeEnemy::CheckPlayerVisibility()
 {
 	if (!PlayerPawn) return;
 
-	// === Variabler ===
+	// Variabler 
 	FVector EnemyLocation = GetActorLocation() + FVector(0, 0, 50);
 	FVector Forward = GetActorForwardVector();
-	FVector LookDirection = Forward.RotateAngleAxis(10.f, GetActorRightVector()); // lite nedåtriktad
+	FVector LookDirection = Forward.RotateAngleAxis(10.f, GetActorRightVector()); // gör konen lite nedåtriktad
 	FVector ToPlayer = PlayerPawn->GetActorLocation() - EnemyLocation;
 	float Distance = ToPlayer.Size();
 	ToPlayer.Normalize();
 
-	// === Skillnad mellan patrull- och chase-läge ===
+	// Skillnad mellan patrull och chase-läge 
 	float EffectiveVisionRange = bIsChasing ? VisionRange : VisionRange * 0.6f;
 	float EffectiveVisionAngle = bIsChasing ? VisionAngle : VisionAngle * 0.5f;
 
-	// === Rita debug-koner ===
+	// Rita debug för fiendens synfält, alltså konerna
 	if (!bIsChasing && bVisionDebug)
 	{
 		// Vanliga syn-kon
@@ -171,7 +171,7 @@ void AMeleeEnemy::CheckPlayerVisibility()
 			0.05f
 		);
 
-		// Suspicious-kon (mindre)
+		// Suspicious-kon 
 		DrawDebugCone(
 			GetWorld(),
 			EnemyLocation,
@@ -186,7 +186,7 @@ void AMeleeEnemy::CheckPlayerVisibility()
 		);
 	}
 
-	// === Kontrollera om spelaren är inom räckvidd ===
+	// Kontrollera om spelaren är inom räckvidd
 	if (Distance <= EffectiveVisionRange)
 	{
 		float Dot = FVector::DotProduct(LookDirection, ToPlayer);
@@ -219,7 +219,7 @@ void AMeleeEnemy::CheckPlayerVisibility()
 		}
 	}
 
-	// === Andra konen: misstanke ===
+	// Andra konen /  misstanke kon
 	if (Distance <= SuspiciousVisionRange)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("SuspiciousVisionRange 1"));
@@ -269,14 +269,14 @@ void AMeleeEnemy::CheckPlayerVisibility()
 		}
 	}
 
-	// === Om spelaren lämnar misstanke-kon ===
+	// Om spelaren lämnar den andra konen
 	if (bIsSuspicious && !bPlayerInSuspiciousZone)
 	{
 		if (SuspiciousTimer > 4.f && SuspiciousTimer < TimeToSpotPlayer)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("SuspiciousLocationDetected"));
 			UpdateLastSeenPlayerLocation();
-			OnSuspiciousLocationDetected(); // trigga delegate eller AI-händelse
+			OnSuspiciousLocationDetected(); 
 		}
 
 		bIsSuspicious = false;
@@ -334,7 +334,7 @@ void AMeleeEnemy::Die()
 	
 	SetActorTickEnabled(false);
 
-	// Rensa alla timers som kan referera till
+	// Rensa alla timers 
 	GetWorldTimerManager().ClearAllTimersForObject(this);
 
 	// ta bort hitbox-komponenten 
@@ -467,6 +467,35 @@ void AMeleeEnemy::HearSoundAtLocation(FVector SoundLocation)
 void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 {
 	if (!StateVFXComponent) return;
+	
+	// Om vi redan spelar samma vfx, gör inget
+	if (StateVFXComponent->GetAsset() != nullptr)
+	{
+		UNiagaraSystem* CurrentAsset = StateVFXComponent->GetAsset();
+		
+		UNiagaraSystem* NewAsset = nullptr;
+		switch (NewState)
+		{
+		case EEnemyState::Patrolling:
+			NewAsset = nullptr;
+			break;
+		case EEnemyState::Alert:
+			NewAsset = AlertVFX;
+			break;
+		case EEnemyState::Chasing:
+			NewAsset = ChaseVFX;
+			break;
+		case EEnemyState::Searching:
+			NewAsset = SearchVFX;
+			break;
+		default:
+			NewAsset = nullptr;
+			break;
+		}
+		
+		if (NewAsset == CurrentAsset)
+			return;
+	}
 
 	switch (NewState)
 	{

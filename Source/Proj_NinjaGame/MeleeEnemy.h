@@ -66,7 +66,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
 	bool bVisionDebug = true;
 
-	// === Secondary (suspicious) vision system ===
+	// Andra syn sättet för fienden / andra konen
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
 	float SuspiciousVisionRange = 3000.f;
 
