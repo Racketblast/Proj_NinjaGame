@@ -622,19 +622,23 @@ void AStealthCharacter::Die()
 
 	GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
 	{
-		// Säkerhetsstopp innan leveln laddas om, hade en krash tidigare så lade till detta för att stopa krasshen. 
-		for (TActorIterator<AAIController> It(GetWorld()); It; ++It)
-		{
-			if (AAIController* AICon = *It)
-			{
-				AICon->StopMovement();
-				AICon->GetPathFollowingComponent()->OnRequestFinished.RemoveAll(AICon);
-				AICon->GetWorldTimerManager().ClearAllTimersForObject(AICon);
-				AICon->UnPossess();
-			}
-		}
-
-		UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), true);
+		GetWorld()->GetTimerManager().SetTimer(
+			TempHandle,
+			[this]() {
+				// Säkerhetsstopp innan leveln laddas om, hade en krasch tidigare så lade till detta för att stoppa kraschen. 
+				for (TActorIterator<AAIController> It(GetWorld()); It; ++It)
+				{
+					if (AAIController* AICon = *It)
+					{
+						AICon->StopMovement();
+						AICon->GetPathFollowingComponent()->OnRequestFinished.RemoveAll(AICon);
+						AICon->GetWorldTimerManager().ClearAllTimersForObject(AICon);
+						AICon->UnPossess();
+					}
+				}
+				UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), true);
+			},
+			0.2f, false);
 	});
 }
 

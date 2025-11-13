@@ -336,10 +336,20 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 			if (PatrolPoints.Num() > 1)
 			{
 				FTimerHandle WaitHandle;
-				GetWorldTimerManager().SetTimer(WaitHandle, [this]()
+				/*GetWorldTimerManager().SetTimer(WaitHandle, [this]()
 				{
 					CurrentPatrolIndex = (CurrentPatrolIndex + 1) % ControlledEnemy->GetPatrolPoints().Num();
 					MoveToNextPatrolPoint();
+				}, ControlledEnemy->GetWaitTimeAtPoint(), false);*/
+				TWeakObjectPtr<AMeleeAIController> WeakThis(this); // Använde detta för att stoppa en tidigare krasch 
+				GetWorldTimerManager().SetTimer(WaitHandle, [WeakThis]()
+				{
+					if (!WeakThis.IsValid()) return;
+					AMeleeAIController* Self = WeakThis.Get();
+					if (!Self->ControlledEnemy || !IsValid(Self->ControlledEnemy)) return;
+
+					Self->CurrentPatrolIndex = (Self->CurrentPatrolIndex + 1) % Self->ControlledEnemy->GetPatrolPoints().Num();
+					Self->MoveToNextPatrolPoint();
 				}, ControlledEnemy->GetWaitTimeAtPoint(), false);
 			}
 		}
@@ -490,10 +500,7 @@ void AMeleeAIController::OnHeardSound(FVector SoundLocation)
 	ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
 	//bIsInvestigatingSound = true;
 	LastKnownPlayerLocation = SoundLocation;
-
 	
-
-
 	// Justera ljudets position till marknivån 
 	FVector GroundedSoundLocation = SoundLocation;
 	FHitResult Hit;
