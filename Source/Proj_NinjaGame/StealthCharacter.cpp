@@ -448,7 +448,6 @@ void AStealthCharacter::Climb(float Seconds)
 			FHitResult HitResult;
 			FCollisionQueryParams Params;
 			Params.AddIgnoredActor(this);
-			DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.0f, 0, 1.0f);
 			
 			//If we are at a wall
 			if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
@@ -459,7 +458,7 @@ void AStealthCharacter::Climb(float Seconds)
 					FVector HalfCapsuleHeight = {0,0,GetCapsuleComponent()->GetScaledCapsuleHalfHeight()};
 					FVector StartEdge = GetActorLocation();
 					FVector EndEdge = StartEdge + HalfCapsuleHeight + GetActorForwardVector() * 45;
-					DrawDebugLine(GetWorld(), StartEdge, EndEdge, FColor::Cyan, false, 0.0f, 0, 1.0f);
+					
 					if (!GetWorld()->LineTraceSingleByChannel(HitResult, StartEdge, EndEdge, ECC_Visibility, Params))
 					{
 						ToggleSneak();

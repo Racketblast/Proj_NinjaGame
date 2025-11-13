@@ -233,7 +233,7 @@ protected:
 	float SneakNoiseMultiplier = 0.1f;
 
 	//Climbing
-	UPROPERTY(BlueprintReadWrite, Category = "Climb")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Climb")
 	bool bCanClimb = true;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Climb")
