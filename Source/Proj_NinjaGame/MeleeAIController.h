@@ -10,6 +10,7 @@ UENUM(BlueprintType)
 enum class EEnemyState : uint8
 {
 	Patrolling,
+	Alert, 
 	Chasing,
 	Searching
 };
@@ -43,8 +44,13 @@ protected:
 	
 	void StartChasing();
 	void StopChasing();
+	void StartAlert();
+	FTimerHandle AlertTimerHandle;
 
 	virtual void OnUnPossess() override;
+
+	UFUNCTION()
+	void HandleSuspiciousLocation(FVector Location);
 
 private:
 	FTimerHandle StartPatrolTimerHandle;

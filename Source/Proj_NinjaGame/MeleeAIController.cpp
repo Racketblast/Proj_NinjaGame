@@ -26,6 +26,8 @@ void AMeleeAIController::OnPossess(APawn* InPawn)
 		CurrentPatrolIndex = 0;
 		CurrentState = EEnemyState::Patrolling;
 
+		ControlledEnemy->OnSuspiciousLocation.AddDynamic(this, &AMeleeAIController::HandleSuspiciousLocation);
+
 		//UE_LOG(LogTemp, Warning, TEXT("AMeleeAIController OnPossess"));
 
 		ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
@@ -38,14 +40,19 @@ void AMeleeAIController::OnPossess(APawn* InPawn)
 void AMeleeAIController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
+	
 	if (!ControlledEnemy) return;
 
 	switch (CurrentState)
 	{
 	case EEnemyState::Patrolling:
 		{
-			if (ControlledEnemy->CanSeePlayer())
+			if (ControlledEnemy->bPlayerInAlertCone) 
+			{
+				StartAlert();
+				//UE_LOG(LogTemp, Warning, TEXT("StartAlert"));
+			}
+			else if (ControlledEnemy->CanSeePlayer())
 			{
 				StartChasing();
 			}
@@ -61,6 +68,37 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 					ControlledEnemy->bHeardSoundRecently = false;
 				}, 0.5f, false);
 			}
+			break;
+		}
+	case EEnemyState::Alert:
+		{
+			// Om fienden ser spelaren tillräckligt tydligt så börja jaga
+			if (ControlledEnemy->CanSeePlayer())
+			{
+				StartChasing();
+			}
+			else
+			{
+				// titta mot spelaren 
+				APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+				if (Player)
+				{
+					FVector ToPlayer = Player->GetActorLocation() - ControlledEnemy->GetActorLocation();
+					ToPlayer.Z = 0;
+					if (!ToPlayer.IsNearlyZero())
+					{
+						FRotator TargetRot = ToPlayer.Rotation();
+						FRotator NewRot = FMath::RInterpTo(
+							ControlledEnemy->GetActorRotation(),
+							TargetRot,
+							DeltaSeconds,
+							3.5f
+						);
+						ControlledEnemy->SetActorRotation(NewRot);
+					}
+				}
+			}
+
 			break;
 		}
 	case EEnemyState::Chasing:
@@ -89,6 +127,12 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 		}
 	case EEnemyState::Searching:
 		{
+			if (ControlledEnemy->bPlayerInAlertCone) 
+			{
+				StartAlert();
+				//UE_LOG(LogTemp, Warning, TEXT("StartAlert"));
+			}
+			
 			// Om fienden ser spelaren igen så börjar den jaga direkt
 			if (ControlledEnemy->CanSeePlayer())
 			{
@@ -126,9 +170,47 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 	}
 }
 
-void AMeleeAIController::MoveToNextPatrolPoint()
+void AMeleeAIController::StartAlert()
 {
 	if (!ControlledEnemy) return;
+
+	StopMovement();
+	CurrentState = EEnemyState::Alert;
+	ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX 
+	ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = 0.f; // stannar helt
+
+	// Titta mot spelaren direkt
+	APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+	if (Player)
+	{
+		FVector ToPlayer = Player->GetActorLocation() - ControlledEnemy->GetActorLocation();
+		ToPlayer.Z = 0.f;
+		if (!ToPlayer.IsNearlyZero())
+		{
+			ControlledEnemy->SetActorRotation(ToPlayer.Rotation());
+		}
+	}
+
+	// Efter några sekunder om fienden fortfarande inte ser spelaren så återgår den till patrullering
+	GetWorldTimerManager().SetTimer(AlertTimerHandle, [this]()
+	{
+		if (!ControlledEnemy->CanSeePlayer())
+		{
+			CurrentState = EEnemyState::Patrolling;
+			ControlledEnemy->UpdateStateVFX(CurrentState);
+			ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
+			MoveToNextPatrolPoint();
+		}
+	}, 3.f, false);
+}
+
+
+void AMeleeAIController::MoveToNextPatrolPoint()
+{
+	if (!ControlledEnemy || !IsValid(ControlledEnemy))
+		return;
+	if (GetWorld()->bIsTearingDown)
+		return;
 
 	const TArray<AActor*>& PatrolPoints = ControlledEnemy->GetPatrolPoints();
 	const int32 NumPoints = PatrolPoints.Num();
@@ -162,6 +244,11 @@ void AMeleeAIController::MoveToNextPatrolPoint()
 
 void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
+	if (!ControlledEnemy || !IsValid(ControlledEnemy))
+		return;
+	if (GetWorld()->bIsTearingDown)
+		return;
+	
 	Super::OnMoveCompleted(RequestID, Result);
 
 	/*const TArray<AActor*>& PatrolPoints = ControlledEnemy->GetPatrolPoints();
@@ -212,10 +299,11 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 				MoveToNextPatrolPoint();
 			}, 0.5f, false);
 		}
-	}*/
 
-	if (!ControlledEnemy)
-		return;
+		if (!ControlledEnemy)
+			return;
+	}*/
+	
 
 	// Kolla att detta inte är ett gammalt move som avbrutits av ett nytt
 	/*if (Result.Code == EPathFollowingResult::Aborted)
@@ -437,8 +525,32 @@ void AMeleeAIController::OnHeardSound(FVector SoundLocation)
 	MoveToLocation(GroundedSoundLocation, -1.0f, true, true, false, false, 0, true);
 }
 
+void AMeleeAIController::HandleSuspiciousLocation(FVector Location)
+{
+	if (!IsValid(this)) return;
+	
+	UE_LOG(LogTemp, Warning, TEXT("HandleSuspiciousLocation"));
+	/*StopMovement();
+	FRotator LookAtRot = (Location - GetPawn()->GetActorLocation()).Rotation();
+	GetPawn()->SetActorRotation(LookAtRot);*/
+	
+	if (CurrentState == EEnemyState::Patrolling)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Enemy is investigating suspicious location!"));
+		CurrentState = EEnemyState::Searching;
+		ControlledEnemy->UpdateStateVFX(CurrentState);
+		MoveToLocation(Location);
+	}
+}
+
+
 void AMeleeAIController::OnUnPossess()
 {
+	if (ControlledEnemy)
+	{
+		ControlledEnemy->OnSuspiciousLocation.RemoveDynamic(this, &AMeleeAIController::HandleSuspiciousLocation);
+		ControlledEnemy = nullptr;
+	}
 	Super::OnUnPossess();
 
 	// Rensa timers 
@@ -446,6 +558,5 @@ void AMeleeAIController::OnUnPossess()
 	GetWorldTimerManager().ClearTimer(LoseSightTimerHandle);
 	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
 	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
-
-	ControlledEnemy = nullptr;
+	GetWorldTimerManager().ClearTimer(AlertTimerHandle);
 }

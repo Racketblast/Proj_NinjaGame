@@ -24,6 +24,7 @@ public:
 	bool bCanBeAssassinated = false;
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
@@ -63,6 +64,26 @@ protected:
 	bool bCanSeePlayer = false;
 
 	void CheckPlayerVisibility();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
+	bool bVisionDebug = true;
+
+	// Andra syn sättet för fienden / andra konen
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
+	float SuspiciousVisionRange = 3000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
+	float SuspiciousVisionAngle = 90.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
+	float TimeToSpotPlayer = 6.f; // sekunder för att upptäcka om spelaren stannar kvar
+
+	float SuspiciousTimer = 0.f;
+	bool bIsSuspicious = false;
+	bool bPlayerInSuspiciousZone = false;
+
+
+	void OnSuspiciousLocationDetected();
 
 	
 	// För Attack 
@@ -120,6 +141,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	bool bIsChasing = false;
 
+	UPROPERTY(BlueprintReadWrite)
+	bool bPlayerInAlertCone = false;
 	
 	UFUNCTION(BlueprintCallable)
 	void StartAttack();
@@ -130,6 +153,13 @@ public:
 	void DisableHitbox();
 	
 	virtual void ApplyDamageTo(AActor* Target);
+
+
+	
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSuspiciousLocationDelegate, FVector, Location);
+
+	UPROPERTY(BlueprintAssignable, Category = "AI")
+	FOnSuspiciousLocationDelegate OnSuspiciousLocation;
 
 
 	/* Hearing system */
@@ -157,6 +187,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
 	UNiagaraSystem* SearchVFX;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
+	UNiagaraSystem* AlertVFX;
 
 	UFUNCTION(BlueprintCallable, Category="VFX")
 	void UpdateStateVFX(EEnemyState NewState);
