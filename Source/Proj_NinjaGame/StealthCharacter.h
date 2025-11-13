@@ -249,6 +249,13 @@ protected:
 	bool bHoldingJump = false;
 
 	void Climb(float Seconds);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	float MaxStamina = 100;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
+	float CurrentStamina;
+
+	void UpdateStamina(float StaminaAmount);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	float ClimbStaminaSeconds = 1.f;
@@ -272,5 +279,3 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	bool bIsInCombat = false;
 };
-
-

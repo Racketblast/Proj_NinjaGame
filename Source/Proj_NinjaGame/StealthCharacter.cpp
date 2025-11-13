@@ -60,6 +60,8 @@ AStealthCharacter::AStealthCharacter()
 	GetCharacterMovement()->AirControl = 0.5f;
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
 	GetCharacterMovement()->MaxWalkSpeedCrouched = SneakWalkSpeed;
+
+	CurrentStamina = MaxStamina;
 }
 
 void AStealthCharacter::MoveInput(const FInputActionValue& Value)
@@ -293,6 +295,26 @@ void AStealthCharacter::UpdateProjectilePrediction()
     UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult);
 
 	SpawnedMarker->SetActorLocation(PredictResult.HitResult.Location);
+}
+
+
+
+
+void AStealthCharacter::UpdateStamina(float StaminaAmount)
+{
+	if (CurrentStamina + StaminaAmount <= MaxStamina && CurrentStamina + StaminaAmount >= 0)
+	{
+		CurrentStamina += StaminaAmount;
+
+		if (CurrentStamina < 0)
+		{
+			CurrentStamina = 0;
+		}
+		else if (CurrentStamina > MaxStamina)
+		{
+			CurrentStamina = MaxStamina;
+		}
+	}
 }
 
 // Called when the game starts or when spawned
