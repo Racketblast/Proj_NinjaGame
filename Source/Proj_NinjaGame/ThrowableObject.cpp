@@ -8,6 +8,7 @@
 #include "StealthGameInstance.h"
 #include "ThrowableWeapon.h"
 #include "SoundUtility.h"
+#include "Components/AudioComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/DamageType.h"
@@ -73,18 +74,32 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Throwable OnComponentHit %s"), *GetVelocity().GetSafeNormal().ToString());
 		UGameplayStatics::ApplyPointDamage(
-						Enemy,
-						DealtDamage,
-						GetVelocity().GetSafeNormal(),
-						Hit,
-						UGameplayStatics::GetPlayerController(this,0),
-						this,
-						UDamageType::StaticClass()
-						);
+			Enemy,
+			DealtDamage,
+			GetVelocity().GetSafeNormal(),
+			Hit,
+			UGameplayStatics::GetPlayerController(this,0),
+			this,
+			UDamageType::StaticClass()
+		);
+		if (ImpactEnemySound)
+		{
+			
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactEnemySound, GetActorLocation());
+		}
+		else if (ImpactGroundSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation());
+		}
+		
 		Destroy();
 	}
 	else
 	{
+		if (ImpactGroundSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation());
+		}
 		if (bBreaksOnImpact)
 		{
 			Destroy();
@@ -107,11 +122,12 @@ void AThrowableObject::HandlePickup(AStealthCharacter* Player)
 		}
 		if (ThrowableWeapon)
 		{
-			if (!Player->HeldThrowableWeapon)
+			if (Player->HeldThrowableWeapon)
 			{
-				Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
-				Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
+				Player->HeldThrowableWeapon->Destroy();
 			}
+			Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
+			Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
 			Player->LastHeldWeapon = ThrowableWeapon;
 		}
 		

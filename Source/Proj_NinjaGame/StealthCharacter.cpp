@@ -15,6 +15,7 @@
 #include "KunaiWeapon.h"
 #include "PlayerUseInterface.h"
 #include "MeleeAIController.h"
+#include "MeleeWeapon.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Proj_NinjaGame.h"
 #include "StealthGameInstance.h"
@@ -170,7 +171,7 @@ void AStealthCharacter::Attack()
 {
 	if (bIsAiming)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Aiming"));
+		UE_LOG(LogTemp, Display, TEXT("Ranged attack"));
 		//ThrowingWeapon
 		if (HeldThrowableWeapon)
 		{
@@ -183,8 +184,15 @@ void AStealthCharacter::Attack()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Display, TEXT("No Aiming"));
 		//MeleeWeapon
+		if (CurrentMeleeWeapon->bCanMeleeAttack)
+		{
+			if (CurrentMovementState != EPlayerMovementState::Run && CurrentMovementState != EPlayerMovementState::Climb)
+			{
+				UE_LOG(LogTemp, Display, TEXT("Melee attack"));
+				CurrentMeleeWeapon->bMeleeAttacking = true;
+			}
+		}
 	}
 }
 
@@ -204,7 +212,7 @@ void AStealthCharacter::EquipKunai()
 					}
 					UE_LOG(LogTemp, Display, TEXT("Unequipping Kunai"));
 					HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(LastHeldWeapon);
-					HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
+					HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
 				}
 			}
 			else
@@ -217,7 +225,7 @@ void AStealthCharacter::EquipKunai()
 					}
 					UE_LOG(LogTemp, Display, TEXT("Equipping Kunai"));
 					HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(KunaiWeapon);
-					HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
+					HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
 				}
 			}
 		}
@@ -275,10 +283,10 @@ void AStealthCharacter::UpdateProjectilePrediction()
 	{
 		PredictParams.ProjectileRadius = 5.f;
 	}
-    PredictParams.MaxSimTime = 1.f; // Max simulated tim of travel per second
+    PredictParams.MaxSimTime = 2.f; // Max simulated tim of travel per second
     PredictParams.bTraceWithCollision = true; //If hit something
     PredictParams.SimFrequency = 15.f; //How many checks per second
-    PredictParams.TraceChannel = ECC_Visibility;
+    PredictParams.TraceChannel = ECC_Camera;
     PredictParams.ActorsToIgnore.Add(this);
 
     FPredictProjectilePathResult PredictResult;
@@ -295,6 +303,27 @@ void AStealthCharacter::BeginPlay()
 	if (FirstPersonCameraComponent)
 	{
 		NormalFOV = FirstPersonCameraComponent->FieldOfView;
+	}
+	
+	if (KunaiWeapon && AmountOfKunai > 1)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Equip Kunai"));
+		if (HeldThrowableWeapon)
+		{
+			HeldThrowableWeapon->Destroy();
+		}
+		HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(KunaiWeapon);
+		HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
+	}
+	
+	if (MeleeWeapon)
+	{
+		if (CurrentMeleeWeapon)
+		{
+			HeldThrowableWeapon->Destroy();
+		}
+		CurrentMeleeWeapon = GetWorld()->SpawnActor<AMeleeWeapon>(MeleeWeapon);
+		CurrentMeleeWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
 	}
 }
 

@@ -31,6 +31,10 @@ public:
 	bool bBreaksOnImpact = true;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<AThrowableWeapon> ThrowableWeapon;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	USoundBase* ImpactGroundSound;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	USoundBase* ImpactEnemySound;
 	
 protected:
 	// Called when the game starts or when spawned
