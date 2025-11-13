@@ -52,6 +52,12 @@ protected:
 	UFUNCTION()
 	void HandleSuspiciousLocation(FVector Location);
 
+	
+	// Time handle Funktioner:
+	void ResetSoundFlag();
+	void OnAlertTimerExpired();
+	void RetryMoveToNextPatrolPoint();
+
 private:
 	FTimerHandle StartPatrolTimerHandle;
 	FTimerHandle LookAroundTimerHandle;

@@ -19,10 +19,10 @@ AMeleeEnemy::AMeleeEnemy()
 	PrimaryActorTick.bCanEverTick = true;
 
 
-	// Skapa hitbox och fäst vid mesh (t.ex. hand-socket) eller root
+	// Skapa hitbox och fäst vid mesh 
 	MeleeHitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("MeleeHitBox"));
-	MeleeHitBox->SetupAttachment(GetMesh()); // eller AttachToComponent(GetMesh(), ...)
-	// Positionera hitbox relativt i blueprint eller här via SetRelativeLocation/Rotation
+	MeleeHitBox->SetupAttachment(GetMesh()); 
+	// Positionera hitbox 
 	MeleeHitBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	MeleeHitBox->SetCollisionObjectType(ECC_WorldDynamic);
 	MeleeHitBox->SetCollisionResponseToAllChannels(ECR_Ignore);
@@ -299,18 +299,6 @@ void AMeleeEnemy::CheckPlayerVisibility()
 	bPlayerInAlertCone = false;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
 void AMeleeEnemy::OnSuspiciousLocationDetected()
 {
 	UE_LOG(LogTemp, Warning, TEXT("OnSuspiciousLocationDetected()"));
@@ -375,10 +363,6 @@ void AMeleeEnemy::Die()
 	Destroy(); 
 }
 
-
-
-
-
 void AMeleeEnemy::StartAttack()
 {
 	if (!bCanAttack) return;
@@ -399,10 +383,11 @@ void AMeleeEnemy::StartAttack()
 	// aktiverar hitbox en kort stund 
 	EnableHitbox(0.2f);
 	
-	GetWorldTimerManager().SetTimer(AttackCooldownHandle, [this]()
+	/*GetWorldTimerManager().SetTimer(AttackCooldownHandle, [this]()
 	{
 		bCanAttack = true;
-	}, AttackCooldown, false);
+	}, AttackCooldown, false);*/
+	GetWorldTimerManager().SetTimer(AttackCooldownHandle, this, &AMeleeEnemy::ResetAttackCooldown, AttackCooldown, false);
 }
 
 void AMeleeEnemy::EnableHitbox(float WindowSeconds)
@@ -461,13 +446,13 @@ void AMeleeEnemy::OnMeleeOverlapBegin(UPrimitiveComponent* OverlappedComp, AActo
 	}
 }
 
+
 void AMeleeEnemy::ApplyDamageTo(AActor* Target)
 {
 	if (!Target) return;
 
 	UGameplayStatics::ApplyDamage(Target, AttackDamage, GetController(), this, nullptr);
 }
-
 
 
 void AMeleeEnemy::HearSoundAtLocation(FVector SoundLocation)
@@ -482,16 +467,19 @@ void AMeleeEnemy::HearSoundAtLocation(FVector SoundLocation)
 		//UE_LOG(LogTemp, Warning, TEXT("Enemy heard sound at %s"), *SoundLocation.ToString());
 
 		// Starta timer för att glömma ljudet efter ett tag
-		GetWorldTimerManager().SetTimerForNextTick([this]()
+		/*GetWorldTimerManager().SetTimerForNextTick([this]()
 		{
 			FTimerHandle ForgetSoundHandle;
 			GetWorldTimerManager().SetTimer(ForgetSoundHandle, [this]()
 			{
 				bHeardSoundRecently = false;
 			}, HearingMemoryTime, false);
-		});
+		});*/
+		FTimerHandle ForgetSoundHandle;
+		GetWorldTimerManager().SetTimer(ForgetSoundHandle, this, &AMeleeEnemy::ForgetHeardSound, HearingMemoryTime, false);
 	}
 }
+
 
 void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 {
@@ -564,6 +552,7 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 	}
 }
 
+
 void AMeleeEnemy::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
@@ -579,4 +568,18 @@ void AMeleeEnemy::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		StateVFXComponent->Deactivate();
 	}
+}
+
+
+
+
+// Time handle Funktioner:
+void AMeleeEnemy::ResetAttackCooldown()
+{
+	bCanAttack = true;
+}
+
+void AMeleeEnemy::ForgetHeardSound()
+{
+	bHeardSoundRecently = false;
 }
