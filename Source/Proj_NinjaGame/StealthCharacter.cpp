@@ -19,6 +19,7 @@
 #include "Proj_NinjaGame.h"
 #include "StealthGameInstance.h"
 #include "ThrowableWeapon.h"
+#include "EnvironmentQuery/EnvQueryTypes.h"
 
 
 // Sets default values
@@ -554,11 +555,14 @@ void AStealthCharacter::ToggleSneak()
 {	
 	if (CurrentMovementState == EPlayerMovementState::Crouch)
 	{
-		// Gå tillbaka till gångläge
-		UnCrouch();
-		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
-		CurrentMovementState = EPlayerMovementState::Walk;
-		//UE_LOG(LogTemp, Warning, TEXT("Player stopped sneaking."));
+		if (CanUnCrouch())
+		{
+			// Gå tillbaka till gångläge
+			UnCrouch();
+			GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
+			CurrentMovementState = EPlayerMovementState::Walk;
+			//UE_LOG(LogTemp, Warning, TEXT("Player stopped sneaking."));
+		}
 	}
 	else
 	{
@@ -571,6 +575,38 @@ void AStealthCharacter::ToggleSneak()
 	}
 }
 
+bool AStealthCharacter::CanUnCrouch()
+{
+	const float DeltaZ = GetDefaultHalfHeight() - GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+	const FVector CheckLocation = GetActorLocation() + FVector(0, 0, DeltaZ);
+
+	TArray<UPrimitiveComponent*> Overlaps;
+
+	// We only care about blocking geometry, so use ECC_Pawn or Visibility/WorldStatic as needed
+	const TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes = {
+		UEngineTypes::ConvertToObjectType(ECC_WorldStatic),
+		UEngineTypes::ConvertToObjectType(ECC_WorldDynamic),
+		UEngineTypes::ConvertToObjectType(ECC_Pawn),
+		UEngineTypes::ConvertToObjectType(ECC_PhysicsBody)
+	};
+
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(this);
+
+	bool bHit = UKismetSystemLibrary::CapsuleOverlapComponents(
+		GetWorld(),
+		CheckLocation,
+		GetCapsuleComponent()->GetUnscaledCapsuleRadius(),
+		GetDefaultHalfHeight(),
+		ObjectTypes,
+		nullptr,
+		ActorsToIgnore,
+		Overlaps
+	);
+
+	return !bHit;
+}
+
 void AStealthCharacter::StartSprint()
 {
 	AimEnd();
@@ -580,14 +616,11 @@ void AStealthCharacter::StartSprint()
 	{
 		UnCrouch();
 		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
-		TargetCameraBaseLocation = DefaultCameraRelativeLocation;
 		CurrentMovementState = EPlayerMovementState::Walk;
-		bIsSneaking = false;
 	}
 	
 	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 	CurrentMovementState = EPlayerMovementState::Run;
-	bIsSprinting = true;
 	
 	//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
 }

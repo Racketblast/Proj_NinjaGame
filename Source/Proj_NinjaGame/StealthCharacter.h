@@ -185,6 +185,8 @@ protected:
 
 	void ToggleSneak();
 
+	bool CanUnCrouch();
+
 	// Sprint
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Movement")
 	float SprintSpeed = 900.0f;
