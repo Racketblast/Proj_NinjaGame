@@ -56,60 +56,6 @@ void AMeleeEnemy::Tick(float DeltaTime)
 
 /*void AMeleeEnemy::CheckPlayerVisibility()
 {
-	if (!PlayerPawn) return;
-
-	FVector ToPlayer = PlayerPawn->GetActorLocation() - GetActorLocation();
-	float Distance = ToPlayer.Size();
-
-	if (Distance > VisionRange)
-	{
-		bCanSeePlayer = false;
-		return;
-	}
-
-	FVector Forward = GetActorForwardVector();
-	ToPlayer.Normalize();
-
-	float Dot = FVector::DotProduct(Forward, ToPlayer);
-	float Angle = FMath::Acos(Dot) * (180.f / PI);
-
-	if (Angle > VisionAngle)
-	{
-		bCanSeePlayer = false;
-		return;
-	}
-
-	// Line trace check
-	FHitResult Hit;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
-
-	bool bHit = GetWorld()->LineTraceSingleByChannel(
-		Hit,
-		GetActorLocation() + FVector(0,0,50),
-		PlayerPawn->GetActorLocation(),
-		ECC_Visibility,
-		Params
-	);
-
-	if (!bHit || Hit.GetActor() == PlayerPawn)
-	{
-		bCanSeePlayer = true;
-		DrawDebugLine(GetWorld(), GetActorLocation(), PlayerPawn->GetActorLocation(), FColor::Green, false, 0.05f);
-		if (bCanSeePlayer)
-		{
-			UpdateLastSeenPlayerLocation();
-		}
-	}
-	else
-	{
-		bCanSeePlayer = false;
-		DrawDebugLine(GetWorld(), GetActorLocation(), Hit.Location, FColor::Red, false, 0.05f);
-	}
-}*/
-
-void AMeleeEnemy::CheckPlayerVisibility()
-{
     if (!PlayerPawn) return;
 
 	// Rita endast konen när vi patrullerar
@@ -190,8 +136,175 @@ void AMeleeEnemy::CheckPlayerVisibility()
         bCanSeePlayer = false;
         DrawDebugLine(GetWorld(), EnemyLocation, Hit.Location, FColor::Red, false, 0.05f);
     }
+}*/
+
+void AMeleeEnemy::CheckPlayerVisibility()
+{
+	if (!PlayerPawn) return;
+
+	// === Variabler ===
+	FVector EnemyLocation = GetActorLocation() + FVector(0, 0, 50);
+	FVector Forward = GetActorForwardVector();
+	FVector LookDirection = Forward.RotateAngleAxis(10.f, GetActorRightVector()); // lite nedåtriktad
+	FVector ToPlayer = PlayerPawn->GetActorLocation() - EnemyLocation;
+	float Distance = ToPlayer.Size();
+	ToPlayer.Normalize();
+
+	// === Skillnad mellan patrull- och chase-läge ===
+	float EffectiveVisionRange = bIsChasing ? VisionRange : VisionRange * 0.6f;
+	float EffectiveVisionAngle = bIsChasing ? VisionAngle : VisionAngle * 0.5f;
+
+	// === Rita debug-koner ===
+	if (!bIsChasing && bVisionDebug)
+	{
+		// Vanliga syn-kon
+		DrawDebugCone(
+			GetWorld(),
+			EnemyLocation,
+			LookDirection,
+			EffectiveVisionRange,
+			FMath::DegreesToRadians(EffectiveVisionAngle * 0.5f),
+			FMath::DegreesToRadians(EffectiveVisionAngle * 0.5f),
+			12,
+			FColor::Yellow,
+			false,
+			0.05f
+		);
+
+		// Suspicious-kon (mindre)
+		DrawDebugCone(
+			GetWorld(),
+			EnemyLocation,
+			LookDirection,
+			SuspiciousVisionRange,
+			FMath::DegreesToRadians(SuspiciousVisionAngle * 0.5f),
+			FMath::DegreesToRadians(SuspiciousVisionAngle * 0.5f),
+			12,
+			FColor::Orange,
+			false,
+			0.05f
+		);
+	}
+
+	// === Kontrollera om spelaren är inom räckvidd ===
+	if (Distance <= EffectiveVisionRange)
+	{
+		float Dot = FVector::DotProduct(LookDirection, ToPlayer);
+		float Angle = FMath::Acos(Dot) * (180.f / PI);
+
+		if (Angle <= EffectiveVisionAngle * 0.5f)
+		{
+			FHitResult Hit;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(this);
+
+			bool bHit = GetWorld()->LineTraceSingleByChannel(
+				Hit,
+				EnemyLocation,
+				PlayerPawn->GetActorLocation(),
+				ECC_Visibility,
+				Params
+			);
+
+			if (!bHit || Hit.GetActor() == PlayerPawn)
+			{
+				bCanSeePlayer = true;
+				bIsSuspicious = false;
+				SuspiciousTimer = 0.f;
+				UpdateLastSeenPlayerLocation();
+
+				DrawDebugLine(GetWorld(), EnemyLocation, PlayerPawn->GetActorLocation(), FColor::Green, false, 0.1f);
+				return;
+			}
+		}
+	}
+
+	// === Andra konen: misstanke ===
+	if (Distance <= SuspiciousVisionRange)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("SuspiciousVisionRange 1"));
+		float SuspiciousDot = FVector::DotProduct(LookDirection, ToPlayer);
+		float SuspiciousAngle = FMath::Acos(SuspiciousDot) * (180.f / PI);
+
+		if (SuspiciousAngle <= SuspiciousVisionAngle * 0.5f)
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("Suspicious: inom vinkel"));
+			
+			FHitResult Hit;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(this);
+
+			bool bHit = GetWorld()->LineTraceSingleByChannel(
+				Hit,
+				EnemyLocation,
+				PlayerPawn->GetActorLocation(),
+				ECC_Visibility,
+				Params
+			);
+
+			if (!bHit || Hit.GetActor() == PlayerPawn)
+			{
+				bPlayerInSuspiciousZone = true;
+				bIsSuspicious = true;
+				SuspiciousTimer += GetWorld()->GetDeltaSeconds();
+				bPlayerInAlertCone = true;
+
+				//UE_LOG(LogTemp, Warning, TEXT("SuspiciousVisionRange 2"));
+
+				// Fienden tittar mot spelaren
+				FRotator LookAtRot = (PlayerPawn->GetActorLocation() - GetActorLocation()).Rotation();
+				SetActorRotation(FMath::RInterpTo(GetActorRotation(), LookAtRot, GetWorld()->GetDeltaSeconds(), 2.f));
+
+				// Om spelaren stannar kvar tillräckligt länge så upptäcks spelaren
+				if (SuspiciousTimer >= TimeToSpotPlayer)
+				{
+					//UE_LOG(LogTemp, Warning, TEXT("Upptäck spelaren efter timer!"))
+					bCanSeePlayer = true;
+					UpdateLastSeenPlayerLocation();
+					return;
+				}
+
+				return;
+			}
+		}
+	}
+
+	// === Om spelaren lämnar misstanke-kon ===
+	if (bIsSuspicious && !bPlayerInSuspiciousZone)
+	{
+		if (SuspiciousTimer > 4.f && SuspiciousTimer < TimeToSpotPlayer)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SuspiciousLocationDetected"));
+			UpdateLastSeenPlayerLocation();
+			OnSuspiciousLocationDetected(); // trigga delegate eller AI-händelse
+		}
+
+		bIsSuspicious = false;
+		SuspiciousTimer = 0.f;
+	}
+
+	bPlayerInSuspiciousZone = false;
+	bCanSeePlayer = false;
+	bPlayerInAlertCone = false;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+void AMeleeEnemy::OnSuspiciousLocationDetected()
+{
+	UE_LOG(LogTemp, Warning, TEXT("OnSuspiciousLocationDetected()"));
+	OnSuspiciousLocation.Broadcast(LastSeenPlayerLocation);
+}
 
 void AMeleeEnemy::UpdateLastSeenPlayerLocation()
 {
@@ -218,6 +331,36 @@ float AMeleeEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEven
 void AMeleeEnemy::Die()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Enemy died!"));
+	
+	SetActorTickEnabled(false);
+
+	// Rensa alla timers som kan referera till
+	GetWorldTimerManager().ClearAllTimersForObject(this);
+
+	// ta bort hitbox-komponenten 
+	if (MeleeHitBox)
+	{
+		MeleeHitBox->OnComponentBeginOverlap.Clear(); 
+		MeleeHitBox->DestroyComponent();
+		MeleeHitBox = nullptr;
+	}
+
+	// ta bort VFX-komponent
+	if (StateVFXComponent)
+	{
+		StateVFXComponent->Deactivate();
+		StateVFXComponent->DestroyComponent();
+		StateVFXComponent = nullptr;
+	}
+
+	// Ser till att AIControllern inte försöker använda fienden längre
+	AController* MyController = GetController();
+	if (MyController)
+	{
+		MyController->UnPossess();
+		MyController->Destroy();
+	}
+	
 	Destroy(); 
 }
 
@@ -332,7 +475,13 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 		StateVFXComponent->SetAsset(nullptr);
 		StateVFXComponent->Deactivate();
 		break;
-
+	case EEnemyState::Alert:
+		if (AlertVFX)
+		{
+			StateVFXComponent->SetAsset(AlertVFX);
+			StateVFXComponent->Activate(true);
+		}
+		break;
 	case EEnemyState::Chasing:
 		if (ChaseVFX)
 		{
@@ -357,3 +506,19 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 	}
 }
 
+void AMeleeEnemy::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	
+	GetWorldTimerManager().ClearAllTimersForObject(this);
+
+	if (MeleeHitBox)
+	{
+		MeleeHitBox->OnComponentBeginOverlap.Clear();
+	}
+
+	if (StateVFXComponent)
+	{
+		StateVFXComponent->Deactivate();
+	}
+}

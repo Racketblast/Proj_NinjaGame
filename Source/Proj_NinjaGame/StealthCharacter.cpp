@@ -20,6 +20,7 @@
 #include "StealthGameInstance.h"
 #include "ThrowableWeapon.h"
 #include "EnvironmentQuery/EnvQueryTypes.h"
+#include "Navigation/PathFollowingComponent.h"
 
 
 // Sets default values
@@ -543,6 +544,9 @@ void AStealthCharacter::Die()
 			if (AAIController* AICon = *It)
 			{
 				AICon->StopMovement();
+				AICon->GetPathFollowingComponent()->OnRequestFinished.RemoveAll(AICon);
+				AICon->GetWorldTimerManager().ClearAllTimersForObject(AICon);
+				AICon->UnPossess();
 			}
 		}
 
