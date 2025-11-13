@@ -536,7 +536,7 @@ void AStealthCharacter::Die()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Player died!"));
 
-	GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
+	/*GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
 	{
 		// Säkerhetsstopp innan leveln laddas om, hade en krash tidigare så lade till detta för att stopa krasshen. 
 		for (TActorIterator<AAIController> It(GetWorld()); It; ++It)
@@ -551,6 +551,27 @@ void AStealthCharacter::Die()
 		}
 
 		UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), true);
+	});*/
+
+	GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
+	{
+		GetWorld()->GetTimerManager().SetTimer(
+			TempHandle,
+			[this]() {
+				// Säkerhetsstopp innan leveln laddas om, hade en krash tidigare så lade till detta för att stopa krasshen. 
+				for (TActorIterator<AAIController> It(GetWorld()); It; ++It)
+				{
+					if (AAIController* AICon = *It)
+					{
+						AICon->StopMovement();
+						AICon->GetPathFollowingComponent()->OnRequestFinished.RemoveAll(AICon);
+						AICon->GetWorldTimerManager().ClearAllTimersForObject(AICon);
+						AICon->UnPossess();
+					}
+				}
+				UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), true);
+			},
+			0.2f, false);
 	});
 }
 

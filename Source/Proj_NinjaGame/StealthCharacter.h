@@ -117,6 +117,7 @@ protected:
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
 
 	void Die();
+	FTimerHandle TempHandle;
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void Use();
