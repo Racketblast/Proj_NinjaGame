@@ -26,6 +26,10 @@ public:
 	bool bMeleeAttacking = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	float MeleeDamage = 2;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* HitSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* SwingSound;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -33,6 +37,7 @@ protected:
 	void MeleeAttackLoop();
 	
 	FTimerHandle MeleeAttackingTimer;
+	UPROPERTY()
 	TArray<AActor*> ActorsHit;
 	
 	UPROPERTY(EditDefaultsOnly)

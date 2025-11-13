@@ -248,20 +248,34 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "Climb")
 	bool bHoldingJump = false;
 
-	void Climb(float Seconds);
+	void Climb();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	//Player Stamina
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
 	float MaxStamina = 100;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stamina")
 	float CurrentStamina;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stamina")
+	float UpdateStaminaAmount;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
+	float StaminaRefreshRate = 0.1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
+	float RegainStaminaStartTime = 3;
 
-	void UpdateStamina(float StaminaAmount);
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-	float ClimbStaminaSeconds = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
+	float RegainStaminaAmount = 2;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
+	float SprintStaminaAmount = -2;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
+	float ClimbStaminaAmount = -4;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
+	float AttackStaminaAmount = -20;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Stats")
-	float ClimbStaminaSecondsPassed = 0;
+	FTimerHandle StaminaTimer;
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	void UpdateStaminaStart(float InStamina);
+	UFUNCTION()
+	void UpdateStaminaLoop();
 
 	virtual void Landed(const FHitResult& Hit) override;
 public:	

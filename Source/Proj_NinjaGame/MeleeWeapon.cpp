@@ -23,9 +23,11 @@ AMeleeWeapon::AMeleeWeapon()
 
 void AMeleeWeapon::StartMeleeAttack()
 {
-	bCanMeleeAttack = false;
+	if (SwingSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), SwingSound, GetActorLocation());
+	}
 	GetWorld()->GetTimerManager().SetTimer(MeleeAttackingTimer, this, &AMeleeWeapon::MeleeAttackLoop, 0.01, true);
-	bMeleeAttacking = true;
 }
 
 void AMeleeWeapon::MeleeAttackLoop()
@@ -44,6 +46,10 @@ void AMeleeWeapon::MeleeAttackLoop()
 		{
 			if (Enemy->bCanBeAssassinated && !Enemy->CanSeePlayer())
 			{
+				if (HitSound)
+				{
+					UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, GetActorLocation());
+				}
 				ActorsHit.Add(Enemy);
 				UGameplayStatics::ApplyDamage(
 					Enemy,
