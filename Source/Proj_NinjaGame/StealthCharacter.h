@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "StealthCharacter.generated.h"
 
+class AMeleeWeapon;
 class AKunaiWeapon;
 class AThrowableWeapon;
 class UInputComponent;
@@ -142,34 +143,39 @@ protected:
 	UPROPERTY(BlueprintReadWrite)
 	bool bIsAiming;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
 	USoundBase* ThrowSound;
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	float CameraForwardMultiplier = 100.f;
 	
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	AThrowableWeapon* HeldThrowableWeapon = nullptr;
 	
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
 	TSubclassOf<AThrowableWeapon> LastHeldWeapon;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Stats")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
 	int AmountOfKunai = 3;
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	TSubclassOf<AKunaiWeapon> KunaiWeapon;
 
 	//Projectile marker
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
 	AActor* SpawnedMarker;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	TSubclassOf<AActor> MarkerClass;
 	
     void UpdateProjectilePrediction();
 	
-	//Melee maybe
+	//Melee
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	TSubclassOf<AMeleeWeapon> MeleeWeapon;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
+	AMeleeWeapon* CurrentMeleeWeapon;
+	
 	/*
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
 	int32 MeleeDistance = 150;
@@ -244,6 +250,13 @@ protected:
 	bool bHoldingJump = false;
 
 	void Climb(float Seconds);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	float MaxStamina = 100;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
+	float CurrentStamina;
+
+	void UpdateStamina(float StaminaAmount);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	float ClimbStaminaSeconds = 1.f;
@@ -267,5 +280,3 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	bool bIsInCombat = false;
 };
-
-

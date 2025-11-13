@@ -21,11 +21,12 @@ void APickupWeaponObject::Use_Implementation(AStealthCharacter* Player)
 		}
 		if (ThrowableWeapon)
 		{
-			if (!Player->HeldThrowableWeapon)
+			if (Player->HeldThrowableWeapon)
 			{
-				Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
-				Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
+				Player->HeldThrowableWeapon->Destroy();
 			}
+			Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
+			Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
 			Player->LastHeldWeapon = ThrowableWeapon;
 		}
 		

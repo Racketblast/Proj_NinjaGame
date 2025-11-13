@@ -15,6 +15,7 @@
 #include "KunaiWeapon.h"
 #include "PlayerUseInterface.h"
 #include "MeleeAIController.h"
+#include "MeleeWeapon.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Proj_NinjaGame.h"
 #include "StealthGameInstance.h"
@@ -60,6 +61,8 @@ AStealthCharacter::AStealthCharacter()
 	GetCharacterMovement()->AirControl = 0.5f;
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
 	GetCharacterMovement()->MaxWalkSpeedCrouched = SneakWalkSpeed;
+
+	CurrentStamina = MaxStamina;
 }
 
 void AStealthCharacter::MoveInput(const FInputActionValue& Value)
@@ -171,7 +174,7 @@ void AStealthCharacter::Attack()
 {
 	if (bIsAiming)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Aiming"));
+		UE_LOG(LogTemp, Display, TEXT("Ranged attack"));
 		//ThrowingWeapon
 		if (HeldThrowableWeapon)
 		{
@@ -184,8 +187,15 @@ void AStealthCharacter::Attack()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Display, TEXT("No Aiming"));
 		//MeleeWeapon
+		if (CurrentMeleeWeapon->bCanMeleeAttack)
+		{
+			if (CurrentMovementState != EPlayerMovementState::Run && CurrentMovementState != EPlayerMovementState::Climb)
+			{
+				UE_LOG(LogTemp, Display, TEXT("Melee attack"));
+				CurrentMeleeWeapon->bMeleeAttacking = true;
+			}
+		}
 	}
 }
 
@@ -205,7 +215,7 @@ void AStealthCharacter::EquipKunai()
 					}
 					UE_LOG(LogTemp, Display, TEXT("Unequipping Kunai"));
 					HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(LastHeldWeapon);
-					HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
+					HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
 				}
 			}
 			else
@@ -218,7 +228,7 @@ void AStealthCharacter::EquipKunai()
 					}
 					UE_LOG(LogTemp, Display, TEXT("Equipping Kunai"));
 					HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(KunaiWeapon);
-					HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
+					HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
 				}
 			}
 		}
@@ -276,16 +286,36 @@ void AStealthCharacter::UpdateProjectilePrediction()
 	{
 		PredictParams.ProjectileRadius = 5.f;
 	}
-    PredictParams.MaxSimTime = 1.f; // Max simulated tim of travel per second
+    PredictParams.MaxSimTime = 2.f; // Max simulated tim of travel per second
     PredictParams.bTraceWithCollision = true; //If hit something
     PredictParams.SimFrequency = 15.f; //How many checks per second
-    PredictParams.TraceChannel = ECC_Visibility;
+    PredictParams.TraceChannel = ECC_Camera;
     PredictParams.ActorsToIgnore.Add(this);
 
     FPredictProjectilePathResult PredictResult;
     UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult);
 
 	SpawnedMarker->SetActorLocation(PredictResult.HitResult.Location);
+}
+
+
+
+
+void AStealthCharacter::UpdateStamina(float StaminaAmount)
+{
+	if (CurrentStamina + StaminaAmount <= MaxStamina && CurrentStamina + StaminaAmount >= 0)
+	{
+		CurrentStamina += StaminaAmount;
+
+		if (CurrentStamina < 0)
+		{
+			CurrentStamina = 0;
+		}
+		else if (CurrentStamina > MaxStamina)
+		{
+			CurrentStamina = MaxStamina;
+		}
+	}
 }
 
 // Called when the game starts or when spawned
@@ -296,6 +326,27 @@ void AStealthCharacter::BeginPlay()
 	if (FirstPersonCameraComponent)
 	{
 		NormalFOV = FirstPersonCameraComponent->FieldOfView;
+	}
+	
+	if (KunaiWeapon && AmountOfKunai > 1)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Equip Kunai"));
+		if (HeldThrowableWeapon)
+		{
+			HeldThrowableWeapon->Destroy();
+		}
+		HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(KunaiWeapon);
+		HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
+	}
+	
+	if (MeleeWeapon)
+	{
+		if (CurrentMeleeWeapon)
+		{
+			HeldThrowableWeapon->Destroy();
+		}
+		CurrentMeleeWeapon = GetWorld()->SpawnActor<AMeleeWeapon>(MeleeWeapon);
+		CurrentMeleeWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
 	}
 }
 
@@ -638,9 +689,12 @@ void AStealthCharacter::StartSprint()
 	// Om spelaren är i crouch så lämna det läget först
 	if (CurrentMovementState == EPlayerMovementState::Crouch)
 	{
-		UnCrouch();
-		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
-		CurrentMovementState = EPlayerMovementState::Walk;
+		if (CanUnCrouch())
+		{
+			UnCrouch();
+			GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
+			CurrentMovementState = EPlayerMovementState::Walk;
+		}
 	}
 	
 	GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;

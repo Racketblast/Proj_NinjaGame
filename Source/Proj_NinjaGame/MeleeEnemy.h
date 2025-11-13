@@ -20,6 +20,8 @@ class PROJ_NINJAGAME_API AMeleeEnemy : public ACharacter
 public:
 	AMeleeEnemy();
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	bool bCanBeAssassinated = false;
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -99,6 +101,18 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere, Category="Combat")
 	UBoxComponent* MeleeHitBox;
+
+	UPROPERTY(VisibleAnywhere, Category="Combat")
+	UCapsuleComponent* AssassinationCapsule;
+	
+	UFUNCTION()
+	void OnAssasinationOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+							 UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+							 bool bFromSweep, const FHitResult& SweepResult);
+	
+	UFUNCTION()
+	void OnAssasinationOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+								UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	
 	bool bCanAttack = true;
 	bool bHitRegisteredThisSwing = false;
@@ -119,6 +133,7 @@ public:
 	FORCEINLINE float GetSearchTime() const { return SearchTime; }
 	FORCEINLINE float GetWalkSpeed() const { return WalkSpeed; }
 	FORCEINLINE float GetRunSpeed() const { return RunSpeed; }
+	float GetHealth() const { return Health; }
 
 	void UpdateLastSeenPlayerLocation();
 	FVector GetLastSeenPlayerLocation() const { return LastSeenPlayerLocation; }

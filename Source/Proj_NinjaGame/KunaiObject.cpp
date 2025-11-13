@@ -18,13 +18,15 @@ void AKunaiObject::HandlePickup(class AStealthCharacter* Player)
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), InteractSound, GetActorLocation());
 	}
 	
-	if (!Player->HeldThrowableWeapon)
+	
+	if (ThrowableWeapon)
 	{
-		if (ThrowableWeapon)
+		if (Player->HeldThrowableWeapon)
 		{
-			Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
-			Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
+			Player->HeldThrowableWeapon->Destroy();
 		}
+		Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
+		Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
 	}
 
 	Player->AmountOfKunai++;
