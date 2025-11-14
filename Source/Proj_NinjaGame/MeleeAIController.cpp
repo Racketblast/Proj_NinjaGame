@@ -62,12 +62,7 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 				//UE_LOG(LogTemp, Warning, TEXT("Patrolling: Heard sound at %s"), *ControlledEnemy->LastHeardSoundLocation.ToString());
 				OnHeardSound(ControlledEnemy->LastHeardSoundLocation);
 				bIsInvestigatingSound = true;
-
-				/*GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, [this]()
-				{
-					bIsInvestigatingSound = false;
-					ControlledEnemy->bHeardSoundRecently = false;
-				}, 0.5f, false);*/
+				
 				GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, this, &AMeleeAIController::ResetSoundFlag, 0.5f, false);
 			}
 			break;
@@ -598,10 +593,13 @@ void AMeleeAIController::OnHeardSound(FVector SoundLocation)
 	bIsMovingToSound = true;
 
 	DrawDebugSphere(GetWorld(), SoundLocation, 25.f, 12, FColor::Yellow, false, 5.f);  
-	DrawDebugSphere(GetWorld(), GroundedLocation, 25.f, 12, FColor::Green, false, 5.f); 
+	DrawDebugSphere(GetWorld(), GroundedLocation, 25.f, 12, FColor::Green, false, 5.f);
+
+	UE_LOG(LogTemp, Warning, TEXT("OnHeardSound triggered: Enemy moving toward sound at %s"), *GroundedLocation.ToString());
 	
 	MoveToLocation(GroundedLocation, -1.f, true, true, false, false, 0, true);
 }
+
 
 
 void AMeleeAIController::HandleSuspiciousLocation(FVector Location)
@@ -661,6 +659,11 @@ void AMeleeAIController::ResetSoundFlag()
 void AMeleeAIController::OnAlertTimerExpired()
 {
 	if (!ControlledEnemy || !IsValid(ControlledEnemy)) return;
+
+	/*if (ControlledEnemy->bHeardSoundRecently)
+	{
+		return;
+	}*/
 
 	if (!ControlledEnemy->CanSeePlayer())
 	{
