@@ -4,6 +4,7 @@
 #include "MeleeWeapon.h"
 
 #include "MeleeEnemy.h"
+#include "SoundUtility.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -61,7 +62,10 @@ void AMeleeWeapon::MeleeAttackLoop()
 			}
 			else
 			{
-				
+				if (HitSound)
+				{
+					UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, GetActorLocation());
+				}	
 				ActorsHit.Add(Enemy);
 				UGameplayStatics::ApplyDamage(
 					Enemy,
@@ -70,6 +74,11 @@ void AMeleeWeapon::MeleeAttackLoop()
 					UGameplayStatics::GetPlayerCharacter(this,0),
 					UDamageType::StaticClass()
 					);
+				
+				//Sound för fienden
+				float NoiseLevel = 4.0f;
+
+				USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel);
 			}
 		}
 	}
