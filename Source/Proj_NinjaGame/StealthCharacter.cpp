@@ -61,6 +61,7 @@ AStealthCharacter::AStealthCharacter()
 	GetCharacterMovement()->AirControl = 0.5f;
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
 	GetCharacterMovement()->MaxWalkSpeedCrouched = SneakWalkSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
 
 	CurrentStamina = MaxStamina;
 }
@@ -341,6 +342,8 @@ void AStealthCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
+	
 	if (FirstPersonCameraComponent)
 	{
 		NormalFOV = FirstPersonCameraComponent->FieldOfView;
