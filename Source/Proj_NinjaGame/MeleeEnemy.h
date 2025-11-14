@@ -125,6 +125,12 @@ protected:
 							 UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 							 bool bFromSweep, const FHitResult& SweepResult);
 
+
+
+	// Time handle Funktioner:
+	void ResetAttackCooldown();
+	void ForgetHeardSound();
+
 public:
 	FORCEINLINE const TArray<AActor*>& GetPatrolPoints() const { return PatrolPoints; }
 	FORCEINLINE bool CanSeePlayer() const { return bCanSeePlayer; }

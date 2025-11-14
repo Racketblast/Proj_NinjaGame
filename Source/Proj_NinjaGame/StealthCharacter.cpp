@@ -156,18 +156,6 @@ void AStealthCharacter::DoJumpEnd()
 	StopJumping();
 	
 	bHoldingJump = false;
-	
-	float NoiseLevel;
-		
-	if (CurrentMovementState == EPlayerMovementState::Crouch)
-	{
-		NoiseLevel = 1.0f * SneakNoiseMultiplier;
-	}
-	else
-	{
-		NoiseLevel = 1.5f;
-	}
-	USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel);
 }
 
 void AStealthCharacter::Attack()
@@ -386,6 +374,18 @@ void AStealthCharacter::Landed(const FHitResult& Hit)
 	UE_LOG(LogTemp, Display, TEXT("Landed"));
 	
 	bCanClimb = true;
+
+	float NoiseLevel;
+		
+	if (CurrentMovementState == EPlayerMovementState::Crouch)
+	{
+		NoiseLevel = 1.0f * SneakNoiseMultiplier;
+	}
+	else
+	{
+		NoiseLevel = 1.5f;
+	}
+	USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel);
 }
 
 void AStealthCharacter::Tick(float DeltaTime)

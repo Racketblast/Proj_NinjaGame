@@ -62,11 +62,12 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 				OnHeardSound(ControlledEnemy->LastHeardSoundLocation);
 				bIsInvestigatingSound = true;
 
-				GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, [this]()
+				/*GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, [this]()
 				{
 					bIsInvestigatingSound = false;
 					ControlledEnemy->bHeardSoundRecently = false;
-				}, 0.5f, false);
+				}, 0.5f, false);*/
+				GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, this, &AMeleeAIController::ResetSoundFlag, 0.5f, false);
 			}
 			break;
 		}
@@ -162,11 +163,12 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 		
 		bIsInvestigatingSound = true;
 		
-		GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, [this]()
+		/*GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, [this]()
 		{
 			bIsInvestigatingSound = false;
 			ControlledEnemy->bHeardSoundRecently = false;
-		}, 0.5f, false);
+		}, 0.5f, false);*/
+		GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, this, &AMeleeAIController::ResetSoundFlag, 0.5f, false);
 	}
 }
 
@@ -192,7 +194,7 @@ void AMeleeAIController::StartAlert()
 	}
 
 	// Efter några sekunder om fienden fortfarande inte ser spelaren så återgår den till patrullering
-	GetWorldTimerManager().SetTimer(AlertTimerHandle, [this]()
+	/*GetWorldTimerManager().SetTimer(AlertTimerHandle, [this]()
 	{
 		if (!ControlledEnemy->CanSeePlayer())
 		{
@@ -201,7 +203,8 @@ void AMeleeAIController::StartAlert()
 			ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
 			MoveToNextPatrolPoint();
 		}
-	}, 3.f, false);
+	}, 3.f, false);*/
+	GetWorldTimerManager().SetTimer(AlertTimerHandle, this, &AMeleeAIController::OnAlertTimerExpired, 3.f, false);
 }
 
 
@@ -327,6 +330,17 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 	}
 
 	const TArray<AActor*>& PatrolPoints = ControlledEnemy->GetPatrolPoints();
+	if (PatrolPoints.Num() == 0)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("OnMoveCompleted aborted: PatrolPoints empty or enemy destroyed."));
+		return;
+	}
+
+	if (CurrentPatrolIndex < 0 || CurrentPatrolIndex >= PatrolPoints.Num())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnMoveCompleted invalid patrol index (%d / %d)."), CurrentPatrolIndex, PatrolPoints.Num());
+		return;
+	}
 	
 	if (CurrentState == EEnemyState::Patrolling)
 	{
@@ -361,10 +375,11 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 				*PatrolPoints[CurrentPatrolIndex]->GetName());
 
 			FTimerHandle RetryHandle;
-			GetWorldTimerManager().SetTimer(RetryHandle, [this]()
+			/*GetWorldTimerManager().SetTimer(RetryHandle, [this]()
 			{
 				MoveToNextPatrolPoint();
-			}, 1.0f, false);
+			}, 1.0f, false);*/
+			GetWorldTimerManager().SetTimer(RetryHandle, this, &AMeleeAIController::RetryMoveToNextPatrolPoint, 1.0f, false);
 		}
 	}
 
@@ -421,6 +436,10 @@ void AMeleeAIController::OnTargetLost()
 
 void AMeleeAIController::BeginSearch()
 {
+	if (!ControlledEnemy || !IsValid(ControlledEnemy)) return;
+	if (!GetPawn()) return;
+	if (GetWorld()->bIsTearingDown) return;
+	
 	StopMovement();
 
 	//UE_LOG(LogTemp, Warning, TEXT("AMeleeAIController BeginSearch 1"));
@@ -437,6 +456,8 @@ void AMeleeAIController::BeginSearch()
 
 void AMeleeAIController::LookAround()
 {
+	if (!ControlledEnemy || !IsValid(ControlledEnemy)) return;
+	if (GetWorld()->bIsTearingDown) return;
 	//UE_LOG(LogTemp, Warning, TEXT("AMeleeAIController LookAround 1"));
 	
 	APawn* ControlledPawn = GetPawn();
@@ -453,6 +474,10 @@ void AMeleeAIController::LookAround()
 
 void AMeleeAIController::EndSearch()
 {
+	if (!ControlledEnemy || !IsValid(ControlledEnemy)) return;
+	if (!GetPawn()) return;
+	if (GetWorld()->bIsTearingDown) return;
+	
 	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
 	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
 	
@@ -558,6 +583,10 @@ void AMeleeAIController::OnUnPossess()
 		ControlledEnemy->OnSuspiciousLocation.RemoveDynamic(this, &AMeleeAIController::HandleSuspiciousLocation);
 		ControlledEnemy = nullptr;
 	}
+
+	// Rensa alla timers
+	GetWorldTimerManager().ClearAllTimersForObject(this);
+	
 	Super::OnUnPossess();
 
 	// Rensa timers 
@@ -567,3 +596,36 @@ void AMeleeAIController::OnUnPossess()
 	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
 	GetWorldTimerManager().ClearTimer(AlertTimerHandle);
 }
+
+
+
+
+
+// Time handle funktioner:
+void AMeleeAIController::ResetSoundFlag()
+{
+	bIsInvestigatingSound = false;
+	if (ControlledEnemy && IsValid(ControlledEnemy))
+	{
+		ControlledEnemy->bHeardSoundRecently = false;
+	}
+}
+
+void AMeleeAIController::OnAlertTimerExpired()
+{
+	if (!ControlledEnemy || !IsValid(ControlledEnemy)) return;
+
+	if (!ControlledEnemy->CanSeePlayer())
+	{
+		CurrentState = EEnemyState::Patrolling;
+		ControlledEnemy->UpdateStateVFX(CurrentState);
+		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
+		MoveToNextPatrolPoint();
+	}
+}
+
+void AMeleeAIController::RetryMoveToNextPatrolPoint()
+{
+	MoveToNextPatrolPoint();
+}
+
