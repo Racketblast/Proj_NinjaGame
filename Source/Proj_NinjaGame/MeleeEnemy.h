@@ -135,6 +135,16 @@ protected:
 	void ResetAttackCooldown();
 	void ForgetHeardSound();
 
+	// Audio:
+	UPROPERTY(EditAnywhere, Category="Audio")
+	USoundBase* SearchingSound;
+
+	UPROPERTY(EditAnywhere, Category="Audio")
+	USoundBase* AlertSound;
+
+	UPROPERTY(EditAnywhere, Category="Audio")
+	USoundBase* ChasingSound;
+
 public:
 	FORCEINLINE const TArray<AActor*>& GetPatrolPoints() const { return PatrolPoints; }
 	FORCEINLINE bool CanSeePlayer() const { return bCanSeePlayer; }

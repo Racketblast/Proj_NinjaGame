@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "AIController.h"
+#include "NavigationSystem.h"
 #include "GameFramework/Character.h"
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -392,6 +393,29 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 
 	/*UE_LOG(LogTemp, Warning, TEXT("PatrolPoints num: %d, index: %d, success: %d"),
 		PatrolPoints.Num(), CurrentPatrolIndex, Result.IsSuccess());*/
+
+	
+	// Failsafe för searching moves 
+	/*if (CurrentState == EEnemyState::Searching)
+	{
+		if (!Result.IsSuccess())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Searching move failed. Ending search early."));
+
+			// Avsluta search
+			StopMovement();
+			bIsLookingAround = false;
+			bIsMovingToSound = false;
+			bIsInvestigatingSound = false;
+
+			// Återgå till patrullering
+			CurrentState = EEnemyState::Patrolling;
+			ControlledEnemy->UpdateStateVFX(CurrentState);
+
+			// Starta patrull igen
+			MoveToNextPatrolPoint();
+		}
+	}*/
 }
 
 
@@ -519,62 +543,66 @@ void AMeleeAIController::EndSearch()
 	}
 }
 
-
 void AMeleeAIController::OnHeardSound(FVector SoundLocation)
 {
 	if (!ControlledEnemy) return;
 
-	// Om den redan letar eller hör ett nytt ljud mitt i en undersökning så rensar den alla tidigare timers
+	// Reset all searching states
 	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
 	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
 	bIsLookingAround = false;
 	bIsMovingToSound = false;
 	bIsInvestigatingSound = false;
 
-	// Bara reagera om fienden inte redan jagar spelaren
+	// Ignore sounds while chasing
 	if (CurrentState == EEnemyState::Chasing) return;
-
-	//UE_LOG(LogTemp, Warning, TEXT("Enemy heard a sound and is investigating"));
 	
-	//DrawDebugSphere(GetWorld(), SoundLocation, 25.f, 12, FColor::Yellow, false, 5.f); 	// För att se vart ljudet som fienden hör är i världen. 
-
 	StopMovement();
-
-	CurrentState = EEnemyState::Searching;
-	ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
-	//bIsInvestigatingSound = true;
-	LastKnownPlayerLocation = SoundLocation;
 	
-	// Justera ljudets position till marknivån 
-	FVector GroundedSoundLocation = SoundLocation;
+	CurrentState = EEnemyState::Searching;
+	ControlledEnemy->UpdateStateVFX(CurrentState);
+
+	// Adjust sound height 
+	FVector GroundedLocation = SoundLocation;
+
 	FHitResult Hit;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(ControlledEnemy);
 
-	//  skjuter en linetrace rakt ner från ovanför ljudkällan för att hitta marken
-	FVector Start = SoundLocation + FVector(0.f, 0.f, 200.f);
-	FVector End = SoundLocation - FVector(0.f, 0.f, 500.f);
+	FVector TraceStart = SoundLocation + FVector(0, 0, 200);
+	FVector TraceEnd   = SoundLocation - FVector(0, 0, 500);
 
-	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+	if (GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, Params))
 	{
-		GroundedSoundLocation = Hit.ImpactPoint;
-		//UE_LOG(LogTemp, Warning, TEXT("Adjusted sound location to ground: %s"), *GroundedSoundLocation.ToString());
+		GroundedLocation = Hit.ImpactPoint;
 	}
 	else
 	{
-		// Om ingen mark hittas, använd fiendens egen Z-höjd som fallback
-		GroundedSoundLocation.Z = ControlledEnemy->GetActorLocation().Z;
-		UE_LOG(LogTemp, Warning, TEXT("Using fallback grounded sound location: %s"), *GroundedSoundLocation.ToString());
+		GroundedLocation.Z = ControlledEnemy->GetActorLocation().Z;
+	}
+
+	// Project to NavMesh 
+	FNavLocation Projected;
+	UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
+
+	if (NavSys && NavSys->ProjectPointToNavigation(
+			GroundedLocation,
+			Projected,
+			FVector(300, 300, 500)  
+		))
+	{
+		GroundedLocation = Projected.Location;
 	}
 	
-	DrawDebugSphere(GetWorld(), SoundLocation, 25.f, 12, FColor::Yellow, false, 5.f);  
-	DrawDebugSphere(GetWorld(), GroundedSoundLocation, 25.f, 12, FColor::Green, false, 5.f); 
-
+	LastKnownPlayerLocation = GroundedLocation;
 	bIsMovingToSound = true;
-	UE_LOG(LogTemp, Warning, TEXT("OnHeardSound triggered: Enemy moving toward sound at %s"), *SoundLocation.ToString());
-	//MoveToLocation(GroundedSoundLocation);
-	MoveToLocation(GroundedSoundLocation, -1.0f, true, true, false, false, 0, true);
+
+	DrawDebugSphere(GetWorld(), SoundLocation, 25.f, 12, FColor::Yellow, false, 5.f);  
+	DrawDebugSphere(GetWorld(), GroundedLocation, 25.f, 12, FColor::Green, false, 5.f); 
+	
+	MoveToLocation(GroundedLocation, -1.f, true, true, false, false, 0, true);
 }
+
 
 void AMeleeAIController::HandleSuspiciousLocation(FVector Location)
 {

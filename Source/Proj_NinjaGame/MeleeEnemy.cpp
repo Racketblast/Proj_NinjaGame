@@ -609,12 +609,28 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 			StateVFXComponent->SetAsset(AlertVFX);
 			StateVFXComponent->Activate(true);
 		}
+		if (AlertSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				AlertSound,
+				GetActorLocation()
+			);
+		}
 		break;
 	case EEnemyState::Chasing:
 		if (ChaseVFX)
 		{
 			StateVFXComponent->SetAsset(ChaseVFX);
 			StateVFXComponent->Activate(true);
+		}
+		if (ChasingSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				ChasingSound,
+				GetActorLocation()
+			);
 		}
 		break;
 
@@ -623,6 +639,14 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 		{
 			StateVFXComponent->SetAsset(SearchVFX);
 			StateVFXComponent->Activate(true);
+		}
+		if (SearchingSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				SearchingSound,
+				GetActorLocation()
+			);
 		}
 		break;
 
