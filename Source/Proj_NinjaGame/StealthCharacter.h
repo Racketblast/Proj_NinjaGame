@@ -288,6 +288,8 @@ public:
 
 	/** Returns first person camera component **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
+
+	EPlayerMovementState GetPlayerMovementState() const { return CurrentMovementState; }
 	
 	UPROPERTY(BlueprintReadWrite)
 	bool bHasCompletedTheMission = false;

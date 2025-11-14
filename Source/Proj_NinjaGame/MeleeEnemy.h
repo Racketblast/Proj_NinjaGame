@@ -65,6 +65,10 @@ protected:
 
 	void CheckPlayerVisibility();
 
+	void CheckImmediateProximityDetection();
+
+	void CheckChaseProximityDetection();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
 	bool bVisionDebug = true;
 

@@ -419,6 +419,25 @@ void AMeleeAIController::StopChasing()
 	}
 }
 
+void AMeleeAIController::RefreshChaseTarget()
+{
+	if (!ControlledEnemy || !IsValid(ControlledEnemy)) return;
+
+	APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+	if (!Player) return;
+
+	if (CurrentState == EEnemyState::Chasing)
+	{
+		const float Dist = FVector::Dist(Player->GetActorLocation(), GetPawn()->GetActorLocation());
+
+		// Uppdatera bara path om spelaren rört sig tillräckligt
+		if (Dist > 10.f) 
+		{
+			MoveToActor(Player);
+		}
+	}
+}
+
 
 
 void AMeleeAIController::OnTargetLost()
