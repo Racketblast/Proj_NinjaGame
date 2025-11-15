@@ -25,6 +25,8 @@ public:
 
 	// Kallas när fienden hör ett ljud
 	void OnHeardSound(FVector SoundLocation);
+
+	void RefreshChaseTarget();
 	
 protected:
 	virtual void OnPossess(APawn* InPawn) override;

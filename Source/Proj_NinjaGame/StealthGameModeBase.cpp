@@ -29,8 +29,10 @@ void AStealthGameModeBase::SetPlayerStart()
 		{
 			if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance()))
 			{
+				UE_LOG(LogTemp, Error, TEXT("Something"));
 				if (GI->StartLocation == Start->PlayerStartTag)
 				{
+					UE_LOG(LogTemp, Error, TEXT("Found it"));
 					UGameplayStatics::GetPlayerCharacter(this,0)->SetActorLocation(Start->GetActorLocation());
 					return;
 				}

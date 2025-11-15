@@ -65,6 +65,10 @@ protected:
 
 	void CheckPlayerVisibility();
 
+	void CheckImmediateProximityDetection();
+
+	void CheckChaseProximityDetection();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
 	bool bVisionDebug = true;
 
@@ -130,6 +134,16 @@ protected:
 	// Time handle Funktioner:
 	void ResetAttackCooldown();
 	void ForgetHeardSound();
+
+	// Audio:
+	UPROPERTY(EditAnywhere, Category="Audio")
+	USoundBase* SearchingSound;
+
+	UPROPERTY(EditAnywhere, Category="Audio")
+	USoundBase* AlertSound;
+
+	UPROPERTY(EditAnywhere, Category="Audio")
+	USoundBase* ChasingSound;
 
 public:
 	FORCEINLINE const TArray<AActor*>& GetPatrolPoints() const { return PatrolPoints; }

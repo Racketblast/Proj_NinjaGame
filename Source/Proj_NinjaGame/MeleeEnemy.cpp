@@ -61,9 +61,91 @@ void AMeleeEnemy::BeginPlay()
 void AMeleeEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	//CheckImmediateProximityDetection();
+
+	CheckChaseProximityDetection();
 	
 	CheckPlayerVisibility();
 }
+
+void AMeleeEnemy::CheckImmediateProximityDetection()
+{
+	if (!PlayerPawn) return;
+	
+	const float ProximityThreshold = 150.f;
+
+	const float DistanceToPlayer = FVector::Dist(GetActorLocation(), PlayerPawn->GetActorLocation());
+
+	if (DistanceToPlayer > ProximityThreshold)
+		return;
+
+
+	AStealthCharacter* StealthPlayer = Cast<AStealthCharacter>(PlayerPawn);
+	if (!StealthPlayer) return;
+
+	if (StealthPlayer->GetPlayerMovementState() == EPlayerMovementState::Crouch)
+		return; // om Spelaren smyger så ska fienden inte autoupptäcka
+
+	//UE_LOG(LogTemp, Warning, TEXT("CheckImmediateProximityDetection"));
+
+	// direkt upptäck spelaren
+	bCanSeePlayer = true;
+	UpdateLastSeenPlayerLocation();
+	
+	OnSuspiciousLocation.Broadcast(PlayerPawn->GetActorLocation()); 
+
+	#if WITH_EDITOR
+		DrawDebugSphere(
+			GetWorld(),
+			GetActorLocation(),
+			ProximityThreshold,
+			16,
+			FColor::Red,
+			false,
+			0.1f,
+			0,
+			2.f
+		);
+	#endif
+}
+
+void AMeleeEnemy::CheckChaseProximityDetection()
+{
+	if (!bIsChasing) return; 
+	if (!PlayerPawn) return;
+
+	const float ChaseProximityRadius = 350.f; 
+	const float Distance = FVector::Dist(GetActorLocation(), PlayerPawn->GetActorLocation());
+
+	// Debug sphere
+	/*#if WITH_EDITOR
+		DrawDebugSphere(
+			GetWorld(),
+			GetActorLocation(),
+			ChaseProximityRadius,
+			20,
+			FColor::Blue,
+			false,
+			0.1f,
+			0,
+			2.f
+		);
+	#endif*/
+
+	// Om spelaren är inom sfären blir dem direkt upptäck
+	if (Distance <= ChaseProximityRadius)
+	{
+		bCanSeePlayer = true;
+		UpdateLastSeenPlayerLocation();
+		
+		if (AMeleeAIController* AI = Cast<AMeleeAIController>(GetController()))
+		{
+			AI->RefreshChaseTarget();
+		}
+	}
+}
+
 
 /*void AMeleeEnemy::CheckPlayerVisibility()
 {
@@ -161,7 +243,7 @@ void AMeleeEnemy::CheckPlayerVisibility()
 	float Distance = ToPlayer.Size();
 	ToPlayer.Normalize();
 
-	// Skillnad mellan patrull och chase-läge 
+	// Skillnad mellan patrull och chase läge 
 	float EffectiveVisionRange = bIsChasing ? VisionRange : VisionRange * 0.6f;
 	float EffectiveVisionAngle = bIsChasing ? VisionAngle : VisionAngle * 0.5f;
 
@@ -527,12 +609,28 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 			StateVFXComponent->SetAsset(AlertVFX);
 			StateVFXComponent->Activate(true);
 		}
+		if (AlertSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				AlertSound,
+				GetActorLocation()
+			);
+		}
 		break;
 	case EEnemyState::Chasing:
 		if (ChaseVFX)
 		{
 			StateVFXComponent->SetAsset(ChaseVFX);
 			StateVFXComponent->Activate(true);
+		}
+		if (ChasingSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				ChasingSound,
+				GetActorLocation()
+			);
 		}
 		break;
 
@@ -541,6 +639,14 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 		{
 			StateVFXComponent->SetAsset(SearchVFX);
 			StateVFXComponent->Activate(true);
+		}
+		if (SearchingSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				SearchingSound,
+				GetActorLocation()
+			);
 		}
 		break;
 
