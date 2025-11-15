@@ -9,6 +9,7 @@
 #include "DrawDebugHelpers.h"
 #include "MeleeAIController.h"
 #include "StealthCharacter.h"
+#include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -18,6 +19,11 @@ AMeleeEnemy::AMeleeEnemy()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	//Audio
+	StateAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("StateAudioComponent"));
+	StateAudioComponent->SetupAttachment(RootComponent);
+	
+	StateAudioComponent->bAutoActivate = false; 	// styr ljuden i koden, så detta ska vara false
 
 	// Skapa hitbox och fäst vid mesh 
 	MeleeHitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("MeleeHitBox"));
@@ -611,11 +617,7 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 		}
 		if (AlertSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(
-				this,
-				AlertSound,
-				GetActorLocation()
-			);
+			PlayStateSound(AlertSound);
 		}
 		break;
 	case EEnemyState::Chasing:
@@ -626,11 +628,7 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 		}
 		if (ChasingSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(
-				this,
-				ChasingSound,
-				GetActorLocation()
-			);
+			PlayStateSound(ChasingSound);
 		}
 		break;
 
@@ -642,11 +640,7 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 		}
 		if (SearchingSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(
-				this,
-				SearchingSound,
-				GetActorLocation()
-			);
+			PlayStateSound(SearchingSound);
 		}
 		break;
 
@@ -654,9 +648,29 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 		// Stäng av VFX
 		StateVFXComponent->SetAsset(nullptr);
 		StateVFXComponent->Deactivate();
+
+		// Stoppa ljud 
+		PlayStateSound(nullptr); 
 		break;
 	}
 }
+
+
+void AMeleeEnemy::PlayStateSound(USoundBase* NewSound)
+{
+	if (!StateAudioComponent) return;
+
+	// Gör inget om samma ljud redan spelar 
+	if (StateAudioComponent->Sound == NewSound)
+		return;
+
+	StateAudioComponent->Stop();
+	StateAudioComponent->SetSound(NewSound);
+
+	if (NewSound)
+		StateAudioComponent->Play();
+}
+
 
 
 void AMeleeEnemy::EndPlay(const EEndPlayReason::Type EndPlayReason)
