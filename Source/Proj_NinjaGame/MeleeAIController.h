@@ -54,6 +54,16 @@ protected:
 	UFUNCTION()
 	void HandleSuspiciousLocation(FVector Location);
 
+
+	// Failsafe
+	FVector LastSearchLocation;
+	float TimeWithoutMovement = 0.f;
+
+	UPROPERTY(EditAnywhere, Category="AI")
+	float SearchFailSpeedThreshold = 5.f; // Ifall fiendens hastighet är under detta räknas den som stilla
+
+	UPROPERTY(EditAnywhere, Category="AI")
+	float SearchFailTime = 5.f; // Hur länge fienden kan vara stilla innan failsafe triggas
 	
 	// Time handle Funktioner:
 	void ResetSoundFlag();

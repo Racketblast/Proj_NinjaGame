@@ -147,6 +147,46 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 				//UE_LOG(LogTemp, Warning, TEXT("AMeleeAIController Searching Tick"));
 				BeginSearch();
 			}
+
+
+			
+			// Movement Failsafe
+			FVector CurrentLocation = GetPawn()->GetActorLocation();
+			FVector Delta = CurrentLocation - LastSearchLocation;
+			float DistanceMoved = Delta.Size();
+
+			// Kolla hastighet 
+			float Speed = ControlledEnemy->GetVelocity().Size();
+
+			if (Speed < SearchFailSpeedThreshold && DistanceMoved < 10.f)
+			{
+				// Fienden står stilla eller rör sig knappt
+				TimeWithoutMovement += DeltaSeconds;
+			}
+			else
+			{
+				// Fienden rör sig igen, så reset failsafe
+				TimeWithoutMovement = 0.f;
+			}
+
+			// Spara senaste positionen
+			LastSearchLocation = CurrentLocation;
+
+			// Trigga failsafe
+			if (TimeWithoutMovement >= SearchFailTime)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Search failsafe triggered, returning to patrol."));
+
+				TimeWithoutMovement = 0.f;
+				bIsLookingAround = false;
+				bIsMovingToSound = false;
+				bIsInvestigatingSound = false;
+
+				CurrentState = EEnemyState::Patrolling;
+				ControlledEnemy->UpdateStateVFX(CurrentState);
+				MoveToNextPatrolPoint();
+			}
+
 			break;
 		}
 	}
@@ -466,6 +506,8 @@ void AMeleeAIController::OnTargetLost()
 		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
 		LastKnownPlayerLocation = ControlledEnemy->GetLastSeenPlayerLocation();
 		CurrentState = EEnemyState::Searching;
+		TimeWithoutMovement = 0.f; // För failsafe
+		LastSearchLocation = ControlledEnemy->GetActorLocation(); // För failsafe
 		ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
 		MoveToLocation(LastKnownPlayerLocation);
 	}
@@ -555,6 +597,8 @@ void AMeleeAIController::OnHeardSound(FVector SoundLocation)
 	StopMovement();
 	
 	CurrentState = EEnemyState::Searching;
+	TimeWithoutMovement = 0.f; // För failsafe
+	LastSearchLocation = ControlledEnemy->GetActorLocation(); // För failsafe
 	ControlledEnemy->UpdateStateVFX(CurrentState);
 
 	// Adjust sound height 
@@ -615,6 +659,8 @@ void AMeleeAIController::HandleSuspiciousLocation(FVector Location)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Enemy is investigating suspicious location!"));
 		CurrentState = EEnemyState::Searching;
+		TimeWithoutMovement = 0.f; // För failsafe
+		LastSearchLocation = ControlledEnemy->GetActorLocation(); // För failsafe
 		ControlledEnemy->UpdateStateVFX(CurrentState);
 		MoveToLocation(Location);
 	}
