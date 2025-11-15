@@ -16,27 +16,25 @@ void AStealthGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	SetPlayerStart();
 }
 
-void AStealthGameModeBase::SetPlayerStart()
+AActor* AStealthGameModeBase::ChoosePlayerStart_Implementation(AController* Player)
 {
-	TArray<AActor*> PlayerStarts;
-	UGameplayStatics::GetAllActorsOfClass(this, TSubclassOf<APlayerStart>(),PlayerStarts);
-	for (auto PlayerStart : PlayerStarts)
+	
+	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance()))
 	{
-		if (APlayerStart* Start = Cast<APlayerStart>(PlayerStart))
+		TArray<AActor*> PlayerStarts;
+		UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(),PlayerStarts);
+		for (auto PlayerStart : PlayerStarts)
 		{
-			if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance()))
+			if (APlayerStart* Start = Cast<APlayerStart>(PlayerStart))
 			{
-				UE_LOG(LogTemp, Error, TEXT("Something"));
 				if (GI->StartLocation == Start->PlayerStartTag)
 				{
-					UE_LOG(LogTemp, Error, TEXT("Found it"));
-					UGameplayStatics::GetPlayerCharacter(this,0)->SetActorLocation(Start->GetActorLocation());
-					return;
+					return Start;
 				}
 			}
 		}
 	}
+	return Super::ChoosePlayerStart_Implementation(Player);
 }
