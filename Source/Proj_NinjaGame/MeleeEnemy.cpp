@@ -350,9 +350,23 @@ void AMeleeEnemy::CheckPlayerVisibility()
 
 				//UE_LOG(LogTemp, Warning, TEXT("SuspiciousVisionRange 2"));
 
-				// Fienden tittar mot spelaren
-				FRotator LookAtRot = (PlayerPawn->GetActorLocation() - GetActorLocation()).Rotation();
-				SetActorRotation(FMath::RInterpTo(GetActorRotation(), LookAtRot, GetWorld()->GetDeltaSeconds(), 2.f));
+				// Fienden tittar mot spelaren, men ignorerar pitch
+				/*FRotator LookAtRot = (PlayerPawn->GetActorLocation() - GetActorLocation()).Rotation();
+				SetActorRotation(FMath::RInterpTo(GetActorRotation(), LookAtRot, GetWorld()->GetDeltaSeconds(), 2.f));*/
+				FVector ToPlayerFlat = PlayerPawn->GetActorLocation() - GetActorLocation();
+				ToPlayerFlat.Z = 0;
+
+				if (!ToPlayerFlat.IsNearlyZero())
+				{
+					FRotator LookAtRot = ToPlayerFlat.Rotation();
+					FRotator NewRotation = FMath::RInterpTo(
+						GetActorRotation(),
+						LookAtRot,
+						GetWorld()->GetDeltaSeconds(),
+						2.f
+					);
+					SetActorRotation(NewRotation);
+				}
 
 				// Om spelaren stannar kvar tillräckligt länge så upptäcks spelaren
 				if (SuspiciousTimer >= TimeToSpotPlayer)
@@ -555,14 +569,6 @@ void AMeleeEnemy::HearSoundAtLocation(FVector SoundLocation)
 		//UE_LOG(LogTemp, Warning, TEXT("Enemy heard sound at %s"), *SoundLocation.ToString());
 
 		// Starta timer för att glömma ljudet efter ett tag
-		/*GetWorldTimerManager().SetTimerForNextTick([this]()
-		{
-			FTimerHandle ForgetSoundHandle;
-			GetWorldTimerManager().SetTimer(ForgetSoundHandle, [this]()
-			{
-				bHeardSoundRecently = false;
-			}, HearingMemoryTime, false);
-		});*/
 		FTimerHandle ForgetSoundHandle;
 		GetWorldTimerManager().SetTimer(ForgetSoundHandle, this, &AMeleeEnemy::ForgetHeardSound, HearingMemoryTime, false);
 	}
