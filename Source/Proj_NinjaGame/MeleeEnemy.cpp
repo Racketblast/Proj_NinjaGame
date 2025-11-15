@@ -9,6 +9,7 @@
 #include "DrawDebugHelpers.h"
 #include "MeleeAIController.h"
 #include "StealthCharacter.h"
+#include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -18,6 +19,11 @@ AMeleeEnemy::AMeleeEnemy()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	//Audio
+	StateAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("StateAudioComponent"));
+	StateAudioComponent->SetupAttachment(RootComponent);
+	
+	StateAudioComponent->bAutoActivate = false; 	// styr ljuden i koden, så detta ska vara false
 
 	// Skapa hitbox och fäst vid mesh 
 	MeleeHitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("MeleeHitBox"));
@@ -344,9 +350,23 @@ void AMeleeEnemy::CheckPlayerVisibility()
 
 				//UE_LOG(LogTemp, Warning, TEXT("SuspiciousVisionRange 2"));
 
-				// Fienden tittar mot spelaren
-				FRotator LookAtRot = (PlayerPawn->GetActorLocation() - GetActorLocation()).Rotation();
-				SetActorRotation(FMath::RInterpTo(GetActorRotation(), LookAtRot, GetWorld()->GetDeltaSeconds(), 2.f));
+				// Fienden tittar mot spelaren, men ignorerar pitch
+				/*FRotator LookAtRot = (PlayerPawn->GetActorLocation() - GetActorLocation()).Rotation();
+				SetActorRotation(FMath::RInterpTo(GetActorRotation(), LookAtRot, GetWorld()->GetDeltaSeconds(), 2.f));*/
+				FVector ToPlayerFlat = PlayerPawn->GetActorLocation() - GetActorLocation();
+				ToPlayerFlat.Z = 0;
+
+				if (!ToPlayerFlat.IsNearlyZero())
+				{
+					FRotator LookAtRot = ToPlayerFlat.Rotation();
+					FRotator NewRotation = FMath::RInterpTo(
+						GetActorRotation(),
+						LookAtRot,
+						GetWorld()->GetDeltaSeconds(),
+						2.f
+					);
+					SetActorRotation(NewRotation);
+				}
 
 				// Om spelaren stannar kvar tillräckligt länge så upptäcks spelaren
 				if (SuspiciousTimer >= TimeToSpotPlayer)
@@ -549,14 +569,6 @@ void AMeleeEnemy::HearSoundAtLocation(FVector SoundLocation)
 		//UE_LOG(LogTemp, Warning, TEXT("Enemy heard sound at %s"), *SoundLocation.ToString());
 
 		// Starta timer för att glömma ljudet efter ett tag
-		/*GetWorldTimerManager().SetTimerForNextTick([this]()
-		{
-			FTimerHandle ForgetSoundHandle;
-			GetWorldTimerManager().SetTimer(ForgetSoundHandle, [this]()
-			{
-				bHeardSoundRecently = false;
-			}, HearingMemoryTime, false);
-		});*/
 		FTimerHandle ForgetSoundHandle;
 		GetWorldTimerManager().SetTimer(ForgetSoundHandle, this, &AMeleeEnemy::ForgetHeardSound, HearingMemoryTime, false);
 	}
@@ -611,11 +623,7 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 		}
 		if (AlertSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(
-				this,
-				AlertSound,
-				GetActorLocation()
-			);
+			PlayStateSound(AlertSound);
 		}
 		break;
 	case EEnemyState::Chasing:
@@ -626,11 +634,7 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 		}
 		if (ChasingSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(
-				this,
-				ChasingSound,
-				GetActorLocation()
-			);
+			PlayStateSound(ChasingSound);
 		}
 		break;
 
@@ -642,11 +646,7 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 		}
 		if (SearchingSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(
-				this,
-				SearchingSound,
-				GetActorLocation()
-			);
+			PlayStateSound(SearchingSound);
 		}
 		break;
 
@@ -654,9 +654,29 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 		// Stäng av VFX
 		StateVFXComponent->SetAsset(nullptr);
 		StateVFXComponent->Deactivate();
+
+		// Stoppa ljud 
+		PlayStateSound(nullptr); 
 		break;
 	}
 }
+
+
+void AMeleeEnemy::PlayStateSound(USoundBase* NewSound)
+{
+	if (!StateAudioComponent) return;
+
+	// Gör inget om samma ljud redan spelar 
+	if (StateAudioComponent->Sound == NewSound)
+		return;
+
+	StateAudioComponent->Stop();
+	StateAudioComponent->SetSound(NewSound);
+
+	if (NewSound)
+		StateAudioComponent->Play();
+}
+
 
 
 void AMeleeEnemy::EndPlay(const EEndPlayReason::Type EndPlayReason)

@@ -136,6 +136,9 @@ protected:
 	void ForgetHeardSound();
 
 	// Audio:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Audio")
+	UAudioComponent* StateAudioComponent;
+	
 	UPROPERTY(EditAnywhere, Category="Audio")
 	USoundBase* SearchingSound;
 
@@ -144,6 +147,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category="Audio")
 	USoundBase* ChasingSound;
+
+	void PlayStateSound(USoundBase* NewSound);
 
 public:
 	FORCEINLINE const TArray<AActor*>& GetPatrolPoints() const { return PatrolPoints; }
