@@ -583,7 +583,7 @@ void AMeleeAIController::OnHeardSound(FVector SoundLocation)
 	if (NavSys && NavSys->ProjectPointToNavigation(
 			GroundedLocation,
 			Projected,
-			FVector(300, 300, 500)  
+			FVector(ControlledEnemy->HearingRange, ControlledEnemy->HearingRange, ControlledEnemy->HearingRange)  
 		))
 	{
 		GroundedLocation = Projected.Location;
