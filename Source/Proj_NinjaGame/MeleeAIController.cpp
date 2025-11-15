@@ -7,6 +7,7 @@
 #include "TimerManager.h"
 #include "AIController.h"
 #include "NavigationSystem.h"
+#include "PatrolPoint.h"
 #include "GameFramework/Character.h"
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -382,6 +383,16 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 	{
 		if (Result.IsSuccess())
 		{
+			// Rotation från PatrolPoint 
+			AActor* TargetPoint = PatrolPoints[CurrentPatrolIndex];
+			if (APatrolPoint* PatrolPoint = Cast<APatrolPoint>(TargetPoint))
+			{
+				if (PatrolPoint->bUseCustomRotation)
+				{
+					ControlledEnemy->SetActorRotation(PatrolPoint->CustomRotation);
+				}
+			}
+
 			// Gå vidare till nästa patrullpunkt
 			if (PatrolPoints.Num() > 1)
 			{
