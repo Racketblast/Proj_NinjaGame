@@ -403,7 +403,7 @@ void AMeleeEnemy::CheckPlayerVisibility()
 	// Om spelaren lämnar den andra konen
 	if (bIsSuspicious && !bPlayerInSuspiciousZone)
 	{
-		if (SuspiciousTimer > 4.f && SuspiciousTimer < TimeToSpotPlayer)
+		if (SuspiciousTimer > 3.f && SuspiciousTimer < TimeToSpotPlayer)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("SuspiciousLocationDetected"));
 			UpdateLastSeenPlayerLocation();
