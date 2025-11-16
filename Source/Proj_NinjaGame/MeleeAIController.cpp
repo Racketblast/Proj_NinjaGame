@@ -726,6 +726,8 @@ void AMeleeAIController::OnAlertTimerExpired()
 		return;
 	}
 
+	if (ControlledEnemy->bPlayerInAlertCone) return;
+
 	if (!ControlledEnemy->CanSeePlayer())
 	{
 		CurrentState = EEnemyState::Patrolling;

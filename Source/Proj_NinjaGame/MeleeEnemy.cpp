@@ -690,6 +690,14 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 	{
 		return;
 	}
+
+	// Logga state-byten
+	/*UE_LOG(LogTemp, Warning, TEXT("STATE CHANGE: %s -> %s"),
+		*UEnum::GetValueAsString(PreviousState),
+		*UEnum::GetValueAsString(NewState)
+	);*/
+
+	//UE_LOG(LogTemp, Warning, TEXT("Alert: AudioComponent playing? %d"), StateAudioComponent->IsPlaying());
 	
 	// Bara spela ljud om state faktiskt ändrats 
 	if (PreviousState != NewState)
