@@ -602,8 +602,11 @@ void AMeleeAIController::OnHeardSound(FVector SoundLocation)
 	bIsMovingToSound = false;
 	bIsInvestigatingSound = false;
 
-	// Ignore sounds while chasing
+	// Ingnorera ljud när fienden redan jagar spelaren. 
 	if (CurrentState == EEnemyState::Chasing) return;
+
+	// Ingnorera ljud ifall spelaren är i fiendens alert vision cone. 
+	if (ControlledEnemy->bPlayerInAlertCone) return;
 	
 	StopMovement();
 	
@@ -666,7 +669,7 @@ void AMeleeAIController::HandleSuspiciousLocation(FVector Location)
 	FRotator LookAtRot = (Location - GetPawn()->GetActorLocation()).Rotation();
 	GetPawn()->SetActorRotation(LookAtRot);*/
 	
-	if (CurrentState == EEnemyState::Patrolling)
+	if (CurrentState != EEnemyState::Chasing && CurrentState != EEnemyState::Searching)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Enemy is investigating suspicious location!"));
 		CurrentState = EEnemyState::Searching;
@@ -717,10 +720,11 @@ void AMeleeAIController::OnAlertTimerExpired()
 {
 	if (!ControlledEnemy || !IsValid(ControlledEnemy)) return;
 
-	/*if (ControlledEnemy->bHeardSoundRecently)
+	if (CurrentState == EEnemyState::Searching)
 	{
+		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
 		return;
-	}*/
+	}
 
 	if (!ControlledEnemy->CanSeePlayer())
 	{

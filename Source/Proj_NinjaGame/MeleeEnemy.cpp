@@ -605,7 +605,9 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 		}
 		
 		if (NewAsset == CurrentAsset)
+		{
 			return;
+		}
 	}
 
 	switch (NewState)
