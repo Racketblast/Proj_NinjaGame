@@ -87,7 +87,7 @@ void APCGHandler::CreateFirstRoom(int &AmountOfRoomsLeft)
 			
 					AmountOfRoomsLeft--;
 
-					UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
+					//UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
 					bRightRoomType = true;
 					OccupiedNodeLocations.Add(NewRoom->GridLocation);
 					PlacedRooms.Add(NewRoom);
@@ -107,7 +107,7 @@ void APCGHandler::CreateFirstRoom(int &AmountOfRoomsLeft)
 			
 				AmountOfRoomsLeft--;
 
-				UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
+				//UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
 				bRightRoomType = true;
 				OccupiedNodeLocations.Add(NewRoom->GridLocation);
 				PlacedRooms.Add(NewRoom);
@@ -319,7 +319,7 @@ void APCGHandler::CreateNextRooms(int &AmountOfRoomsLeft)
 				
 				AmountOfRoomsLeft--;
 
-				UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
+				//UE_LOG(LogTemp, Warning, TEXT("Room of type %i was chosen, name: %s"), NewRoom->AmountOfEntrances, *NewRoom->GetActorLabel());
 				bRightRoomType = true;
 				OccupiedNodeLocations.Add(NewRoom->GridLocation);
 				PlacedRooms.Add(NewRoom);
