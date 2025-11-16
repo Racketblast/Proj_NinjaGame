@@ -386,7 +386,7 @@ void AStealthCharacter::Landed(const FHitResult& Hit)
 	}
 	else
 	{
-		NoiseLevel = 1.5f;
+		NoiseLevel = 2.0f; // ändrade från 1.5
 	}
 	USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel);
 }

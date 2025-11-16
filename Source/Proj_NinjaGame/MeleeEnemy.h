@@ -218,6 +218,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="VFX")
 	void UpdateStateVFX(EEnemyState NewState);
+
+	EEnemyState PreviousState = EEnemyState::Patrolling;
 	
 
 private:

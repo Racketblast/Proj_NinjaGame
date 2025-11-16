@@ -575,7 +575,7 @@ void AMeleeEnemy::HearSoundAtLocation(FVector SoundLocation)
 }
 
 
-void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
+/*void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 {
 	if (!StateVFXComponent) return;
 	
@@ -661,7 +661,74 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 		PlayStateSound(nullptr); 
 		break;
 	}
+}*/
+
+void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
+{
+	if (!StateVFXComponent) return;
+
+	// Om state inte ändrats, gör inget, borde fungera både för VFX och ljud
+	if (PreviousState == NewState)
+	{
+		return;
+	}
+	
+	// Bara spela ljud om state faktiskt ändrats 
+	if (PreviousState != NewState)
+	{
+		switch (NewState)
+		{
+		case EEnemyState::Alert:
+			PlayStateSound(AlertSound);
+			break;
+		case EEnemyState::Chasing:
+			PlayStateSound(ChasingSound);
+			break;
+		case EEnemyState::Searching:
+			PlayStateSound(SearchingSound);
+			break;
+		default:
+			// Stoppa ljud 
+			PlayStateSound(nullptr);
+			break;
+		}
+	}
+
+	// Uppdatera VFX 
+	switch (NewState)
+	{
+	case EEnemyState::Patrolling:
+		// Stäng av VFX
+		StateVFXComponent->SetAsset(nullptr);
+		StateVFXComponent->Deactivate();
+		break;
+
+	case EEnemyState::Alert:
+		StateVFXComponent->SetAsset(AlertVFX);
+		StateVFXComponent->Activate(true);
+		break;
+
+	case EEnemyState::Chasing:
+		StateVFXComponent->SetAsset(ChaseVFX);
+		StateVFXComponent->Activate(true);
+		break;
+
+	case EEnemyState::Searching:
+		StateVFXComponent->SetAsset(SearchVFX);
+		StateVFXComponent->Activate(true);
+		break;
+
+	default:
+		// Stäng av VFX
+		StateVFXComponent->SetAsset(nullptr);
+		StateVFXComponent->Deactivate();
+		break;
+	}
+
+	// Spara state 
+	PreviousState = NewState;
 }
+
 
 
 void AMeleeEnemy::PlayStateSound(USoundBase* NewSound)
