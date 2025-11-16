@@ -41,7 +41,12 @@ AMeleeEnemy::AMeleeEnemy()
 
 	StateVFXComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("StateVFX"));
 	StateVFXComponent->SetupAttachment(GetMesh());
-	StateVFXComponent->SetRelativeLocation(FVector(0.f, 0.f, 120.f)); 
+	StateVFXComponent->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
+
+	// För att undvika att gå in i andra fiender
+	GetCharacterMovement()->bUseRVOAvoidance = true;
+	GetCharacterMovement()->AvoidanceWeight = 0.5f;
+	GetCharacterMovement()->AvoidanceConsiderationRadius = 300.f;
 }
 
 
@@ -62,6 +67,19 @@ void AMeleeEnemy::BeginPlay()
 		AssassinationCapsule->OnComponentBeginOverlap.AddDynamic(this, &AMeleeEnemy::OnAssasinationOverlapBegin);
 		AssassinationCapsule->OnComponentEndOverlap.AddDynamic(this, &AMeleeEnemy::OnAssasinationOverlapEnd);
 	}
+}
+
+void AMeleeEnemy::FaceRotation(FRotator NewRotation, float DeltaTime)
+{
+	FVector Vel = GetVelocity();
+	Vel.Z = 0;
+
+	if (Vel.Size() > 10.f)
+	{
+		NewRotation = Vel.Rotation();
+	}
+
+	Super::FaceRotation(NewRotation, DeltaTime);
 }
 
 void AMeleeEnemy::Tick(float DeltaTime)
