@@ -481,6 +481,7 @@ void AStealthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 		// Sprint
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &AStealthCharacter::StartSprint);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Ongoing, this, &AStealthCharacter::LoopSprint);
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &AStealthCharacter::StopSprint);
 
 	}
@@ -739,43 +740,52 @@ bool AStealthCharacter::CanUnCrouch()
 void AStealthCharacter::StartSprint()
 {
 	if (CurrentMovementState != EPlayerMovementState::Climb)
-	// Kolla om spelaren faktiskt försöker röra sig
-	FVector2D MovementInput(MoveInputForward, MoveInputRight);
-
-
-	if (MovementInput.IsNearlyZero())
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("Cannot sprint without MovementInput."));
-		return;
-	}
+		// Kolla om spelaren faktiskt försöker röra sig
+		FVector2D MovementInput(MoveInputForward, MoveInputRight);
+		
+		if (MovementInput.IsNearlyZero())
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("Cannot sprint without MovementInput."));
+			return;
+		}
 	
-	if (CurrentStamina > 0)
-	{
 		if (CurrentStamina > 0)
 		{
-			AimEnd();
-			// Om spelaren är i crouch så lämna det läget först
-			if (CurrentMovementState == EPlayerMovementState::Crouch)
+			if (CurrentStamina > 0)
 			{
-				if (CanUnCrouch())
+				AimEnd();
+				// Om spelaren är i crouch så lämna det läget först
+				if (CurrentMovementState == EPlayerMovementState::Crouch)
 				{
-					UnCrouch();
-					UpdateStaminaStart(SprintStaminaAmount);
+					if (CanUnCrouch())
+					{
+						UnCrouch();
+						UpdateStaminaStart(SprintStaminaAmount);
 				
+						GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+						CurrentMovementState = EPlayerMovementState::Run;
+					}
+				}
+				else
+				{
+					UpdateStaminaStart(SprintStaminaAmount);
+	
 					GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 					CurrentMovementState = EPlayerMovementState::Run;
 				}
-			}
-			else
-			{
-				UpdateStaminaStart(SprintStaminaAmount);
 	
-				GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
-				CurrentMovementState = EPlayerMovementState::Run;
+				//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
 			}
-	
-			//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
 		}
+	}
+}
+
+void AStealthCharacter::LoopSprint()
+{
+	if (CurrentMovementState != EPlayerMovementState::Run)
+	{
+		StartSprint();
 	}
 }
 

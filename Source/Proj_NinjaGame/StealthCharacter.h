@@ -206,6 +206,8 @@ protected:
 
 	void StartSprint();
 
+	void LoopSprint();
+
 	void StopSprint();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
