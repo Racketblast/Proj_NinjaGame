@@ -286,7 +286,7 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 		// Endast ignorera aborter från gamla patrull-moves, inte ljud-moves
 		if (CurrentState == EEnemyState::Patrolling)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("OnMoveCompleted RequestID: %s Result: %d CurrentState: %d bIsMovingToSound: %d"), *RequestID.ToString(), (int)Result.Code, (int)CurrentState, (int)bIsMovingToSound);
+			//UE_LOG(LogTemp, Warning, TEXT("OnMoveCompleted RequestID: %s Result: %d CurrentState: %d bIsMovingToSound: %d"), *RequestID.ToString(), (int)Result.Code, (int)CurrentState, (int)bIsMovingToSound);
 			UE_LOG(LogTemp, Warning, TEXT("Move aborted (ignored patrol move)."));
 			return;
 		}
@@ -583,7 +583,7 @@ void AMeleeAIController::HandleSuspiciousLocation(FVector Location)
 {
     if (!IsValid(this) || !ControlledEnemy || !IsValid(ControlledEnemy)) return;
 
-    UE_LOG(LogTemp, Error, TEXT("HandleSuspiciousLocation: Trying to move to: %s"), *Location.ToString());
+    //UE_LOG(LogTemp, Warning, TEXT("HandleSuspiciousLocation: Trying to move to: %s"), *Location.ToString());
 
     if (CurrentState == EEnemyState::Chasing || CurrentState == EEnemyState::Searching)
     {
@@ -606,7 +606,7 @@ void AMeleeAIController::HandleSuspiciousLocation(FVector Location)
         LastKnownPlayerLocation = NavLoc.Location;
         //bIsMovingToSound = true;
 
-        UE_LOG(LogTemp, Warning, TEXT("Moving to projected navmesh point: %s"), *NavLoc.Location.ToString());
+        UE_LOG(LogTemp, Warning, TEXT("HandleSuspiciousLocation: Moving to projected navmesh point: %s"), *NavLoc.Location.ToString());
 
         // Debug draw
         DrawDebugSphere(GetWorld(), Location, 30.f, 12, FColor::Yellow, false, 8.f);

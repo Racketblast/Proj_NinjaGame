@@ -124,19 +124,20 @@ void AMeleeEnemy::CheckImmediateProximityDetection()
 	
 	OnSuspiciousLocation.Broadcast(PlayerPawn->GetActorLocation()); 
 
-	#if WITH_EDITOR
+	if (bVisionDebug)
+	{
 		DrawDebugSphere(
-			GetWorld(),
-			GetActorLocation(),
-			ProximityThreshold,
-			16,
-			FColor::Red,
-			false,
-			0.1f,
-			0,
-			2.f
-		);
-	#endif
+		GetWorld(),
+		GetActorLocation(),
+		ProximityThreshold,
+		16,
+		FColor::Red,
+		false,
+		0.1f,
+		0,
+		2.f
+	);
+	}
 }
 
 void AMeleeEnemy::CheckChaseProximityDetection()
@@ -148,7 +149,8 @@ void AMeleeEnemy::CheckChaseProximityDetection()
 	const float Distance = FVector::Dist(GetActorLocation(), PlayerPawn->GetActorLocation());
 
 	// Debug sphere
-	#if WITH_EDITOR
+	if (bVisionDebug)
+	{
 		DrawDebugSphere(
 			GetWorld(),
 			GetActorLocation(),
@@ -160,7 +162,7 @@ void AMeleeEnemy::CheckChaseProximityDetection()
 			0,
 			2.f
 		);
-	#endif
+	}
 
 	bPlayerWithinChaseProximity = (Distance <= ChaseProximityRadius);
 
@@ -202,7 +204,10 @@ void AMeleeEnemy::CheckCloseDetection()
 	);
 
 	// Debug
-	DrawDebugBox(GetWorld(), BoxCenter, BoxHalfSize, BoxRotation, FColor::Purple, false, 0.05f, 0, 0.f); 
+	if (bVisionDebug)
+	{
+		DrawDebugBox(GetWorld(), BoxCenter, BoxHalfSize, BoxRotation, FColor::Purple, false, 0.05f, 0, 0.f); 
+	}
 
 	if (bHit)
 	{
