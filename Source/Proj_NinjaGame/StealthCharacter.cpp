@@ -31,18 +31,10 @@ AStealthCharacter::AStealthCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
-	
-	// Create the first person mesh that will be viewed only by this character's owner
-	FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("First Person Mesh"));
-
-	FirstPersonMesh->SetupAttachment(GetMesh());
-	FirstPersonMesh->SetOnlyOwnerSee(true);
-	FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
-	FirstPersonMesh->SetCollisionProfileName(FName("NoCollision"));
 
 	// Create the Camera Component	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
-	FirstPersonCameraComponent->SetupAttachment(FirstPersonMesh, FName("head"));
+	FirstPersonCameraComponent->SetupAttachment(GetMesh(), "ROOT");
 	FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
 	FirstPersonCameraComponent->bEnableFirstPersonFieldOfView = true;
@@ -50,6 +42,14 @@ AStealthCharacter::AStealthCharacter()
 	FirstPersonCameraComponent->FirstPersonFieldOfView = 70.0f;
 	FirstPersonCameraComponent->FirstPersonScale = 0.6f;
 
+	// Create the first person mesh that will be viewed only by this character's owner
+	FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("First Person Mesh"));
+
+	FirstPersonMesh->SetupAttachment(FirstPersonCameraComponent);
+	FirstPersonMesh->SetOnlyOwnerSee(true);
+	FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
+	FirstPersonMesh->SetCollisionProfileName(FName("NoCollision"));
+	
 	// configure the character comps
 	GetMesh()->SetOwnerNoSee(true);
 	GetMesh()->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::WorldSpaceRepresentation;
@@ -399,16 +399,16 @@ void AStealthCharacter::Landed(const FHitResult& Hit)
 		{
 			if (CanUnCrouch())
 			{
-				UnCrouch();
+				if (bClimbCapsuleShrunk)
+				{
+					UnCrouch(false);
+					bClimbCapsuleShrunk = false;
+				}
 			}
 			else
 			{
 				ToggleSneak();
 			}
-		}
-		else if (CurrentMovementState == EPlayerMovementState::Crouch)
-		{
-			
 		}
 	}
 	
@@ -576,6 +576,7 @@ void AStealthCharacter::Climb()
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(this);
 		
+		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.0f,0, 5.f);
 		//If we are at a wall
 		if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 		{
@@ -584,7 +585,8 @@ void AStealthCharacter::Climb()
 				FVector HalfCapsuleHeight = {0,0,GetCapsuleComponent()->GetScaledCapsuleHalfHeight()};
 				FVector StartEdge = GetActorLocation();
 				FVector EndEdge = StartEdge + HalfCapsuleHeight + GetActorForwardVector() * ClimbRange;
-				
+
+				DrawDebugLine(GetWorld(), StartEdge, EndEdge, FColor::Green, false, 0.0f, 0, 5.f);
 				//If we are at a ledge
 				if (!GetWorld()->LineTraceSingleByChannel(HitResult, StartEdge, EndEdge, ECC_Visibility, Params))
 				{
@@ -600,6 +602,7 @@ void AStealthCharacter::Climb()
 				{
 					if (bHitLedge)
 					{
+						UE_LOG(LogTemp, Warning, TEXT("No ledge"));
 						bHitLedge = false;
 					}
 				}
@@ -626,8 +629,14 @@ void AStealthCharacter::Climb()
 						}
 						StopSprint();
 						//Just makes the character as small as when you are crouching
-						Crouch(false);
+						if (!bClimbCapsuleShrunk)
+						{
+							UE_LOG(LogTemp, Warning, TEXT("Climb capsule shrunk"));
+							Crouch(false);
+							bClimbCapsuleShrunk = true;
+						}
 						
+						UE_LOG(LogTemp, Warning, TEXT("Climbing"));
 						UpdateStaminaStart(ClimbStaminaAmount);
 						GetMovementComponent()->Velocity = {};
 						CurrentMovementState = EPlayerMovementState::Climb;
@@ -656,7 +665,6 @@ void AStealthCharacter::Climb()
 
 void AStealthCharacter::ExitClimb()
 {
-	
 	if (bIsClimbing)
 	{
 		bIsClimbing = false;

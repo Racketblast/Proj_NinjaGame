@@ -252,6 +252,9 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "Climb")
 	bool bHitLedge = false;
 
+	UPROPERTY(BlueprintReadWrite, Category = "Climb")
+	bool bClimbCapsuleShrunk = false;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Climb")
 	float ClimbRange = 45.f;
 	
