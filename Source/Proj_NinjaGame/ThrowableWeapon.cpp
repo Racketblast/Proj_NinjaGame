@@ -29,6 +29,10 @@ void AThrowableWeapon::Throw(AStealthCharacter* Player)
 		ThrownObject->bBreaksOnImpact = bBreakOnImpact;
 		ThrownObject->DealtDamage = ThrowDamage;
 		ThrownObject->ThrowVelocity = Player->FirstPersonCameraComponent->GetForwardVector() * ThrowSpeed;
+		
+		ThrownObject->StaticMeshComponent->SetSimulatePhysics(true);
+		ThrownObject->StaticMeshComponent->SetNotifyRigidBodyCollision(true);
+		
 		ThrownObject->StaticMeshComponent->SetPhysicsLinearVelocity(ThrownObject->ThrowVelocity, false);
 	}
 
@@ -40,9 +44,9 @@ void AThrowableWeapon::Throw(AStealthCharacter* Player)
 	else
 	{
 		Player->HeldThrowableWeapon = nullptr;
-		Player->LastHeldWeapon = nullptr;
 		Player->AimEnd();
 	}
+	Player->LastHeldWeapon = nullptr;
 	Destroy();
 }
 

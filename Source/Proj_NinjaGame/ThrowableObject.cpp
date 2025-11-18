@@ -17,8 +17,6 @@ AThrowableObject::AThrowableObject()
 {
 	StaticMeshComponent->OnComponentHit.AddDynamic(this, &AThrowableObject::ThrowableOnComponentHit);
 	StaticMeshComponent->SetGenerateOverlapEvents(false);
-	StaticMeshComponent->SetNotifyRigidBodyCollision(true);
-	StaticMeshComponent->SetSimulatePhysics(true);
 }
 
 void AThrowableObject::Use_Implementation(class AStealthCharacter* Player)
