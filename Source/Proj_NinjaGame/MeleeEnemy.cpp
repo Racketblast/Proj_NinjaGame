@@ -12,6 +12,7 @@
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Engine/OverlapResult.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 
@@ -93,6 +94,8 @@ void AMeleeEnemy::Tick(float DeltaTime)
 	CheckChaseProximityDetection();
 	
 	CheckPlayerVisibility();
+
+	CheckCloseDetection();
 }
 
 void AMeleeEnemy::CheckImmediateProximityDetection()
@@ -159,6 +162,8 @@ void AMeleeEnemy::CheckChaseProximityDetection()
 		);
 	#endif
 
+	bPlayerWithinChaseProximity = (Distance <= ChaseProximityRadius);
+
 	// Om spelaren är inom sfären blir dem direkt upptäck
 	if (Distance <= ChaseProximityRadius)
 	{
@@ -172,6 +177,57 @@ void AMeleeEnemy::CheckChaseProximityDetection()
 	}
 }
 
+void AMeleeEnemy::CheckCloseDetection()
+{
+	if (!PlayerPawn) return;
+	if (bIsChasing) return; 
+
+	FVector Forward = GetActorForwardVector();
+	FVector BoxCenter = GetActorLocation() + FVector(0,0,40) + Forward * 130.f; // flytta boxen framåt
+
+	FVector BoxHalfSize = FVector(80.f, 50.f, 120.f); // längd, bredd, höjd
+
+	
+	// Rotera boxen så den matchar fiendens rotation
+	FQuat BoxRotation = GetActorRotation().Quaternion();
+
+	FCollisionShape Box = FCollisionShape::MakeBox(BoxHalfSize);
+
+	bool bHit = GetWorld()->OverlapBlockingTestByChannel(
+		BoxCenter,
+		BoxRotation,
+		ECC_Pawn,
+		Box,
+		FCollisionQueryParams(FName(), false, this)
+	);
+
+	// Debug
+	DrawDebugBox(GetWorld(), BoxCenter, BoxHalfSize, BoxRotation, FColor::Purple, false, 0.05f, 0, 0.f); 
+
+	if (bHit)
+	{
+		// kontrollera att spelaren faktiskt är i boxen
+		TArray<FOverlapResult> Results;
+		bool bOverlap = GetWorld()->OverlapMultiByObjectType(
+			Results,
+			BoxCenter,
+			BoxRotation,
+			FCollisionObjectQueryParams(ECC_Pawn),
+			Box
+		);
+
+		for (auto& R : Results)
+		{
+			if (R.GetActor() == PlayerPawn)
+			{
+				bCanSeePlayer = true;  
+				UpdateLastSeenPlayerLocation();
+				return;
+			}
+		}
+	}
+}
+
 void AMeleeEnemy::CheckPlayerVisibility()
 {
 	if (!PlayerPawn) return;
@@ -180,62 +236,6 @@ void AMeleeEnemy::CheckPlayerVisibility()
 	FVector PlayerLoc = PlayerPawn->GetActorLocation();
 	FVector ToPlayer = PlayerLoc - EnemyEyes;
 	float Distance = ToPlayer.Size();
-	
-	/*// Close detection
-	const float CloseDetectionRange = 200.f;
-	const float ForwardOffset = 100.f; 
-
-	if (Distance <= CloseDetectionRange)
-	{
-		FVector Forward = GetActorForwardVector();
-
-		const FVector HeightOffsets[3] =
-		{
-			FVector(0,0,60), 
-			FVector(0,0,30), 
-			FVector(0,0,10)  
-		};
-
-		for (int i = 0; i < 3; i++)
-		{
-			// Starta lite FRAMFÖR fienden
-			FVector Start = GetActorLocation() + HeightOffsets[i] + Forward * ForwardOffset;
-			// Sluta vid spelaren + samma höjd
-			FVector End = PlayerPawn->GetActorLocation() + FVector(0,0,HeightOffsets[i].Z * 0.3f);
-
-			FHitResult Hit;
-			FCollisionQueryParams Params;
-			Params.AddIgnoredActor(this);
-
-			// BOX = "crouch proof"
-			bool bHit = GetWorld()->SweepSingleByChannel(
-				Hit,
-				Start,
-				End,
-				FQuat::Identity,
-				    ECC_Pawn,
-				FCollisionShape::MakeBox(FVector(15.f, 80.f, 60.f)), 
-				Params
-			);
-
-			// DEBUG
-			DrawDebugBox(GetWorld(), (Start + End) * 0.5f, FVector(35.f), FColor::Purple, false, 0.05f);
-			if (bHit && Hit.GetActor() == PlayerPawn)
-			{
-				DrawDebugLine(GetWorld(), Start, End, FColor::Purple, false, 0.05f);
-			}
-			
-			if (bHit && Hit.GetActor() == PlayerPawn)
-			{
-				bCanSeePlayer = true;
-				UpdateLastSeenPlayerLocation();
-				UE_LOG(LogTemp, Warning, TEXT("CLOSE RANGE DETECT layer %d"), i);
-				return;
-			}
-		}
-	}*/
-
-
 	
 	// Variabler 
 	FVector EnemyLocation = GetActorLocation() + FVector(0, 0, 50);
@@ -391,16 +391,21 @@ void AMeleeEnemy::CheckPlayerVisibility()
 		SuspiciousTimer = 0.f;
 	}
 
+	if (!bPlayerWithinChaseProximity)
+	{
+		bCanSeePlayer = false;
+	}
 	bPlayerInSuspiciousZone = false;
-	bCanSeePlayer = false;
 	bPlayerInAlertCone = false;
 }
+
 
 void AMeleeEnemy::OnSuspiciousLocationDetected()
 {
 	UE_LOG(LogTemp, Warning, TEXT("OnSuspiciousLocationDetected()"));
 	OnSuspiciousLocation.Broadcast(LastSeenPlayerLocation);
 }
+
 
 void AMeleeEnemy::UpdateLastSeenPlayerLocation()
 {
@@ -409,25 +414,6 @@ void AMeleeEnemy::UpdateLastSeenPlayerLocation()
 	{
 		LastSeenPlayerLocation = PlayerPawn->GetActorLocation();
 	}
-}
-
-bool AMeleeEnemy::HasClearLOS(const FVector& Start, const FVector& End)
-{
-	FHitResult Hit;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
-
-	bool bHit = GetWorld()->LineTraceSingleByChannel(
-		Hit,
-		Start,
-		End,
-		ECC_Visibility,
-		Params
-	);
-
-	DrawDebugLine(GetWorld(), Start, End, FColor::Purple, false, 0.05f, 0, 2.f);
-	
-	return (!bHit || Hit.GetActor() == PlayerPawn);
 }
 
 
