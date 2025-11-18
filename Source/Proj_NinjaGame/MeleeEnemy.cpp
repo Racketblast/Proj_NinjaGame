@@ -143,7 +143,7 @@ void AMeleeEnemy::CheckChaseProximityDetection()
 	const float Distance = FVector::Dist(GetActorLocation(), PlayerPawn->GetActorLocation());
 
 	// Debug sphere
-	/*#if WITH_EDITOR
+	#if WITH_EDITOR
 		DrawDebugSphere(
 			GetWorld(),
 			GetActorLocation(),
@@ -155,7 +155,7 @@ void AMeleeEnemy::CheckChaseProximityDetection()
 			0,
 			2.f
 		);
-	#endif*/
+	#endif
 
 	// Om spelaren är inom sfären blir dem direkt upptäck
 	if (Distance <= ChaseProximityRadius)
@@ -170,101 +170,77 @@ void AMeleeEnemy::CheckChaseProximityDetection()
 	}
 }
 
-
-/*void AMeleeEnemy::CheckPlayerVisibility()
-{
-    if (!PlayerPawn) return;
-
-	// Rita endast konen när vi patrullerar
-	if (!bIsChasing)
-	{
-		FVector EnemyLocation = GetActorLocation() + FVector(0, 0, 50);
-		FVector Forward = GetActorForwardVector();
-		FVector LookDirection = Forward.RotateAngleAxis(20.f, GetActorRightVector()); 
-
-		FColor ConeColor = FColor::Yellow;
-		DrawDebugCone(
-			GetWorld(),
-			EnemyLocation,
-			LookDirection,
-			VisionRange * 0.6f,
-			FMath::DegreesToRadians(VisionAngle * 0.5f),
-			FMath::DegreesToRadians(VisionAngle * 0.5f),
-			12,
-			ConeColor,
-			false,
-			0.1f 
-		);
-	}
-
-	//UE_LOG(LogTemp, Warning, TEXT("CheckPlayerVisibility"));
-
-    // Skillnad mellan patrull och chase-läge 
-    float EffectiveVisionRange = bIsChasing ? VisionRange : VisionRange * 0.6f;
-    float EffectiveVisionAngle = bIsChasing ? VisionAngle : VisionAngle * 0.5f;
-
-    FVector EnemyLocation = GetActorLocation() + FVector(0, 0, 50);
-    FVector Forward = GetActorForwardVector();
-
-    // Rikta synfältet nedåt 
-    FVector LookDirection = Forward.RotateAngleAxis(20.f, GetActorRightVector()); 
-
-    FVector ToPlayer = PlayerPawn->GetActorLocation() - EnemyLocation;
-    float Distance = ToPlayer.Size();
-
-    if (Distance > EffectiveVisionRange)
-    {
-        bCanSeePlayer = false;
-        return;
-    }
-
-    ToPlayer.Normalize();
-    float Dot = FVector::DotProduct(LookDirection, ToPlayer);
-    float Angle = FMath::Acos(Dot) * (180.f / PI);
-
-    if (Angle > EffectiveVisionAngle)
-    {
-        bCanSeePlayer = false;
-        return;
-    }
-
-    // Line trace för sikt 
-    FHitResult Hit;
-    FCollisionQueryParams Params;
-    Params.AddIgnoredActor(this);
-
-    bool bHit = GetWorld()->LineTraceSingleByChannel(
-        Hit,
-        EnemyLocation,
-        PlayerPawn->GetActorLocation(),
-        ECC_Visibility,
-        Params
-    );
-
-    if (!bHit || Hit.GetActor() == PlayerPawn)
-    {
-        bCanSeePlayer = true;
-        UpdateLastSeenPlayerLocation();
-
-        DrawDebugLine(GetWorld(), EnemyLocation, PlayerPawn->GetActorLocation(), FColor::Green, false, 0.05f);
-    }
-    else
-    {
-        bCanSeePlayer = false;
-        DrawDebugLine(GetWorld(), EnemyLocation, Hit.Location, FColor::Red, false, 0.05f);
-    }
-}*/
-
 void AMeleeEnemy::CheckPlayerVisibility()
 {
 	if (!PlayerPawn) return;
 
+	FVector EnemyEyes = GetActorLocation() + FVector(0, 0, 60);
+	FVector PlayerLoc = PlayerPawn->GetActorLocation();
+	FVector ToPlayer = PlayerLoc - EnemyEyes;
+	float Distance = ToPlayer.Size();
+	
+	/*// Close detection
+	const float CloseDetectionRange = 200.f;
+	const float ForwardOffset = 100.f; 
+
+	if (Distance <= CloseDetectionRange)
+	{
+		FVector Forward = GetActorForwardVector();
+
+		const FVector HeightOffsets[3] =
+		{
+			FVector(0,0,60), 
+			FVector(0,0,30), 
+			FVector(0,0,10)  
+		};
+
+		for (int i = 0; i < 3; i++)
+		{
+			// Starta lite FRAMFÖR fienden
+			FVector Start = GetActorLocation() + HeightOffsets[i] + Forward * ForwardOffset;
+			// Sluta vid spelaren + samma höjd
+			FVector End = PlayerPawn->GetActorLocation() + FVector(0,0,HeightOffsets[i].Z * 0.3f);
+
+			FHitResult Hit;
+			FCollisionQueryParams Params;
+			Params.AddIgnoredActor(this);
+
+			// BOX = "crouch proof"
+			bool bHit = GetWorld()->SweepSingleByChannel(
+				Hit,
+				Start,
+				End,
+				FQuat::Identity,
+				    ECC_Pawn,
+				FCollisionShape::MakeBox(FVector(15.f, 80.f, 60.f)), 
+				Params
+			);
+
+			// DEBUG
+			DrawDebugBox(GetWorld(), (Start + End) * 0.5f, FVector(35.f), FColor::Purple, false, 0.05f);
+			if (bHit && Hit.GetActor() == PlayerPawn)
+			{
+				DrawDebugLine(GetWorld(), Start, End, FColor::Purple, false, 0.05f);
+			}
+			
+			if (bHit && Hit.GetActor() == PlayerPawn)
+			{
+				bCanSeePlayer = true;
+				UpdateLastSeenPlayerLocation();
+				UE_LOG(LogTemp, Warning, TEXT("CLOSE RANGE DETECT layer %d"), i);
+				return;
+			}
+		}
+	}*/
+
+
+	
 	// Variabler 
 	FVector EnemyLocation = GetActorLocation() + FVector(0, 0, 50);
 	FVector Forward = GetActorForwardVector();
 	FVector LookDirection = Forward.RotateAngleAxis(10.f, GetActorRightVector()); // gör konen lite nedåtriktad
-	FVector ToPlayer = PlayerPawn->GetActorLocation() - EnemyLocation;
-	float Distance = ToPlayer.Size();
+	/*FVector ToPlayer = PlayerPawn->GetActorLocation() - EnemyLocation;
+	float Distance = ToPlayer.Size();*/
 	ToPlayer.Normalize();
 
 	// Skillnad mellan patrull och chase läge 
@@ -369,8 +345,7 @@ void AMeleeEnemy::CheckPlayerVisibility()
 				//UE_LOG(LogTemp, Warning, TEXT("SuspiciousVisionRange 2"));
 
 				// Fienden tittar mot spelaren, men ignorerar pitch
-				/*FRotator LookAtRot = (PlayerPawn->GetActorLocation() - GetActorLocation()).Rotation();
-				SetActorRotation(FMath::RInterpTo(GetActorRotation(), LookAtRot, GetWorld()->GetDeltaSeconds(), 2.f));*/
+				
 				FVector ToPlayerFlat = PlayerPawn->GetActorLocation() - GetActorLocation();
 				ToPlayerFlat.Z = 0;
 
@@ -427,11 +402,32 @@ void AMeleeEnemy::OnSuspiciousLocationDetected()
 
 void AMeleeEnemy::UpdateLastSeenPlayerLocation()
 {
+	//UE_LOG(LogTemp, Warning, TEXT("UpdateLastSeenPlayerLocation"));
 	if (PlayerPawn)
 	{
 		LastSeenPlayerLocation = PlayerPawn->GetActorLocation();
 	}
 }
+
+bool AMeleeEnemy::HasClearLOS(const FVector& Start, const FVector& End)
+{
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(
+		Hit,
+		Start,
+		End,
+		ECC_Visibility,
+		Params
+	);
+
+	DrawDebugLine(GetWorld(), Start, End, FColor::Purple, false, 0.05f, 0, 2.f);
+	
+	return (!bHit || Hit.GetActor() == PlayerPawn);
+}
+
 
 float AMeleeEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {

@@ -91,6 +91,8 @@ protected:
 
 	void OnSuspiciousLocationDetected();
 
+	bool HasClearLOS(const FVector& Start, const FVector& End);
+
 	
 	// För Attack 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
