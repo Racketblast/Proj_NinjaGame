@@ -50,6 +50,10 @@ AMeleeEnemy::AMeleeEnemy()
 	GetCharacterMovement()->bUseRVOAvoidance = true;
 	GetCharacterMovement()->AvoidanceWeight = 0.5f;
 	GetCharacterMovement()->AvoidanceConsiderationRadius = 300.f;
+
+	// För bättre rotation
+	/*GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 1.f, 0.f);*/
 }
 
 

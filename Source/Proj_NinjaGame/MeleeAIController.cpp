@@ -267,6 +267,20 @@ void AMeleeAIController::MoveToNextPatrolPoint()
 		TargetPoint = PatrolPoints[CurrentPatrolIndex];
 		if (!TargetPoint) return;
 	}
+
+	/*APawn* EnemyPawn = ControlledEnemy;
+	const FVector Direction = (TargetPoint->GetActorLocation() - EnemyPawn->GetActorLocation());
+	const FRotator LookRot = Direction.Rotation();
+
+	// Mjuk rotation mot nästa punkt
+	EnemyPawn->SetActorRotation(
+		FMath::RInterpTo(
+			EnemyPawn->GetActorRotation(),
+			LookRot,
+			GetWorld()->GetDeltaSeconds(),
+			100.0f                        
+		)
+	);*/
 	
 	//UE_LOG(LogTemp, Warning, TEXT("PatrolPoints num: %d, index: %d"), ControlledEnemy->GetPatrolPoints().Num(), CurrentPatrolIndex);
 	MoveToActor(TargetPoint);
