@@ -139,6 +139,9 @@ protected:
 
 	// Audio:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Audio")
+	UAudioComponent* FootstepsAudioComponent;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Audio")
 	UAudioComponent* StateAudioComponent;
 	
 	UPROPERTY(EditAnywhere, Category="Audio")
