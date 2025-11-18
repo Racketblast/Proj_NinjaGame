@@ -62,6 +62,8 @@ void AThrowableObject::ThrowableOnComponentHit(UPrimitiveComponent* HitComp, AAc
 		return;
 	
 	Thrown = false;
+	StaticMeshComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	
 	ThrowableOnComponentHitFunction(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
 }
 

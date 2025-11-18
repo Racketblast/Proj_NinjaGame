@@ -22,6 +22,10 @@ void AKunaiWeapon::Throw(AStealthCharacter* Player)
 		ThrownObject->Thrown = true;
 		ThrownObject->bBreaksOnImpact = bBreakOnImpact;
 		ThrownObject->ThrowVelocity = Player->FirstPersonCameraComponent->GetForwardVector() * ThrowSpeed;
+		
+		ThrownObject->StaticMeshComponent->SetSimulatePhysics(true);
+		ThrownObject->StaticMeshComponent->SetNotifyRigidBodyCollision(true);
+		
 		ThrownObject->StaticMeshComponent->SetPhysicsLinearVelocity(ThrownObject->ThrowVelocity, false);
 	}
 
