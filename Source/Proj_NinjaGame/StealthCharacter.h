@@ -50,7 +50,7 @@ protected:
 	EPlayerMovementState CurrentMovementState = EPlayerMovementState::Walk;
 
 	virtual bool CanJumpInternal_Implementation() const override;
-
+	
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, Category ="Input")
 	UInputAction* JumpAction;
@@ -245,9 +245,16 @@ protected:
 	float SneakNoiseMultiplier = 0.1f;
 
 	//Climbing
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Climb")
-	bool bCanClimb = true;
+	virtual bool CanCrouch() const override;
+	
+	UPROPERTY(BlueprintReadWrite, Category = "Climb")
+	bool bIsClimbing = false;
+	UPROPERTY(BlueprintReadWrite, Category = "Climb")
+	bool bHitLedge = false;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Climb")
+	float ClimbRange = 45.f;
+	
 	UPROPERTY(BlueprintReadWrite, Category = "Climb")
 	bool bMovingForward = false;
 
@@ -258,6 +265,7 @@ protected:
 	EPlayerMovementState RememberedClimbState;
 
 	void Climb();
+	void ExitClimb();
 
 	//Player Stamina
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
@@ -308,3 +316,10 @@ private:
 	float MoveInputForward = 0.f;
 	float MoveInputRight = 0.f;
 };
+
+inline bool AStealthCharacter::CanCrouch() const
+{
+	if (CurrentMovementState == EPlayerMovementState::Climb)
+		return true;
+	return Super::CanCrouch();
+}
