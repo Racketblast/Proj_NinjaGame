@@ -71,6 +71,10 @@ void AStealthCharacter::MoveInput(const FInputActionValue& Value)
 	// get the Vector2D move axis
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
+	// Spara input, för sprint
+	MoveInputRight = MovementVector.X;
+	MoveInputForward = MovementVector.Y;
+
 	if (MovementVector.Y > 0.0f)
 	{
 		bMovingForward = true;
@@ -82,6 +86,9 @@ void AStealthCharacter::MoveInput(const FInputActionValue& Value)
 void AStealthCharacter::EndMoveInput()
 {
 	bMovingForward = false;
+
+	MoveInputForward = 0.f;
+	MoveInputRight = 0.f;
 }
 
 void AStealthCharacter::LookInput(const FInputActionValue& Value)
@@ -415,6 +422,16 @@ void AStealthCharacter::Tick(float DeltaTime)
 	//Climbing
 	Climb();
 
+
+	// Sluta springa ifall spelaren inte har någon movement input
+	if (CurrentMovementState == EPlayerMovementState::Run)
+	{
+		if (FMath::IsNearlyZero(MoveInputForward) && FMath::IsNearlyZero(MoveInputRight))
+		{
+			StopSprint();
+		}
+	}
+
 	if (FirstPersonCameraComponent)
 	{
 		// Ändrar FOV när spelaren springer 
@@ -722,6 +739,17 @@ bool AStealthCharacter::CanUnCrouch()
 void AStealthCharacter::StartSprint()
 {
 	if (CurrentMovementState != EPlayerMovementState::Climb)
+	// Kolla om spelaren faktiskt försöker röra sig
+	FVector2D MovementInput(MoveInputForward, MoveInputRight);
+
+
+	if (MovementInput.IsNearlyZero())
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("Cannot sprint without MovementInput."));
+		return;
+	}
+	
+	if (CurrentStamina > 0)
 	{
 		if (CurrentStamina > 0)
 		{

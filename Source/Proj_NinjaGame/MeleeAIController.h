@@ -27,6 +27,8 @@ public:
 	void OnHeardSound(FVector SoundLocation);
 
 	void RefreshChaseTarget();
+
+	EEnemyState GetCurrentState() const { return CurrentState; }
 	
 protected:
 	virtual void OnPossess(APawn* InPawn) override;

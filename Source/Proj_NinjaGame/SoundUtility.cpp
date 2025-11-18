@@ -23,15 +23,15 @@ void USoundUtility::ReportNoise(UWorld* World, FVector Location, float Loudness)
 		//Bas-radius, alltså hur långt ett ljud med loudness = 1 hörs
 		const float BaseHearingDistance = 1000.f;
 
-		//Skala med Loudness
+		/*//Skala med Loudness
 		const float EffectiveHearingDistance = BaseHearingDistance * FMath::Pow(Loudness, 0.7f);
 
 		// Gör så att fienden inte kan höra saker som är utanför dens maximala hearing range. 
-		const float FinalHearingRadius = FMath::Min(EffectiveHearingDistance, Enemy->HearingRange);
+		const float FinalHearingRadius = FMath::Min(EffectiveHearingDistance, Enemy->HearingRange);*/
 
 
 		
-		/*// Dämpningsfaktor per vägg
+		// Dämpningsfaktor per vägg
 		const float WallDamping = 0.5f; 
 
 		// Line trace för att checka väggar
@@ -76,7 +76,7 @@ void USoundUtility::ReportNoise(UWorld* World, FVector Location, float Loudness)
 		float EffectiveHearingDistance = BaseHearingDistance * FMath::Pow(OccludedLoudness, 0.7f);
 
 		// Gör så att fienden inte kan höra saker som är utanför dens maximala hearing range. 
-		const float FinalHearingRadius = FMath::Min(EffectiveHearingDistance, Enemy->HearingRange);*/
+		const float FinalHearingRadius = FMath::Min(EffectiveHearingDistance, Enemy->HearingRange);
 		
 
 

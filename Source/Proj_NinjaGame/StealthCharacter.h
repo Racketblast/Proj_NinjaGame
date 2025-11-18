@@ -301,4 +301,8 @@ public:
 	bool bHasCompletedTheMission = false;
 	UPROPERTY(BlueprintReadWrite)
 	bool bIsInCombat = false;
+
+private:
+	float MoveInputForward = 0.f;
+	float MoveInputRight = 0.f;
 };
