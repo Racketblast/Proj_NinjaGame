@@ -20,6 +20,8 @@ AMeleeEnemy::AMeleeEnemy()
 	PrimaryActorTick.bCanEverTick = true;
 
 	//Audio
+	FootstepsAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("FootstepsAudioComponent"));
+	FootstepsAudioComponent->SetupAttachment(RootComponent);
 	StateAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("StateAudioComponent"));
 	StateAudioComponent->SetupAttachment(RootComponent);
 	

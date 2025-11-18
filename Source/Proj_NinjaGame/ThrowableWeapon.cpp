@@ -5,6 +5,7 @@
 
 #include "StealthCharacter.h"
 #include "ThrowableObject.h"
+#include "KunaiWeapon.h"
 #include "Camera/CameraComponent.h"
 
 // Sets default values
@@ -30,10 +31,18 @@ void AThrowableWeapon::Throw(AStealthCharacter* Player)
 		ThrownObject->ThrowVelocity = Player->FirstPersonCameraComponent->GetForwardVector() * ThrowSpeed;
 		ThrownObject->StaticMeshComponent->SetPhysicsLinearVelocity(ThrownObject->ThrowVelocity, false);
 	}
-	
-	Player->HeldThrowableWeapon = nullptr;
-	Player->LastHeldWeapon = nullptr;
-	Player->AimEnd();
+
+	if (Player->AmountOfKunai > 0)
+	{
+		Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(Player->KunaiWeapon);
+		Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
+	}
+	else
+	{
+		Player->HeldThrowableWeapon = nullptr;
+		Player->LastHeldWeapon = nullptr;
+		Player->AimEnd();
+	}
 	Destroy();
 }
 
