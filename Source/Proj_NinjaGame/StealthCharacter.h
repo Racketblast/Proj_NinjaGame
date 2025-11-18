@@ -49,6 +49,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Category = "Player State")
 	EPlayerMovementState CurrentMovementState = EPlayerMovementState::Walk;
 
+	virtual bool CanJumpInternal_Implementation() const override;
+
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, Category ="Input")
 	UInputAction* JumpAction;
@@ -157,9 +159,10 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
 	int AmountOfKunai = 3;
-protected:
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	TSubclassOf<AKunaiWeapon> KunaiWeapon;
+protected:
 
 	//Projectile marker
 	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
@@ -248,6 +251,9 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Climb")
 	bool bHoldingJump = false;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Climb")
+	EPlayerMovementState RememberedClimbState;
 
 	void Climb();
 
