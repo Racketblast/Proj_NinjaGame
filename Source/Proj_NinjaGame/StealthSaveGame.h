@@ -3,6 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+//Make Enum classes later
+#include "StealthGameInstance.h"
+
 #include "GameFramework/SaveGame.h"
 #include "StealthSaveGame.generated.h"
 

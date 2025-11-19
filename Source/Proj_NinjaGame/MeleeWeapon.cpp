@@ -15,11 +15,12 @@ AMeleeWeapon::AMeleeWeapon()
 
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	RootComponent = StaticMeshComponent;
+	StaticMeshComponent->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
+	
 	StartOfBladePos = CreateDefaultSubobject<USceneComponent>(TEXT("StartOfBladePos"));
 	EndOfBladePos = CreateDefaultSubobject<USceneComponent>(TEXT("EndOfBladePos"));
 	StartOfBladePos->SetupAttachment(StaticMeshComponent);
 	EndOfBladePos->SetupAttachment(StaticMeshComponent);
-	
 }
 
 void AMeleeWeapon::StartMeleeAttack()
