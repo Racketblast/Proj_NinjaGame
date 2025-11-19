@@ -49,6 +49,30 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 	{
 	case EEnemyState::Patrolling:
 		{
+			if (bIsRotatingTowardPatrolPoint)
+			{
+				RotationProgress += DeltaSeconds / 2.0f; 
+
+				FRotator Current = ControlledEnemy->GetActorRotation();
+				FRotator Interp  = FMath::RInterpTo(Current, DesiredLookRotation, DeltaSeconds, 2.5f);
+
+				// Lås pitch och roll igen 
+				Interp.Pitch = 0.f;
+				Interp.Roll  = 0.f;
+
+				ControlledEnemy->SetActorRotation(Interp);
+
+				// Kolla när vi är nästan klar
+				if (Current.Equals(DesiredLookRotation, 3.0f)) // tolerans är 3 grader
+				{
+					bIsRotatingTowardPatrolPoint = false;
+
+					// När klar så börjar fienden gå
+					MoveToActor(
+						ControlledEnemy->GetPatrolPoints()[CurrentPatrolIndex]
+					);
+				}
+			}
 			if (ControlledEnemy->bPlayerInAlertCone) 
 			{
 				StartAlert();
@@ -268,22 +292,29 @@ void AMeleeAIController::MoveToNextPatrolPoint()
 		if (!TargetPoint) return;
 	}
 
-	/*APawn* EnemyPawn = ControlledEnemy;
-	const FVector Direction = (TargetPoint->GetActorLocation() - EnemyPawn->GetActorLocation());
-	const FRotator LookRot = Direction.Rotation();
 
-	// Mjuk rotation mot nästa punkt
-	EnemyPawn->SetActorRotation(
-		FMath::RInterpTo(
-			EnemyPawn->GetActorRotation(),
-			LookRot,
-			GetWorld()->GetDeltaSeconds(),
-			100.0f                        
-		)
-	);*/
+	
+	
+	// Beräkna rotation
+	FVector Dir = (TargetPoint->GetActorLocation() - ControlledEnemy->GetActorLocation());
+	DesiredLookRotation = Dir.Rotation();
+
+	// Tvinga pitch och roll till 0
+	DesiredLookRotation.Pitch = 0.f;
+	DesiredLookRotation.Roll  = 0.f;
+
+	// Starta långsam rotation
+	bIsRotatingTowardPatrolPoint = true;
+	RotationProgress = 0.f;
+
+	// Stoppa allt moveTo medan vi roterar
+	StopMovement();
+
+	
+	
 	
 	//UE_LOG(LogTemp, Warning, TEXT("PatrolPoints num: %d, index: %d"), ControlledEnemy->GetPatrolPoints().Num(), CurrentPatrolIndex);
-	MoveToActor(TargetPoint);
+	//MoveToActor(TargetPoint);
 }
 
 void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)

@@ -54,6 +54,9 @@ AMeleeEnemy::AMeleeEnemy()
 	// För bättre rotation
 	/*GetCharacterMovement()->bUseControllerDesiredRotation = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 1.f, 0.f);*/
+	GetCharacterMovement()->bUseControllerDesiredRotation = false;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+
 }
 
 

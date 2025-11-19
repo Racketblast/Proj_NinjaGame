@@ -56,6 +56,11 @@ protected:
 	UFUNCTION()
 	void HandleSuspiciousLocation(FVector Location);
 
+	// Rotation
+	FRotator DesiredLookRotation;
+	bool bIsRotatingTowardPatrolPoint = false;
+	float RotationProgress = 0.f;
+
 
 	// Failsafe
 	FVector LastSearchLocation;
