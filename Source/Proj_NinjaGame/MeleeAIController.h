@@ -57,6 +57,14 @@ protected:
 	void HandleSuspiciousLocation(FVector Location);
 
 	// Rotation
+	void StartSmoothRotationTowards(const FVector& TargetLocation, float RotationSpeed);
+	bool bIsRotating = false;
+	FRotator DesiredRotation;
+	float CurrentRotationSpeed = 1.f;
+	FVector InvestigateTarget;
+	bool bIsInvestigatingTarget = false;
+
+	
 	FRotator DesiredLookRotation;
 	bool bIsRotatingTowardPatrolPoint = false;
 	float RotationProgress = 0.f;

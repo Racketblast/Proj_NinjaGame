@@ -45,6 +45,25 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 	
 	if (!ControlledEnemy) return;
 
+	// Rotation
+	if (bIsRotating)
+	{
+		FRotator Current = ControlledEnemy->GetActorRotation();
+		FRotator Interp = FMath::RInterpTo(Current, DesiredRotation, DeltaSeconds, CurrentRotationSpeed);
+
+		Interp.Pitch = 0.f;
+		Interp.Roll = 0.f;
+
+		ControlledEnemy->SetActorRotation(Interp);
+
+		if (Interp.Equals(DesiredRotation, 2.0f)) 
+		{
+			bIsRotating = false;
+		}
+
+		return; // Under rotation gör fienden inget annat
+	}
+
 	switch (CurrentState)
 	{
 	case EEnemyState::Patrolling:
@@ -154,6 +173,15 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 		}
 	case EEnemyState::Searching:
 		{
+			if (bIsMovingToSound && bIsInvestigatingTarget)
+			{
+				// Gör inget om vi roterar
+				if (!bIsRotating)
+				{
+					MoveToLocation(InvestigateTarget, -1.f, true, true, false, false, 0, true);
+				}
+			}
+			
 			if (ControlledEnemy->bPlayerInAlertCone) 
 			{
 				StartAlert();
@@ -231,6 +259,7 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 		
 		GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, this, &AMeleeAIController::ResetSoundFlag, 0.5f, false);
 	}
+
 }
 
 void AMeleeAIController::StartAlert()
@@ -399,6 +428,8 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 	// när fienden nått ljudkällan 
 	if (CurrentState == EEnemyState::Searching && bIsMovingToSound)
 	{
+		bIsMovingToSound = false;
+		bIsInvestigatingTarget = false;
 		//UE_LOG(LogTemp, Warning, TEXT("AI finished moving to sound, starting search."));
 		bIsMovingToSound = false;
 	}
@@ -620,8 +651,14 @@ void AMeleeAIController::OnHeardSound(FVector SoundLocation)
 	DrawDebugSphere(GetWorld(), GroundedLocation, 25.f, 12, FColor::Green, false, 5.f);
 
 	UE_LOG(LogTemp, Warning, TEXT("OnHeardSound triggered: Enemy moving toward sound at %s"), *GroundedLocation.ToString());
+
 	
-	MoveToLocation(GroundedLocation, -1.f, true, true, false, false, 0, true);
+	bIsInvestigatingTarget = true;
+	InvestigateTarget = GroundedLocation;
+	StartSmoothRotationTowards(GroundedLocation, 4.0f);
+	
+	
+	//MoveToLocation(GroundedLocation, -1.f, true, true, false, false, 0, true);
 }
 
 void AMeleeAIController::HandleSuspiciousLocation(FVector Location)
@@ -668,6 +705,22 @@ void AMeleeAIController::HandleSuspiciousLocation(FVector Location)
         //bIsMovingToSound = false;
         BeginSearch();
     }
+}
+
+
+void AMeleeAIController::StartSmoothRotationTowards(const FVector& TargetLocation, float RotationSpeed)
+{
+	if (!ControlledEnemy) return;
+
+	FVector Dir = TargetLocation - ControlledEnemy->GetActorLocation();
+	Dir.Z = 0.f; 
+
+	DesiredRotation = Dir.Rotation();
+	DesiredRotation.Pitch = 0.f;
+	DesiredRotation.Roll = 0.f;
+
+	CurrentRotationSpeed = RotationSpeed;
+	bIsRotating = true;
 }
 
 
