@@ -71,6 +71,8 @@ protected:
 
 	void CheckChaseProximityDetection();
 
+	void CheckCloseDetection();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
 	bool bVisionDebug = true;
 
@@ -87,9 +89,12 @@ protected:
 	float SuspiciousTimer = 0.f;
 	bool bIsSuspicious = false;
 	bool bPlayerInSuspiciousZone = false;
+	bool bPlayerWithinChaseProximity = false;
 
 
 	void OnSuspiciousLocationDetected();
+
+	bool HasClearLOS(const FVector& Start, const FVector& End);
 
 	
 	// För Attack 

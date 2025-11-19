@@ -70,6 +70,10 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 		}
 	case EEnemyState::Alert:
 		{
+			if (!GetWorldTimerManager().IsTimerActive(AlertTimerHandle))
+			{
+				GetWorldTimerManager().SetTimer(AlertTimerHandle, this, &AMeleeAIController::OnAlertTimerExpired, 3.f, false);
+			}
 			// Om fienden ser spelaren tillräckligt tydligt så börja jaga
 			if (ControlledEnemy->CanSeePlayer())
 			{
@@ -119,6 +123,7 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 			}
 			else if (!GetWorldTimerManager().IsTimerActive(LoseSightTimerHandle))
 			{
+				UE_LOG(LogTemp, Warning, TEXT("lost sight of player during chase. Calling StopChasing"));
 				GetWorldTimerManager().SetTimer(LoseSightTimerHandle, this, &AMeleeAIController::StopChasing, ControlledEnemy->GetLoseSightTime(), false);
 			}
 			break;
@@ -200,11 +205,6 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 		
 		bIsInvestigatingSound = true;
 		
-		/*GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, [this]()
-		{
-			bIsInvestigatingSound = false;
-			ControlledEnemy->bHeardSoundRecently = false;
-		}, 0.5f, false);*/
 		GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, this, &AMeleeAIController::ResetSoundFlag, 0.5f, false);
 	}
 }
@@ -231,16 +231,6 @@ void AMeleeAIController::StartAlert()
 	}
 
 	// Efter några sekunder om fienden fortfarande inte ser spelaren så återgår den till patrullering
-	/*GetWorldTimerManager().SetTimer(AlertTimerHandle, [this]()
-	{
-		if (!ControlledEnemy->CanSeePlayer())
-		{
-			CurrentState = EEnemyState::Patrolling;
-			ControlledEnemy->UpdateStateVFX(CurrentState);
-			ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
-			MoveToNextPatrolPoint();
-		}
-	}, 3.f, false);*/
 	GetWorldTimerManager().SetTimer(AlertTimerHandle, this, &AMeleeAIController::OnAlertTimerExpired, 3.f, false);
 }
 
@@ -291,72 +281,12 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 	
 	Super::OnMoveCompleted(RequestID, Result);
 
-	/*const TArray<AActor*>& PatrolPoints = ControlledEnemy->GetPatrolPoints();
-	if (CurrentState == EEnemyState::Patrolling)
-	{
-		static int32 FailCount = 0;
-		if (!Result.IsSuccess())
-		{
-			FailCount++;
-			if (FailCount > 3)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Too many failed patrol moves, aborting patrol temporarily."));
-				return;
-			}
-		}
-		else
-		{
-			FailCount = 0; 
-		}
-		
-		if (Result.IsSuccess())
-		{
-			// Lyckad förflyttning 
-			if (PatrolPoints.Num() > 1)
-			{
-				FTimerHandle WaitHandle;
-				GetWorldTimerManager().SetTimer(WaitHandle, [this]()
-				{
-					CurrentPatrolIndex = (CurrentPatrolIndex + 1) % ControlledEnemy->GetPatrolPoints().Num();
-					MoveToNextPatrolPoint();
-				}, ControlledEnemy->GetWaitTimeAtPoint(), false);
-			}
-		}
-		else
-		{
-			// Misslyckad förflyttning 
-			UE_LOG(LogTemp, Warning, TEXT("Patrol move failed at point index %d (%s). Restarting patrol route."),
-				CurrentPatrolIndex,
-				*PatrolPoints[CurrentPatrolIndex]->GetName());
-
-			// Starta om patrullen
-			CurrentPatrolIndex = 0;
-
-			// Säkerhetsfördröjning så att pathfinding hinner stabilisera sig
-			FTimerHandle RetryHandle;
-			GetWorldTimerManager().SetTimer(RetryHandle, [this]()
-			{
-				MoveToNextPatrolPoint();
-			}, 0.5f, false);
-		}
-
-		if (!ControlledEnemy)
-			return;
-	}*/
-	
-
-	// Kolla att detta inte är ett gammalt move som avbrutits av ett nytt
-	/*if (Result.Code == EPathFollowingResult::Aborted)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Move aborted (ignored old move)."));
-		return;
-	}*/
-
 	if (Result.Code == EPathFollowingResult::Aborted)
 	{
 		// Endast ignorera aborter från gamla patrull-moves, inte ljud-moves
 		if (CurrentState == EEnemyState::Patrolling)
 		{
+			//UE_LOG(LogTemp, Warning, TEXT("OnMoveCompleted RequestID: %s Result: %d CurrentState: %d bIsMovingToSound: %d"), *RequestID.ToString(), (int)Result.Code, (int)CurrentState, (int)bIsMovingToSound);
 			UE_LOG(LogTemp, Warning, TEXT("Move aborted (ignored patrol move)."));
 			return;
 		}
@@ -397,11 +327,6 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 			if (PatrolPoints.Num() > 1)
 			{
 				FTimerHandle WaitHandle;
-				/*GetWorldTimerManager().SetTimer(WaitHandle, [this]()
-				{
-					CurrentPatrolIndex = (CurrentPatrolIndex + 1) % ControlledEnemy->GetPatrolPoints().Num();
-					MoveToNextPatrolPoint();
-				}, ControlledEnemy->GetWaitTimeAtPoint(), false);*/
 				TWeakObjectPtr<AMeleeAIController> WeakThis(this); // Använde detta för att stoppa en tidigare krasch 
 				GetWorldTimerManager().SetTimer(WaitHandle, [WeakThis]()
 				{
@@ -420,12 +345,8 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 			UE_LOG(LogTemp, Warning, TEXT("Patrol move failed at point index %d (%s). Retrying..."),
 				CurrentPatrolIndex,
 				*PatrolPoints[CurrentPatrolIndex]->GetName());
-
+			
 			FTimerHandle RetryHandle;
-			/*GetWorldTimerManager().SetTimer(RetryHandle, [this]()
-			{
-				MoveToNextPatrolPoint();
-			}, 1.0f, false);*/
 			GetWorldTimerManager().SetTimer(RetryHandle, this, &AMeleeAIController::RetryMoveToNextPatrolPoint, 1.0f, false);
 		}
 	}
@@ -658,27 +579,52 @@ void AMeleeAIController::OnHeardSound(FVector SoundLocation)
 	MoveToLocation(GroundedLocation, -1.f, true, true, false, false, 0, true);
 }
 
-
-
 void AMeleeAIController::HandleSuspiciousLocation(FVector Location)
 {
-	if (!IsValid(this)) return;
-	
-	UE_LOG(LogTemp, Warning, TEXT("HandleSuspiciousLocation"));
-	/*StopMovement();
-	FRotator LookAtRot = (Location - GetPawn()->GetActorLocation()).Rotation();
-	GetPawn()->SetActorRotation(LookAtRot);*/
-	
-	if (CurrentState != EEnemyState::Chasing && CurrentState != EEnemyState::Searching)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Enemy is investigating suspicious location!"));
-		CurrentState = EEnemyState::Searching;
-		TimeWithoutMovement = 0.f; // För failsafe
-		LastSearchLocation = ControlledEnemy->GetActorLocation(); // För failsafe
-		ControlledEnemy->UpdateStateVFX(CurrentState);
-		MoveToLocation(Location);
-	}
+    if (!IsValid(this) || !ControlledEnemy || !IsValid(ControlledEnemy)) return;
+
+    //UE_LOG(LogTemp, Warning, TEXT("HandleSuspiciousLocation: Trying to move to: %s"), *Location.ToString());
+
+    if (CurrentState == EEnemyState::Chasing || CurrentState == EEnemyState::Searching)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("HandleSuspiciousLocation ignored because currently chasing/searching."));
+        return;
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("Enemy is investigating suspicious location!"));
+    CurrentState = EEnemyState::Searching;
+    TimeWithoutMovement = 0.f; // För failsafe
+    LastSearchLocation = ControlledEnemy->GetActorLocation(); // För failsafe
+    ControlledEnemy->UpdateStateVFX(CurrentState);
+    ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
+
+    // Project to navmesh
+    UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
+    FNavLocation NavLoc;
+    if (NavSys && NavSys->ProjectPointToNavigation(Location, NavLoc, FVector(ControlledEnemy->HearingRange)))
+    {
+        LastKnownPlayerLocation = NavLoc.Location;
+        //bIsMovingToSound = true;
+
+        UE_LOG(LogTemp, Warning, TEXT("HandleSuspiciousLocation: Moving to projected navmesh point: %s"), *NavLoc.Location.ToString());
+
+        // Debug draw
+        DrawDebugSphere(GetWorld(), Location, 30.f, 12, FColor::Yellow, false, 8.f);
+        DrawDebugSphere(GetWorld(), NavLoc.Location, 30.f, 12, FColor::Green, false, 8.f);
+        DrawDebugLine(GetWorld(), ControlledEnemy->GetActorLocation(), NavLoc.Location, FColor::Blue, false, 8.f, 0, 2.f);
+    	
+        const float AcceptanceRadius = 50.f;
+        MoveToLocation(NavLoc.Location, AcceptanceRadius, true, true, true, false, nullptr);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("Suspicious location not on navmesh! Location: %s"), *Location.ToString());
+        // Fallback, ifall den inte kan ta sig till locationen så bara undersök lite på stället innan den går tillbaka till patrullering.  
+        //bIsMovingToSound = false;
+        BeginSearch();
+    }
 }
+
 
 
 void AMeleeAIController::OnUnPossess()
@@ -739,6 +685,8 @@ void AMeleeAIController::OnAlertTimerExpired()
 
 void AMeleeAIController::RetryMoveToNextPatrolPoint()
 {
+	StopMovement();
+	ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
 	MoveToNextPatrolPoint();
 }
 

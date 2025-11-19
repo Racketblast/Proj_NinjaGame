@@ -12,6 +12,7 @@
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Engine/OverlapResult.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 
@@ -93,6 +94,8 @@ void AMeleeEnemy::Tick(float DeltaTime)
 	CheckChaseProximityDetection();
 	
 	CheckPlayerVisibility();
+
+	CheckCloseDetection();
 }
 
 void AMeleeEnemy::CheckImmediateProximityDetection()
@@ -121,19 +124,20 @@ void AMeleeEnemy::CheckImmediateProximityDetection()
 	
 	OnSuspiciousLocation.Broadcast(PlayerPawn->GetActorLocation()); 
 
-	#if WITH_EDITOR
+	if (bVisionDebug)
+	{
 		DrawDebugSphere(
-			GetWorld(),
-			GetActorLocation(),
-			ProximityThreshold,
-			16,
-			FColor::Red,
-			false,
-			0.1f,
-			0,
-			2.f
-		);
-	#endif
+		GetWorld(),
+		GetActorLocation(),
+		ProximityThreshold,
+		16,
+		FColor::Red,
+		false,
+		0.1f,
+		0,
+		2.f
+	);
+	}
 }
 
 void AMeleeEnemy::CheckChaseProximityDetection()
@@ -145,7 +149,8 @@ void AMeleeEnemy::CheckChaseProximityDetection()
 	const float Distance = FVector::Dist(GetActorLocation(), PlayerPawn->GetActorLocation());
 
 	// Debug sphere
-	/*#if WITH_EDITOR
+	if (bVisionDebug)
+	{
 		DrawDebugSphere(
 			GetWorld(),
 			GetActorLocation(),
@@ -157,7 +162,9 @@ void AMeleeEnemy::CheckChaseProximityDetection()
 			0,
 			2.f
 		);
-	#endif*/
+	}
+
+	bPlayerWithinChaseProximity = (Distance <= ChaseProximityRadius);
 
 	// Om spelaren är inom sfären blir dem direkt upptäck
 	if (Distance <= ChaseProximityRadius)
@@ -172,101 +179,75 @@ void AMeleeEnemy::CheckChaseProximityDetection()
 	}
 }
 
-
-/*void AMeleeEnemy::CheckPlayerVisibility()
+void AMeleeEnemy::CheckCloseDetection()
 {
-    if (!PlayerPawn) return;
+	if (!PlayerPawn) return;
+	if (bIsChasing) return; 
 
-	// Rita endast konen när vi patrullerar
-	if (!bIsChasing)
+	FVector Forward = GetActorForwardVector();
+	FVector BoxCenter = GetActorLocation() + FVector(0,0,40) + Forward * 130.f; // flytta boxen framåt
+
+	FVector BoxHalfSize = FVector(80.f, 50.f, 120.f); // längd, bredd, höjd
+
+	
+	// Rotera boxen så den matchar fiendens rotation
+	FQuat BoxRotation = GetActorRotation().Quaternion();
+
+	FCollisionShape Box = FCollisionShape::MakeBox(BoxHalfSize);
+
+	bool bHit = GetWorld()->OverlapBlockingTestByChannel(
+		BoxCenter,
+		BoxRotation,
+		ECC_Pawn,
+		Box,
+		FCollisionQueryParams(FName(), false, this)
+	);
+
+	// Debug
+	if (bVisionDebug)
 	{
-		FVector EnemyLocation = GetActorLocation() + FVector(0, 0, 50);
-		FVector Forward = GetActorForwardVector();
-		FVector LookDirection = Forward.RotateAngleAxis(20.f, GetActorRightVector()); 
-
-		FColor ConeColor = FColor::Yellow;
-		DrawDebugCone(
-			GetWorld(),
-			EnemyLocation,
-			LookDirection,
-			VisionRange * 0.6f,
-			FMath::DegreesToRadians(VisionAngle * 0.5f),
-			FMath::DegreesToRadians(VisionAngle * 0.5f),
-			12,
-			ConeColor,
-			false,
-			0.1f 
-		);
+		DrawDebugBox(GetWorld(), BoxCenter, BoxHalfSize, BoxRotation, FColor::Purple, false, 0.05f, 0, 0.f); 
 	}
 
-	//UE_LOG(LogTemp, Warning, TEXT("CheckPlayerVisibility"));
+	if (bHit)
+	{
+		// kontrollera att spelaren faktiskt är i boxen
+		TArray<FOverlapResult> Results;
+		bool bOverlap = GetWorld()->OverlapMultiByObjectType(
+			Results,
+			BoxCenter,
+			BoxRotation,
+			FCollisionObjectQueryParams(ECC_Pawn),
+			Box
+		);
 
-    // Skillnad mellan patrull och chase-läge 
-    float EffectiveVisionRange = bIsChasing ? VisionRange : VisionRange * 0.6f;
-    float EffectiveVisionAngle = bIsChasing ? VisionAngle : VisionAngle * 0.5f;
-
-    FVector EnemyLocation = GetActorLocation() + FVector(0, 0, 50);
-    FVector Forward = GetActorForwardVector();
-
-    // Rikta synfältet nedåt 
-    FVector LookDirection = Forward.RotateAngleAxis(20.f, GetActorRightVector()); 
-
-    FVector ToPlayer = PlayerPawn->GetActorLocation() - EnemyLocation;
-    float Distance = ToPlayer.Size();
-
-    if (Distance > EffectiveVisionRange)
-    {
-        bCanSeePlayer = false;
-        return;
-    }
-
-    ToPlayer.Normalize();
-    float Dot = FVector::DotProduct(LookDirection, ToPlayer);
-    float Angle = FMath::Acos(Dot) * (180.f / PI);
-
-    if (Angle > EffectiveVisionAngle)
-    {
-        bCanSeePlayer = false;
-        return;
-    }
-
-    // Line trace för sikt 
-    FHitResult Hit;
-    FCollisionQueryParams Params;
-    Params.AddIgnoredActor(this);
-
-    bool bHit = GetWorld()->LineTraceSingleByChannel(
-        Hit,
-        EnemyLocation,
-        PlayerPawn->GetActorLocation(),
-        ECC_Visibility,
-        Params
-    );
-
-    if (!bHit || Hit.GetActor() == PlayerPawn)
-    {
-        bCanSeePlayer = true;
-        UpdateLastSeenPlayerLocation();
-
-        DrawDebugLine(GetWorld(), EnemyLocation, PlayerPawn->GetActorLocation(), FColor::Green, false, 0.05f);
-    }
-    else
-    {
-        bCanSeePlayer = false;
-        DrawDebugLine(GetWorld(), EnemyLocation, Hit.Location, FColor::Red, false, 0.05f);
-    }
-}*/
+		for (auto& R : Results)
+		{
+			if (R.GetActor() == PlayerPawn)
+			{
+				bCanSeePlayer = true;  
+				UpdateLastSeenPlayerLocation();
+				return;
+			}
+		}
+	}
+}
 
 void AMeleeEnemy::CheckPlayerVisibility()
 {
 	if (!PlayerPawn) return;
 
+	FVector EnemyEyes = GetActorLocation() + FVector(0, 0, 60);
+	FVector PlayerLoc = PlayerPawn->GetActorLocation();
+	FVector ToPlayer = PlayerLoc - EnemyEyes;
+	float Distance = ToPlayer.Size();
+	
 	// Variabler 
 	FVector EnemyLocation = GetActorLocation() + FVector(0, 0, 50);
 	FVector Forward = GetActorForwardVector();
 	FVector LookDirection = Forward.RotateAngleAxis(10.f, GetActorRightVector()); // gör konen lite nedåtriktad
-	FVector ToPlayer = PlayerPawn->GetActorLocation() - EnemyLocation;
-	float Distance = ToPlayer.Size();
+	/*FVector ToPlayer = PlayerPawn->GetActorLocation() - EnemyLocation;
+	float Distance = ToPlayer.Size();*/
 	ToPlayer.Normalize();
 
 	// Skillnad mellan patrull och chase läge 
@@ -371,8 +352,7 @@ void AMeleeEnemy::CheckPlayerVisibility()
 				//UE_LOG(LogTemp, Warning, TEXT("SuspiciousVisionRange 2"));
 
 				// Fienden tittar mot spelaren, men ignorerar pitch
-				/*FRotator LookAtRot = (PlayerPawn->GetActorLocation() - GetActorLocation()).Rotation();
-				SetActorRotation(FMath::RInterpTo(GetActorRotation(), LookAtRot, GetWorld()->GetDeltaSeconds(), 2.f));*/
+				
 				FVector ToPlayerFlat = PlayerPawn->GetActorLocation() - GetActorLocation();
 				ToPlayerFlat.Z = 0;
 
@@ -416,10 +396,14 @@ void AMeleeEnemy::CheckPlayerVisibility()
 		SuspiciousTimer = 0.f;
 	}
 
+	if (!bPlayerWithinChaseProximity)
+	{
+		bCanSeePlayer = false;
+	}
 	bPlayerInSuspiciousZone = false;
-	bCanSeePlayer = false;
 	bPlayerInAlertCone = false;
 }
+
 
 void AMeleeEnemy::OnSuspiciousLocationDetected()
 {
@@ -427,13 +411,16 @@ void AMeleeEnemy::OnSuspiciousLocationDetected()
 	OnSuspiciousLocation.Broadcast(LastSeenPlayerLocation);
 }
 
+
 void AMeleeEnemy::UpdateLastSeenPlayerLocation()
 {
+	//UE_LOG(LogTemp, Warning, TEXT("UpdateLastSeenPlayerLocation"));
 	if (PlayerPawn)
 	{
 		LastSeenPlayerLocation = PlayerPawn->GetActorLocation();
 	}
 }
+
 
 float AMeleeEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
