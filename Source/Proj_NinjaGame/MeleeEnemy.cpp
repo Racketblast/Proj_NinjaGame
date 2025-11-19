@@ -770,6 +770,11 @@ void AMeleeEnemy::PlayStateSound(USoundBase* NewSound)
 
 
 
+void AMeleeEnemy::SetLastSeenPlayerLocation(FVector NewLocation)
+{
+	LastSeenPlayerLocation = NewLocation;
+}
+
 void AMeleeEnemy::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);

@@ -149,7 +149,19 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 	case EEnemyState::Chasing:
 		{
 			APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(),0);
+
+			// Kamerans chase
+			if (bChasingFromExternalOrder)
+			{
+				// Om vi ser spelaren så byt till normal chase
+				if (ControlledEnemy->CanSeePlayer())
+				{
+					bChasingFromExternalOrder = false;
+				}
+				break;
+			}
 			
+			// Vanlig chase
 			if (ControlledEnemy->CanSeePlayer())
 			{
 				float Dist = FVector::Dist(GetPawn()->GetActorLocation(), Player->GetActorLocation());
@@ -445,9 +457,18 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 	}
 	
 	
-	if (CurrentState == EEnemyState::Searching)
+	/*if (CurrentState == EEnemyState::Searching)
 	{
 		bChasingFromExternalOrder = false; 
+	}*/
+	
+	float Dist = FVector::Dist(ControlledEnemy->GetActorLocation(), LastKnownPlayerLocation);
+	if (bChasingFromExternalOrder && Dist < 150.f)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Chase move reached last known player position"));
+		bChasingFromExternalOrder = false;
+
+		return;
 	}
 
 	/*UE_LOG(LogTemp, Warning, TEXT("PatrolPoints num: %d, index: %d, success: %d"),
@@ -804,9 +825,12 @@ void AMeleeAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayer
 		ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
 		ControlledEnemy->bIsChasing = true;
 		LastKnownPlayerLocation = LastSpottedPlayerLocation;
+		ControlledEnemy->SetLastSeenPlayerLocation(LastSpottedPlayerLocation);
 		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetRunSpeed(); 
 	}
-	
+
+	StopMovement();
+
 	MoveToLocation(LastKnownPlayerLocation);
 }
 

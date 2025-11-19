@@ -137,6 +137,9 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 		bPlayerInCone = false;
 		SpotTimer = 0.f;
 
+		// reseta bool
+		bHasSpottedPlayer = false;
+
 		// Starta animation igen om den inte längre spelar
 		if (!bIsAnimationPlaying && IdlePanAnimation)
 		{
@@ -175,8 +178,5 @@ void ASecurityCamera::OnPlayerSpotted()
 
 		AI->StartChasingFromExternalOrder(LastSpottedPlayerLocation);          
 	}
-
-	// reseta bool
-	bHasSpottedPlayer = false;
 }
 

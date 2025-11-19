@@ -189,7 +189,7 @@ public:
 	
 	virtual void ApplyDamageTo(AActor* Target);
 
-
+	void SetLastSeenPlayerLocation(FVector NewLocation);
 	
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSuspiciousLocationDelegate, FVector, Location);
 

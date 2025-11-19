@@ -99,6 +99,7 @@ private:
 	bool bIsInvestigatingSound = false;
 	bool bIsMovingToSound = false;
 	bool bChasingFromExternalOrder = false;
+
 	
 	int32 LookAroundCount = 0;
 	int32 LookAroundMax = 3;
