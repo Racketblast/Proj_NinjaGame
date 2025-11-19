@@ -402,7 +402,6 @@ void AStealthCharacter::Landed(const FHitResult& Hit)
 				if (bClimbCapsuleShrunk)
 				{
 					UnCrouch(false);
-					bClimbCapsuleShrunk = false;
 				}
 			}
 			else
@@ -410,6 +409,9 @@ void AStealthCharacter::Landed(const FHitResult& Hit)
 				ToggleSneak();
 			}
 		}
+
+		bClimbCapsuleShrunk = false;
+		bHitLedge = false;
 	}
 	
 	float NoiseLevel;
@@ -565,6 +567,13 @@ void AStealthCharacter::CheckForUse()
 	LastUseTarget = nullptr;
 }
 
+bool AStealthCharacter::CanCrouch() const
+{
+	if (CurrentMovementState == EPlayerMovementState::Climb)
+		return true;
+	return Super::CanCrouch();
+}
+
 void AStealthCharacter::Climb()
 {
 	if (CurrentStamina > 0)
@@ -576,7 +585,8 @@ void AStealthCharacter::Climb()
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(this);
 		
-		DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.0f,0, 5.f);
+		//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.0f,0, 5.f);
+		
 		//If we are at a wall
 		if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 		{
@@ -586,32 +596,34 @@ void AStealthCharacter::Climb()
 				FVector StartEdge = GetActorLocation();
 				FVector EndEdge = StartEdge + HalfCapsuleHeight + GetActorForwardVector() * ClimbRange;
 
-				DrawDebugLine(GetWorld(), StartEdge, EndEdge, FColor::Green, false, 0.0f, 0, 5.f);
+				//DrawDebugLine(GetWorld(), StartEdge, EndEdge, FColor::Green, false, 0.0f, 0, 5.f);
+				
 				//If we are at a ledge
 				if (!GetWorld()->LineTraceSingleByChannel(HitResult, StartEdge, EndEdge, ECC_Visibility, Params))
 				{
 					if (!bHitLedge)
 					{
-						UE_LOG(LogTemp, Warning, TEXT("Player ledge"));
+						UE_LOG(LogTemp, Warning, TEXT("At ledge"));
 						bHitLedge = true;
 						
 						ExitClimb();
 					}
 				}
-				else
+				//Code that should work but capsule changes size almost randomly so can't use this
+				/*else
 				{
 					if (bHitLedge)
 					{
 						UE_LOG(LogTemp, Warning, TEXT("No ledge"));
 						bHitLedge = false;
 					}
-				}
+				}*/
 			}
 			
 			//If we are holding forward and jump
 			if (bMovingForward && bHoldingJump)
 			{
-				if (!bIsClimbing)
+				if (!bIsClimbing && !bHitLedge)
 				{
 					if (GetMovementComponent()->IsFalling())
 					{
@@ -632,7 +644,7 @@ void AStealthCharacter::Climb()
 						if (!bClimbCapsuleShrunk)
 						{
 							UE_LOG(LogTemp, Warning, TEXT("Climb capsule shrunk"));
-							Crouch(false);
+							Crouch();
 							bClimbCapsuleShrunk = true;
 						}
 						

@@ -319,10 +319,3 @@ private:
 	float MoveInputForward = 0.f;
 	float MoveInputRight = 0.f;
 };
-
-inline bool AStealthCharacter::CanCrouch() const
-{
-	if (CurrentMovementState == EPlayerMovementState::Climb)
-		return true;
-	return Super::CanCrouch();
-}
