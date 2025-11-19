@@ -63,6 +63,8 @@ protected:
 	float CurrentRotationSpeed = 1.f;
 	FVector InvestigateTarget;
 	bool bIsInvestigatingTarget = false;
+	FVector LookAroundTarget;
+	bool bHasLookAroundTarget = false;
 
 	
 	FRotator DesiredLookRotation;
@@ -94,6 +96,9 @@ private:
 	bool bIsLookingAround = false;
 	bool bIsInvestigatingSound = false;
 	bool bIsMovingToSound = false;
+	
+	int32 LookAroundCount = 0;
+	int32 LookAroundMax = 3;
 
 	void BeginSearch();
 	void LookAround();

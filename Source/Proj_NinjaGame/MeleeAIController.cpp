@@ -181,6 +181,11 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 					MoveToLocation(InvestigateTarget, -1.f, true, true, false, false, 0, true);
 				}
 			}
+
+			if (bHasLookAroundTarget && !bIsRotating)
+			{
+				MoveToLocation(LookAroundTarget);
+			}
 			
 			if (ControlledEnemy->bPlayerInAlertCone) 
 			{
@@ -434,6 +439,11 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 		bIsMovingToSound = false;
 	}
 
+	if (bHasLookAroundTarget && CurrentState == EEnemyState::Searching)
+	{
+		bHasLookAroundTarget = false;
+	}
+
 	/*UE_LOG(LogTemp, Warning, TEXT("PatrolPoints num: %d, index: %d, success: %d"),
 		PatrolPoints.Num(), CurrentPatrolIndex, Result.IsSuccess());*/
 
@@ -530,7 +540,11 @@ void AMeleeAIController::BeginSearch()
 	
 	StopMovement();
 
+	LookAroundCount = 0; // reset varje gång en ny sökning startas
+
 	//UE_LOG(LogTemp, Warning, TEXT("AMeleeAIController BeginSearch 1"));
+	
+	LookAround();
 	
 	// kallar på LookAround() några gånger
 	GetWorldTimerManager().SetTimer(LookAroundTimerHandle, this, &AMeleeAIController::LookAround, 1.5f, true);
@@ -551,13 +565,53 @@ void AMeleeAIController::LookAround()
 	APawn* ControlledPawn = GetPawn();
 	if (!ControlledPawn) return;
 
-	//Slumpar rotation
-	FRotator NewRotation = ControlledPawn->GetActorRotation();
-	NewRotation.Yaw += FMath::RandRange(-90.f, 90.f);
-	ControlledPawn->SetActorRotation(NewRotation);
+	LookAroundCount++;
+	if (LookAroundCount > LookAroundMax)
+	{
+		// stoppa timer
+		//UE_LOG(LogTemp, Warning, TEXT("LookAround max count reached"));
+		GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
+		return;
+	}
 
-	// Rör fienden lite slumpmässigt
-	MoveToLocation(ControlledPawn->GetActorLocation() + ControlledPawn->GetActorForwardVector() * FMath::RandRange(100.f, 250.f));
+	//UE_LOG(LogTemp, Warning, TEXT("AMeleeAIController LookAround"));
+	
+	//Slumpar rotation
+	FRotator Current = ControlledPawn->GetActorRotation();
+	FRotator NewRotation = Current;
+	
+	//NewRotation.Yaw += FMath::RandRange(-360.f, 360.f);
+	float BaseStep = FMath::RandBool() ? 90.f : -90.f;
+	float Variation = FMath::RandRange(-20.f, 20.f);
+	float Step = BaseStep + Variation;
+	NewRotation.Yaw += Step;
+
+
+	StartSmoothRotationTowards(NewRotation.Vector(), 2.0f);
+
+	FVector LookDirection = NewRotation.Vector();
+
+	// Slumpa ett forward move
+	FVector RawTarget = ControlledPawn->GetActorLocation() + LookDirection * FMath::RandRange(100.f, 350.f);
+
+	
+	// Project to NavMesh 
+	FNavLocation Projected;
+	UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
+
+	if (NavSys && NavSys->ProjectPointToNavigation(RawTarget, Projected))
+	{
+		LookAroundTarget = Projected.Location;
+	}
+	else
+	{
+		// Stå still om den inte hittar en plats på navmeshen 
+		LookAroundTarget = ControlledPawn->GetActorLocation();
+	}
+
+	bHasLookAroundTarget = true;
+	
+	//MoveToLocation(ControlledPawn->GetActorLocation() + ControlledPawn->GetActorForwardVector() * FMath::RandRange(100.f, 250.f));
 }
 
 void AMeleeAIController::EndSearch()
@@ -591,6 +645,9 @@ void AMeleeAIController::EndSearch()
 void AMeleeAIController::OnHeardSound(FVector SoundLocation)
 {
 	if (!ControlledEnemy) return;
+
+	bHasLookAroundTarget = false;
+	LookAroundTarget = FVector::ZeroVector;
 
 	// Reset all searching states
 	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
