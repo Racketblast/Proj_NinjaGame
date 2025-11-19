@@ -31,18 +31,10 @@ AStealthCharacter::AStealthCharacter()
 	PrimaryActorTick.bCanEverTick = true;
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
-	
-	// Create the first person mesh that will be viewed only by this character's owner
-	FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("First Person Mesh"));
-
-	FirstPersonMesh->SetupAttachment(GetMesh());
-	FirstPersonMesh->SetOnlyOwnerSee(true);
-	FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
-	FirstPersonMesh->SetCollisionProfileName(FName("NoCollision"));
 
 	// Create the Camera Component	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
-	FirstPersonCameraComponent->SetupAttachment(FirstPersonMesh, FName("head"));
+	FirstPersonCameraComponent->SetupAttachment(GetMesh(), "ROOT");
 	FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
 	FirstPersonCameraComponent->bEnableFirstPersonFieldOfView = true;
@@ -50,6 +42,14 @@ AStealthCharacter::AStealthCharacter()
 	FirstPersonCameraComponent->FirstPersonFieldOfView = 70.0f;
 	FirstPersonCameraComponent->FirstPersonScale = 0.6f;
 
+	// Create the first person mesh that will be viewed only by this character's owner
+	FirstPersonMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("First Person Mesh"));
+
+	FirstPersonMesh->SetupAttachment(FirstPersonCameraComponent);
+	FirstPersonMesh->SetOnlyOwnerSee(true);
+	FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
+	FirstPersonMesh->SetCollisionProfileName(FName("NoCollision"));
+	
 	// configure the character comps
 	GetMesh()->SetOwnerNoSee(true);
 	GetMesh()->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::WorldSpaceRepresentation;
@@ -121,7 +121,7 @@ void AStealthCharacter::Move(float Right, float Forward)
 	if (GetController())
 	{
 		// pass the move inputs
-		if (CurrentMovementState == EPlayerMovementState::Climb)
+		if (CurrentMovementState == EPlayerMovementState::Climb && GetCharacterMovement()->MovementMode == MOVE_Flying)
 		{
 			AddMovementInput(GetActorRightVector(), Right);
 			AddMovementInput(GetActorUpVector(), Forward);
@@ -153,7 +153,7 @@ void AStealthCharacter::Move(float Right, float Forward)
 
 bool AStealthCharacter::CanJumpInternal_Implementation() const
 {
-	if (CurrentMovementState == EPlayerMovementState::Crouch && JumpCurrentCount < JumpMaxCount)
+	if (IsCrouched() && JumpCurrentCount < JumpMaxCount)
 	{
 		return true;
 	}
@@ -392,8 +392,28 @@ void AStealthCharacter::Landed(const FHitResult& Hit)
 	Super::Landed(Hit);
 	UE_LOG(LogTemp, Display, TEXT("Landed"));
 	
-	bCanClimb = true;
+	if (CurrentMovementState == EPlayerMovementState::Climb)
+	{
+		CurrentMovementState = RememberedClimbState;
+		if (CurrentMovementState == EPlayerMovementState::Walk)
+		{
+			if (CanUnCrouch())
+			{
+				if (bClimbCapsuleShrunk)
+				{
+					UnCrouch(false);
+				}
+			}
+			else
+			{
+				ToggleSneak();
+			}
+		}
 
+		bClimbCapsuleShrunk = false;
+		bHitLedge = false;
+	}
+	
 	float NoiseLevel;
 		
 	if (CurrentMovementState == EPlayerMovementState::Crouch)
@@ -547,87 +567,122 @@ void AStealthCharacter::CheckForUse()
 	LastUseTarget = nullptr;
 }
 
+bool AStealthCharacter::CanCrouch() const
+{
+	if (CurrentMovementState == EPlayerMovementState::Climb)
+		return true;
+	return Super::CanCrouch();
+}
+
 void AStealthCharacter::Climb()
 {
-	if (bCanClimb)
+	if (CurrentStamina > 0)
 	{
-		if (CurrentStamina > 0)
+		FVector Start = GetActorLocation();
+		FVector End = Start + GetActorForwardVector() * ClimbRange;
+		
+		FHitResult HitResult;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+		
+		//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.0f,0, 5.f);
+		
+		//If we are at a wall
+		if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 		{
-			FVector Start = GetActorLocation();
-			FVector End = Start + GetActorForwardVector() * 45;
-			
-			FHitResult HitResult;
-			FCollisionQueryParams Params;
-			Params.AddIgnoredActor(this);
-			
-			//If we are at a wall
-			if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+			if (CurrentMovementState == EPlayerMovementState::Climb)
 			{
-				if (CurrentMovementState == EPlayerMovementState::Climb)
-				{
-					//If we are at a ledge
-					FVector HalfCapsuleHeight = {0,0,GetCapsuleComponent()->GetScaledCapsuleHalfHeight()};
-					FVector StartEdge = GetActorLocation();
-					FVector EndEdge = StartEdge + HalfCapsuleHeight + GetActorForwardVector() * 45;
-					
-					if (!GetWorld()->LineTraceSingleByChannel(HitResult, StartEdge, EndEdge, ECC_Visibility, Params))
-					{
-						UpdateStaminaStart(RegainStaminaAmount);
-						CurrentMovementState = RememberedClimbState;
-						GetCharacterMovement()->SetMovementMode(MOVE_Falling);
-						LaunchCharacter({0,0,500},true, true);
-						return;
-					}
-				}
+				FVector HalfCapsuleHeight = {0,0,GetCapsuleComponent()->GetScaledCapsuleHalfHeight()};
+				FVector StartEdge = GetActorLocation();
+				FVector EndEdge = StartEdge + HalfCapsuleHeight + GetActorForwardVector() * ClimbRange;
+
+				//DrawDebugLine(GetWorld(), StartEdge, EndEdge, FColor::Green, false, 0.0f, 0, 5.f);
 				
-				if (bMovingForward && bHoldingJump)
+				//If we are at a ledge
+				if (!GetWorld()->LineTraceSingleByChannel(HitResult, StartEdge, EndEdge, ECC_Visibility, Params))
 				{
-					if (CurrentMovementState != EPlayerMovementState::Climb)
+					if (!bHitLedge)
 					{
-						if (GetMovementComponent()->IsFalling())
-						{
-							RememberedClimbState = CurrentMovementState;
-							StopSprint();
-							UpdateStaminaStart(ClimbStaminaAmount);
-							GetMovementComponent()->Velocity = {};
-							CurrentMovementState = EPlayerMovementState::Climb;
-							GetCharacterMovement()->SetMovementMode(MOVE_Flying);
-						}
+						UE_LOG(LogTemp, Warning, TEXT("At ledge"));
+						bHitLedge = true;
+						
+						ExitClimb();
 					}
 				}
-				else
+				//Code that should work but capsule changes size almost randomly so can't use this
+				/*else
 				{
-					if (CurrentMovementState == EPlayerMovementState::Climb)
+					if (bHitLedge)
 					{
-						UpdateStaminaStart(RegainStaminaAmount);
-						CurrentMovementState = RememberedClimbState;
-						GetCharacterMovement()->SetMovementMode(MOVE_Falling);
-						LaunchCharacter({0,0,500},true, true);
+						UE_LOG(LogTemp, Warning, TEXT("No ledge"));
+						bHitLedge = false;
+					}
+				}*/
+			}
+			
+			//If we are holding forward and jump
+			if (bMovingForward && bHoldingJump)
+			{
+				if (!bIsClimbing && !bHitLedge)
+				{
+					if (GetMovementComponent()->IsFalling())
+					{
+						//Player is now Climbing
+						if (CurrentMovementState != EPlayerMovementState::Climb)
+						{
+							if (CurrentMovementState == EPlayerMovementState::Run)
+							{
+								RememberedClimbState = EPlayerMovementState::Walk;
+							}
+							else
+							{
+								RememberedClimbState = CurrentMovementState;
+							}
+						}
+						StopSprint();
+						//Just makes the character as small as when you are crouching
+						if (!bClimbCapsuleShrunk)
+						{
+							UE_LOG(LogTemp, Warning, TEXT("Climb capsule shrunk"));
+							Crouch();
+							bClimbCapsuleShrunk = true;
+						}
+						
+						UE_LOG(LogTemp, Warning, TEXT("Climbing"));
+						UpdateStaminaStart(ClimbStaminaAmount);
+						GetMovementComponent()->Velocity = {};
+						CurrentMovementState = EPlayerMovementState::Climb;
+						bIsClimbing = true;
+						GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 					}
 				}
 			}
 			else
 			{
-				if (CurrentMovementState == EPlayerMovementState::Climb)
-				{
-					UpdateStaminaStart(RegainStaminaAmount);
-					CurrentMovementState = RememberedClimbState;
-					GetCharacterMovement()->SetMovementMode(MOVE_Falling);
-					LaunchCharacter({0,0,500},true, true);
-				}
+				ExitClimb();
 			}
 		}
-		//Drop if stamina is not enough
+		//If we are not looking at a wall
 		else
 		{
-			if (CurrentMovementState == EPlayerMovementState::Climb)
-			{
-				UpdateStaminaStart(RegainStaminaAmount);
-				CurrentMovementState = RememberedClimbState;
-				GetCharacterMovement()->SetMovementMode(MOVE_Falling);
-				LaunchCharacter({0,0,500},true, true);
-			}
+			ExitClimb();
 		}
+	}
+	//Drop if stamina is not enough
+	else
+	{
+		ExitClimb();
+	}
+}
+
+void AStealthCharacter::ExitClimb()
+{
+	if (bIsClimbing)
+	{
+		bIsClimbing = false;
+		UpdateStaminaStart(RegainStaminaAmount);
+		GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+		LaunchCharacter({0,0,500},true, true);
 	}
 }
 
@@ -712,7 +767,6 @@ bool AStealthCharacter::CanUnCrouch()
 
 	TArray<UPrimitiveComponent*> Overlaps;
 
-	// We only care about blocking geometry, so use ECC_Pawn or Visibility/WorldStatic as needed
 	const TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes = {
 		UEngineTypes::ConvertToObjectType(ECC_WorldStatic),
 		UEngineTypes::ConvertToObjectType(ECC_WorldDynamic),
