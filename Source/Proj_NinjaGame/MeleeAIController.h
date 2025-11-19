@@ -29,6 +29,8 @@ public:
 	void RefreshChaseTarget();
 
 	EEnemyState GetCurrentState() const { return CurrentState; }
+
+	void StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation);
 	
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
@@ -96,6 +98,7 @@ private:
 	bool bIsLookingAround = false;
 	bool bIsInvestigatingSound = false;
 	bool bIsMovingToSound = false;
+	bool bChasingFromExternalOrder = false;
 	
 	int32 LookAroundCount = 0;
 	int32 LookAroundMax = 3;

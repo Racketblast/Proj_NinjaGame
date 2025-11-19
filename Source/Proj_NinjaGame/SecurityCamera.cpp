@@ -3,6 +3,7 @@
 
 #include "SecurityCamera.h"
 
+#include "EnemyHandler.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -42,7 +43,7 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 	if (!PlayerPawn || !CameraMesh)
 		return;
 	
-	// Hämta position & forward från socket "Vision" i SKM
+	// Hämta position och forward från socket "Vision" i SKM
 	const FName VisionSocket = FName("Vision");
 
 	FVector CameraLocation = CameraMesh->GetSocketLocation(VisionSocket);
@@ -71,7 +72,7 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 	}
 
 
-	// Linetrace-koll
+	// Linetracekoll
 	FHitResult Hit;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
@@ -125,6 +126,8 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 
 		if (SpotTimer >= TimeToSpotPlayer && !bHasSpottedPlayer)
 		{
+			LastSpottedPlayerLocation = PlayerPawn->GetActorLocation();
+			
 			bHasSpottedPlayer = true;
 			OnPlayerSpotted();
 		}
@@ -148,9 +151,32 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 void ASecurityCamera::OnPlayerSpotted()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Player spotted by camera!"));
-    
 
-	// Kalla på fiender
-	// Sätt bHasSpottedPlayer to false igen
+	// Hitta EnemyHandler
+	AEnemyHandler* Handler = Cast<AEnemyHandler>(UGameplayStatics::GetActorOfClass(
+		GetWorld(), AEnemyHandler::StaticClass()
+	));
 
+	if (!Handler)
+	{
+		UE_LOG(LogTemp, Error, TEXT("SecurityCamera: No EnemyHandler found!"));
+		return;
+	}
+
+	// Hämta två närmaste fiender
+	TArray<AMeleeEnemy*> Squad = Handler->GetTwoClosestEnemies(LastSpottedPlayerLocation);
+
+	for (AMeleeEnemy* Enemy : Squad)
+	{
+		if (!Enemy) continue;
+
+		AMeleeAIController* AI = Cast<AMeleeAIController>(Enemy->GetController());
+		if (!AI) continue;
+
+		AI->StartChasingFromExternalOrder(LastSpottedPlayerLocation);          
+	}
+
+	// reseta bool
+	bHasSpottedPlayer = false;
 }
+

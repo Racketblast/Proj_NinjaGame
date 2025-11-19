@@ -38,6 +38,9 @@ protected:
 	float SpotTimer = 0.f;
 	
 	bool bIsAnimationPlaying = true;
+
+	UPROPERTY(VisibleAnywhere)
+	FVector LastSpottedPlayerLocation;
 	
 	UPROPERTY(EditAnywhere, Category="Vision")
 	bool bVisionDebug = true;

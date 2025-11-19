@@ -443,6 +443,12 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 	{
 		bHasLookAroundTarget = false;
 	}
+	
+	
+	if (CurrentState == EEnemyState::Searching)
+	{
+		bChasingFromExternalOrder = false; 
+	}
 
 	/*UE_LOG(LogTemp, Warning, TEXT("PatrolPoints num: %d, index: %d, success: %d"),
 		PatrolPoints.Num(), CurrentPatrolIndex, Result.IsSuccess());*/
@@ -522,11 +528,17 @@ void AMeleeAIController::OnTargetLost()
 	if (ControlledEnemy)
 	{
 		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
-		LastKnownPlayerLocation = ControlledEnemy->GetLastSeenPlayerLocation();
+		
+		if (!bChasingFromExternalOrder)
+		{
+			LastKnownPlayerLocation = ControlledEnemy->GetLastSeenPlayerLocation();
+		}
+		
 		CurrentState = EEnemyState::Searching;
 		TimeWithoutMovement = 0.f; // För failsafe
 		LastSearchLocation = ControlledEnemy->GetActorLocation(); // För failsafe
 		ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
+		
 		MoveToLocation(LastKnownPlayerLocation);
 	}
 }
@@ -780,6 +792,23 @@ void AMeleeAIController::StartSmoothRotationTowards(const FVector& TargetLocatio
 	bIsRotating = true;
 }
 
+// Kallas just nu från kameran
+void AMeleeAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation)
+{
+	CurrentState = EEnemyState::Chasing;
+	
+	bChasingFromExternalOrder = true; 
+
+	if (ControlledEnemy)
+	{
+		ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
+		ControlledEnemy->bIsChasing = true;
+		LastKnownPlayerLocation = LastSpottedPlayerLocation;
+		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetRunSpeed(); 
+	}
+	
+	MoveToLocation(LastKnownPlayerLocation);
+}
 
 
 void AMeleeAIController::OnUnPossess()
