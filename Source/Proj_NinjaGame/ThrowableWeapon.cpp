@@ -16,6 +16,7 @@ AThrowableWeapon::AThrowableWeapon()
 	
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	RootComponent = StaticMeshComponent;
+	StaticMeshComponent->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
 }
 
 void AThrowableWeapon::Throw(AStealthCharacter* Player)

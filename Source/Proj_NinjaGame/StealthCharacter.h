@@ -126,7 +126,11 @@ protected:
 	void Use();
 	
 	void CheckForUse();
-	
+
+	UFUNCTION(BlueprintCallable)
+	void ShowActors(AActor* Actor, bool bShow);
+	UFUNCTION(BlueprintCallable)
+	void ShowWeaponActors(bool bShow);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	float Health = 3.f;
@@ -223,6 +227,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
 	float FOVInterpSpeed = 5.0f; // hur snabbt kameran övergår mellan FOV-värden
 
+	//Is this needed, from here
 	// Sprint Kamera
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
 	float CameraBobAmplitude = 1.1f; // hur mycket kameran gungar/skakar
@@ -231,6 +236,7 @@ protected:
 	float CameraBobSpeed = 8.0f; // hur snabbt gungningen sker
 
 	float BobTimer = 0.0f;
+	//down to here
 
 
 	// speed 

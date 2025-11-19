@@ -567,6 +567,41 @@ void AStealthCharacter::CheckForUse()
 	LastUseTarget = nullptr;
 }
 
+void AStealthCharacter::ShowActors(AActor* Actor, bool bShow)
+{
+	TArray<UMeshComponent*> MeshComps;
+	Actor->GetComponents<UMeshComponent>(MeshComps);
+
+	
+	for (UMeshComponent* MeshComp : MeshComps)
+	{
+		if (bShow)
+		{
+			if (!MeshComp) continue;
+			MeshComp->SetVisibility(true, true);
+			MeshComp->SetHiddenInGame(false, true);
+		}
+		else
+		{
+			if (!MeshComp) continue;
+			MeshComp->SetVisibility(false, true);
+			MeshComp->SetHiddenInGame(true, true);
+		}
+	}
+}
+
+void AStealthCharacter::ShowWeaponActors(bool bShow)
+{
+	if (CurrentMeleeWeapon)
+	{
+		ShowActors(CurrentMeleeWeapon, bShow);
+	}
+	if (HeldThrowableWeapon)
+	{
+		ShowActors(HeldThrowableWeapon, bShow);
+	}
+}
+
 bool AStealthCharacter::CanCrouch() const
 {
 	if (CurrentMovementState == EPlayerMovementState::Climb)
@@ -653,6 +688,9 @@ void AStealthCharacter::Climb()
 						GetMovementComponent()->Velocity = {};
 						CurrentMovementState = EPlayerMovementState::Climb;
 						bIsClimbing = true;
+
+						ShowWeaponActors(false);
+						
 						GetCharacterMovement()->SetMovementMode(MOVE_Flying);
 					}
 				}
@@ -680,6 +718,9 @@ void AStealthCharacter::ExitClimb()
 	if (bIsClimbing)
 	{
 		bIsClimbing = false;
+		
+		ShowWeaponActors(true);
+		
 		UpdateStaminaStart(RegainStaminaAmount);
 		GetCharacterMovement()->SetMovementMode(MOVE_Falling);
 		LaunchCharacter({0,0,500},true, true);
