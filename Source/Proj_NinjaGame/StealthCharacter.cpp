@@ -20,7 +20,9 @@
 #include "Proj_NinjaGame.h"
 #include "StealthGameInstance.h"
 #include "ThrowableWeapon.h"
+#include "Components/BoxComponent.h"
 #include "EnvironmentQuery/EnvQueryTypes.h"
+#include "MeleeEnemy.h"
 #include "Navigation/PathFollowingComponent.h"
 
 
@@ -49,6 +51,9 @@ AStealthCharacter::AStealthCharacter()
 	FirstPersonMesh->SetOnlyOwnerSee(true);
 	FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
 	FirstPersonMesh->SetCollisionProfileName(FName("NoCollision"));
+	
+	PlayerMeleeBox = CreateDefaultSubobject<UBoxComponent>(TEXT("PlayerMeleeBox"));
+	PlayerMeleeBox->SetupAttachment(FirstPersonCameraComponent);
 	
 	// configure the character comps
 	GetMesh()->SetOwnerNoSee(true);
@@ -183,11 +188,13 @@ void AStealthCharacter::Attack()
 		//ThrowingWeapon
 		if (HeldThrowableWeapon)
 		{
-			if (ThrowSound)
+			if (bCanThrow)
 			{
-				UGameplayStatics::PlaySoundAtLocation(GetWorld(), ThrowSound, GetActorLocation());
+				if (CurrentInteractState == EPlayerInteractState::None || CurrentInteractState == EPlayerInteractState::Throw || CurrentInteractState == EPlayerInteractState::Interact)
+				{
+					CurrentInteractState = EPlayerInteractState::Throw;
+				}
 			}
-			HeldThrowableWeapon->Throw(this);
 		}
 	}
 	else
@@ -199,15 +206,62 @@ void AStealthCharacter::Attack()
 			{
 				if (CurrentStamina + AttackStaminaAmount >= 0)
 				{
-					UE_LOG(LogTemp, Display, TEXT("Melee attack"));
-					CurrentStamina += AttackStaminaAmount;
-					CurrentMeleeWeapon->bCanMeleeAttack = false;
-					CurrentMeleeWeapon->bMeleeAttacking = true;
+					if (CurrentInteractState == EPlayerInteractState::None || CurrentInteractState == EPlayerInteractState::Attack || CurrentInteractState == EPlayerInteractState::Interact)
+					{
+						CurrentInteractState = EPlayerInteractState::Attack;
+						if (CurrentMeleeWeapon->SwingSound)
+						{
+							UGameplayStatics::PlaySoundAtLocation(GetWorld(), CurrentMeleeWeapon->SwingSound, GetActorLocation());
+						}
+						UE_LOG(LogTemp, Display, TEXT("Melee attack"));
+						CurrentStamina += AttackStaminaAmount;
+	
+						TArray<AActor*> HitActors;
+						PlayerMeleeBox->GetOverlappingActors(HitActors);
+						for (auto HitActor : HitActors)
+						{
+							UE_LOG(LogTemp, Warning, TEXT("Looking at Actors"));
+							if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(HitActor))
+							{
+								if (Enemy->bCanBeAssassinated && !Enemy->CanSeePlayer())
+								{
+									UE_LOG(LogTemp, Warning, TEXT("Assassinating enemy"));
+									CurrentMeleeWeapon->bAssassinatingEnemy = true;
+									CurrentMeleeWeapon->bCanMeleeAttack = false;
+									break;
+								}
+							}
+						}
 					
-					UpdateStaminaStart(RegainStaminaAmount);
+						if (!CurrentMeleeWeapon->bAssassinatingEnemy)
+						{
+							UE_LOG(LogTemp, Warning, TEXT("Slashing at enemy"));
+							CurrentMeleeWeapon->bMeleeAttacking = true;
+							CurrentMeleeWeapon->bCanMeleeAttack = false;
+						}
+										
+						UpdateStaminaStart(RegainStaminaAmount);
+					}
 				}
 			}
 		}
+	}
+}
+void AStealthCharacter::StartThrow()
+{
+	if (ThrowSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ThrowSound, GetActorLocation());
+	}
+	HeldThrowableWeapon->Throw(this);
+	bCanThrow = true;
+}
+
+void AStealthCharacter::StopThrow()
+{
+	if (CurrentInteractState == EPlayerInteractState::Throw)
+	{
+		CurrentInteractState = EPlayerInteractState::None;
 	}
 }
 
@@ -527,9 +581,22 @@ void AStealthCharacter::Use()
 		{
 			if (Actor->GetClass()->ImplementsInterface(UPlayerUseInterface::StaticClass()))
 			{
-				IPlayerUseInterface::Execute_Use(Actor, this);
+				if (CurrentInteractState == EPlayerInteractState::None || CurrentInteractState == EPlayerInteractState::Interact)
+				{
+					CurrentInteractState = EPlayerInteractState::Interact;
+		
+					IPlayerUseInterface::Execute_Use(Actor, this);
+				}
 			}
 		}
+	}
+}
+
+void AStealthCharacter::StopUse()
+{
+	if (CurrentInteractState == EPlayerInteractState::Interact)
+	{
+		CurrentInteractState = EPlayerInteractState::None;
 	}
 }
 

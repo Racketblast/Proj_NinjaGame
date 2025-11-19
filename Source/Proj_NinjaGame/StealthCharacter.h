@@ -29,6 +29,15 @@ enum class EPlayerMovementState : uint8
 	Climb  UMETA(DisplayName = "Climb")
 };
 
+UENUM(BlueprintType)
+enum class EPlayerInteractState : uint8
+{
+	None    UMETA(DisplayName = "None"),
+	Attack     UMETA(DisplayName = "Attack"),
+	Throw  UMETA(DisplayName = "Throw"),
+	Interact  UMETA(DisplayName = "Interact")
+};
+
 UCLASS()
 class PROJ_NINJAGAME_API AStealthCharacter : public ACharacter
 {
@@ -48,7 +57,11 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Player State")
 	EPlayerMovementState CurrentMovementState = EPlayerMovementState::Walk;
-
+public:
+	UPROPERTY(BlueprintReadOnly, Category = "Player State")
+	EPlayerInteractState CurrentInteractState = EPlayerInteractState::None;
+	
+protected:
 	virtual bool CanJumpInternal_Implementation() const override;
 	
 	/** Jump Input Action */
@@ -100,6 +113,11 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void Attack();
+	
+	UFUNCTION(BlueprintCallable)
+	void StartThrow();
+	UFUNCTION(BlueprintCallable)
+	void StopThrow();
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void EquipKunai();
@@ -124,6 +142,8 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void Use();
+	UFUNCTION(BlueprintCallable)
+	void StopUse();
 	
 	void CheckForUse();
 
@@ -152,6 +172,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
 	USoundBase* ThrowSound;
 public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
+	bool bCanThrow = true;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	float CameraForwardMultiplier = 100.f;
 	
@@ -182,7 +205,11 @@ protected:
 	TSubclassOf<AMeleeWeapon> MeleeWeapon;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	AMeleeWeapon* CurrentMeleeWeapon;
-	
+
+public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Components", meta = (AllowPrivateAccess = "true"))
+	class UBoxComponent* PlayerMeleeBox;
+protected:
 	/*
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
 	int32 MeleeDistance = 150;

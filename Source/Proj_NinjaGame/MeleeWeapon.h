@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "MeleeWeapon.generated.h"
 
+class AMeleeEnemy;
+
 UCLASS()
 class PROJ_NINJAGAME_API AMeleeWeapon : public AActor
 {
@@ -24,17 +26,35 @@ public:
 	bool bCanMeleeAttack = true;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	bool bMeleeAttacking = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	float MeleeDamage = 2;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* HitSound;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
-	USoundBase* SwingSound;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
+	bool bAssassinatingEnemy = false;
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	float MeleeDamage = 2;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	float MeleeBoxLength = 32.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	float MeleeBoxWidth = 32.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	float MeleeBoxHeight = 32.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* HitSound;
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* SwingSound;
+	
+protected:
+	UPROPERTY(BlueprintReadWrite)
+	class AStealthCharacter* Player;
 
-	void MeleeAttackLoop();
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void AssassinateEnemy();
+
+	AMeleeEnemy* GetEnemyClosestToCrosshair(const TArray<AActor*>& HitActors);
 	
 	FTimerHandle MeleeAttackingTimer;
 	UPROPERTY()
