@@ -1,0 +1,140 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "Door.h"
+
+#include "StealthCharacter.h"
+#include "Components/AudioComponent.h"
+#include "Components/BoxComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+
+ADoor::ADoor()
+{
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	DoorMesh = CreateDefaultSubobject<UStaticMeshComponent>("DoorMesh");
+	DoorMesh->SetupAttachment(RootComponent);
+	DoorSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("DoorSoundComponent"));
+	DoorSoundComponent->SetupAttachment(DoorMesh);
+	LockSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("LockSoundComponent"));
+	LockSoundComponent->SetupAttachment(DoorMesh);
+	DoorHitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("DoorHitBox"));
+	DoorHitBox->SetupAttachment(DoorMesh);
+
+	DoorHitBox->OnComponentBeginOverlap.AddDynamic(this, &ADoor::DoorBeginOverlap);
+}
+
+void ADoor::Use_Implementation(class AStealthCharacter* Player)
+{
+	Super::Use_Implementation(Player);
+	
+	if (!Player) return;
+
+	if (bNeedsToBeUnlocked)
+	{
+		if (Player->DoorsThatCanBeUnlocked.Contains(this))
+		{
+			if (UnlockSound && LockSoundComponent)
+			{
+				LockSoundComponent->SetSound(UnlockSound);
+				LockSoundComponent->Play();
+			}
+			bNeedsToBeUnlocked = false;
+			OpenCloseDoor();
+		}
+		else
+		{
+			if (LockedSound && LockSoundComponent)
+			{
+				LockSoundComponent->SetSound(LockedSound);
+				LockSoundComponent->Play();
+			}
+		}
+	}
+	else
+	{
+		OpenCloseDoor();
+	}
+}
+
+void ADoor::BeginPlay()
+{
+	Super::BeginPlay();
+    ClosedDoorRotation = StaticMeshComponent->GetRelativeRotation();
+}
+
+void ADoor::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	
+	if (!bIsMoving) return;
+
+	FRotator CurrentRotation = StaticMeshComponent->GetRelativeRotation();
+
+	FRotator NewRotation = FMath::RInterpConstantTo(
+		CurrentRotation,
+		DoorTargetRotation,
+		DeltaSeconds,
+		DoorSpeed
+	);
+
+	StaticMeshComponent->SetRelativeRotation(NewRotation);
+
+	if (NewRotation.Equals(DoorTargetRotation, 0.1f))
+	{
+		StaticMeshComponent->SetRelativeRotation(DoorTargetRotation);
+		bIsMoving = false;
+	}
+}
+
+void ADoor::OpenCloseDoor()
+{
+	if (DoorOpenSound && DoorSoundComponent)
+	{
+		DoorSoundComponent->SetSound(DoorOpenSound);
+		DoorSoundComponent->Play();
+	}
+	
+	if (bOpen)
+	{
+		DoorTargetRotation = ClosedDoorRotation;
+	}
+	else
+	{
+        DoorTargetRotation = ClosedDoorRotation + OpenDoorRotation;
+	}
+
+	bOpen = !bOpen;
+	bIsMoving = true;
+}
+
+void ADoor::DoorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (!bIsMoving) return;
+
+	ACharacter* Character = Cast<ACharacter>(OtherActor);
+	if (!Character) return;
+
+	// The hinge is your StaticMeshComponent
+	FVector HingeLocation = StaticMeshComponent->GetComponentLocation();
+
+	// Hinge rotation axis (usually Z)
+	FVector HingeUp = StaticMeshComponent->GetUpVector();
+
+	// Vector from hinge to hit point
+	FVector ToHit = (SweepResult.ImpactPoint - HingeLocation).GetSafeNormal();
+
+	// Tangent direction = the direction the door edge moves
+	FVector PushDirection = FVector::CrossProduct(HingeUp, ToHit).GetSafeNormal();
+
+	// Reverse push direction when closing
+	if (!bOpen)
+	{
+		PushDirection *= -1.f;
+	}
+
+	float PushStrength = 100.f;
+	Character->LaunchCharacter(PushDirection * PushStrength, false, false);
+}

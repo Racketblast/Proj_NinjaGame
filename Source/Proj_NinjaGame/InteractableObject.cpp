@@ -34,6 +34,16 @@ void AInteractableObject::ShowInteractable_Implementation(bool bShow)
 	IPlayerUseInterface::ShowInteractable_Implementation(bShow);
 	
 	StaticMeshComponent->SetRenderCustomDepth(bShow);
+	TArray<USceneComponent*> SceneChildren;
+	StaticMeshComponent->GetChildrenComponents(true, SceneChildren);
+	for (USceneComponent* Child : SceneChildren)
+	{
+		if (UStaticMeshComponent* ChildMesh = Cast<UStaticMeshComponent>(Child))
+		{
+			ChildMesh->SetRenderCustomDepth(bShow);
+		}
+	}
+	
 	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance()))
 	{
 		if (bShow)

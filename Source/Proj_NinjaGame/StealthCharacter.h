@@ -209,16 +209,10 @@ protected:
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Components", meta = (AllowPrivateAccess = "true"))
 	class UBoxComponent* PlayerMeleeBox;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	TArray<class ADoor*> DoorsThatCanBeUnlocked;
 protected:
-	/*
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
-	int32 MeleeDistance = 150;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
-	float MeleeDamage = 40;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
-	float MeleeHitsPerSecond = 0.8;*/
 	
 	// Sneak
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
