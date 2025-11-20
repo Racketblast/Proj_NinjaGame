@@ -29,6 +29,8 @@ public:
 	void RefreshChaseTarget();
 
 	EEnemyState GetCurrentState() const { return CurrentState; }
+
+	void StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation);
 	
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
@@ -56,6 +58,21 @@ protected:
 	UFUNCTION()
 	void HandleSuspiciousLocation(FVector Location);
 
+	// Rotation
+	void StartSmoothRotationTowards(const FVector& TargetLocation, float RotationSpeed);
+	bool bIsRotating = false;
+	FRotator DesiredRotation;
+	float CurrentRotationSpeed = 1.f;
+	FVector InvestigateTarget;
+	bool bIsInvestigatingTarget = false;
+	FVector LookAroundTarget;
+	bool bHasLookAroundTarget = false;
+
+	
+	FRotator DesiredLookRotation;
+	bool bIsRotatingTowardPatrolPoint = false;
+	float RotationProgress = 0.f;
+
 
 	// Failsafe
 	FVector LastSearchLocation;
@@ -81,6 +98,11 @@ private:
 	bool bIsLookingAround = false;
 	bool bIsInvestigatingSound = false;
 	bool bIsMovingToSound = false;
+	bool bChasingFromExternalOrder = false;
+
+	
+	int32 LookAroundCount = 0;
+	int32 LookAroundMax = 3;
 
 	void BeginSearch();
 	void LookAround();

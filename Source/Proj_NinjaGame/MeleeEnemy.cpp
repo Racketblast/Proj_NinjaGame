@@ -50,6 +50,13 @@ AMeleeEnemy::AMeleeEnemy()
 	GetCharacterMovement()->bUseRVOAvoidance = true;
 	GetCharacterMovement()->AvoidanceWeight = 0.5f;
 	GetCharacterMovement()->AvoidanceConsiderationRadius = 300.f;
+
+	// För bättre rotation
+	/*GetCharacterMovement()->bUseControllerDesiredRotation = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 1.f, 0.f);*/
+	GetCharacterMovement()->bUseControllerDesiredRotation = false;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+
 }
 
 
@@ -762,6 +769,11 @@ void AMeleeEnemy::PlayStateSound(USoundBase* NewSound)
 }
 
 
+
+void AMeleeEnemy::SetLastSeenPlayerLocation(FVector NewLocation)
+{
+	LastSeenPlayerLocation = NewLocation;
+}
 
 void AMeleeEnemy::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {

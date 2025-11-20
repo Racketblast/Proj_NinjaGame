@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MeleeEnemy.h"
 #include "GameFramework/Actor.h"
 #include "EnemyHandler.generated.h"
 
@@ -20,6 +21,8 @@ public:
 	UFUNCTION(BlueprintPure)
 	bool GetEnemySeesPlayer() const { return bEnemySeesPlayer; }
 
+	TArray<AMeleeEnemy*> GetTwoClosestEnemies(FVector TargetLocation);
+
 protected:
 	UPROPERTY()
 	TArray<AActor*> AllEnemies;
@@ -27,4 +30,6 @@ protected:
 	bool bEnemySeesPlayer = false; 	// True om minst en fiende jagar spelaren
 	
 	void UpdateEnemyStates();
+
+	AMeleeEnemy* GetClosestEnemyToLocation(FVector TargetLocation);
 };

@@ -45,10 +45,53 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 	
 	if (!ControlledEnemy) return;
 
+	// Rotation
+	if (bIsRotating)
+	{
+		FRotator Current = ControlledEnemy->GetActorRotation();
+		FRotator Interp = FMath::RInterpTo(Current, DesiredRotation, DeltaSeconds, CurrentRotationSpeed);
+
+		Interp.Pitch = 0.f;
+		Interp.Roll = 0.f;
+
+		ControlledEnemy->SetActorRotation(Interp);
+
+		if (Interp.Equals(DesiredRotation, 2.0f)) 
+		{
+			bIsRotating = false;
+		}
+
+		return; // Under rotation gör fienden inget annat
+	}
+
 	switch (CurrentState)
 	{
 	case EEnemyState::Patrolling:
 		{
+			if (bIsRotatingTowardPatrolPoint)
+			{
+				RotationProgress += DeltaSeconds / 2.0f; 
+
+				FRotator Current = ControlledEnemy->GetActorRotation();
+				FRotator Interp  = FMath::RInterpTo(Current, DesiredLookRotation, DeltaSeconds, 2.5f);
+
+				// Lås pitch och roll igen 
+				Interp.Pitch = 0.f;
+				Interp.Roll  = 0.f;
+
+				ControlledEnemy->SetActorRotation(Interp);
+
+				// Kolla när vi är nästan klar
+				if (Current.Equals(DesiredLookRotation, 3.0f)) // tolerans är 3 grader
+				{
+					bIsRotatingTowardPatrolPoint = false;
+
+					// När klar så börjar fienden gå
+					MoveToActor(
+						ControlledEnemy->GetPatrolPoints()[CurrentPatrolIndex]
+					);
+				}
+			}
 			if (ControlledEnemy->bPlayerInAlertCone) 
 			{
 				StartAlert();
@@ -106,7 +149,19 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 	case EEnemyState::Chasing:
 		{
 			APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(),0);
+
+			// Kamerans chase
+			if (bChasingFromExternalOrder)
+			{
+				// Om vi ser spelaren så byt till normal chase
+				if (ControlledEnemy->CanSeePlayer())
+				{
+					bChasingFromExternalOrder = false;
+				}
+				break;
+			}
 			
+			// Vanlig chase
 			if (ControlledEnemy->CanSeePlayer())
 			{
 				float Dist = FVector::Dist(GetPawn()->GetActorLocation(), Player->GetActorLocation());
@@ -130,6 +185,20 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 		}
 	case EEnemyState::Searching:
 		{
+			if (bIsMovingToSound && bIsInvestigatingTarget)
+			{
+				// Gör inget om vi roterar
+				if (!bIsRotating)
+				{
+					MoveToLocation(InvestigateTarget, -1.f, true, true, false, false, 0, true);
+				}
+			}
+
+			if (bHasLookAroundTarget && !bIsRotating)
+			{
+				MoveToLocation(LookAroundTarget);
+			}
+			
 			if (ControlledEnemy->bPlayerInAlertCone) 
 			{
 				StartAlert();
@@ -207,6 +276,7 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 		
 		GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, this, &AMeleeAIController::ResetSoundFlag, 0.5f, false);
 	}
+
 }
 
 void AMeleeAIController::StartAlert()
@@ -267,9 +337,30 @@ void AMeleeAIController::MoveToNextPatrolPoint()
 		TargetPoint = PatrolPoints[CurrentPatrolIndex];
 		if (!TargetPoint) return;
 	}
+
+
+	
+	
+	// Beräkna rotation
+	FVector Dir = (TargetPoint->GetActorLocation() - ControlledEnemy->GetActorLocation());
+	DesiredLookRotation = Dir.Rotation();
+
+	// Tvinga pitch och roll till 0
+	DesiredLookRotation.Pitch = 0.f;
+	DesiredLookRotation.Roll  = 0.f;
+
+	// Starta långsam rotation
+	bIsRotatingTowardPatrolPoint = true;
+	RotationProgress = 0.f;
+
+	// Stoppa allt moveTo medan vi roterar
+	StopMovement();
+
+	
+	
 	
 	//UE_LOG(LogTemp, Warning, TEXT("PatrolPoints num: %d, index: %d"), ControlledEnemy->GetPatrolPoints().Num(), CurrentPatrolIndex);
-	MoveToActor(TargetPoint);
+	//MoveToActor(TargetPoint);
 }
 
 void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
@@ -354,8 +445,30 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 	// när fienden nått ljudkällan 
 	if (CurrentState == EEnemyState::Searching && bIsMovingToSound)
 	{
+		bIsMovingToSound = false;
+		bIsInvestigatingTarget = false;
 		//UE_LOG(LogTemp, Warning, TEXT("AI finished moving to sound, starting search."));
 		bIsMovingToSound = false;
+	}
+
+	if (bHasLookAroundTarget && CurrentState == EEnemyState::Searching)
+	{
+		bHasLookAroundTarget = false;
+	}
+	
+	
+	/*if (CurrentState == EEnemyState::Searching)
+	{
+		bChasingFromExternalOrder = false; 
+	}*/
+	
+	float Dist = FVector::Dist(ControlledEnemy->GetActorLocation(), LastKnownPlayerLocation);
+	if (bChasingFromExternalOrder && Dist < 150.f)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Chase move reached last known player position"));
+		bChasingFromExternalOrder = false;
+
+		return;
 	}
 
 	/*UE_LOG(LogTemp, Warning, TEXT("PatrolPoints num: %d, index: %d, success: %d"),
@@ -436,11 +549,17 @@ void AMeleeAIController::OnTargetLost()
 	if (ControlledEnemy)
 	{
 		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
-		LastKnownPlayerLocation = ControlledEnemy->GetLastSeenPlayerLocation();
+		
+		if (!bChasingFromExternalOrder)
+		{
+			LastKnownPlayerLocation = ControlledEnemy->GetLastSeenPlayerLocation();
+		}
+		
 		CurrentState = EEnemyState::Searching;
 		TimeWithoutMovement = 0.f; // För failsafe
 		LastSearchLocation = ControlledEnemy->GetActorLocation(); // För failsafe
 		ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
+		
 		MoveToLocation(LastKnownPlayerLocation);
 	}
 }
@@ -454,7 +573,11 @@ void AMeleeAIController::BeginSearch()
 	
 	StopMovement();
 
+	LookAroundCount = 0; // reset varje gång en ny sökning startas
+
 	//UE_LOG(LogTemp, Warning, TEXT("AMeleeAIController BeginSearch 1"));
+	
+	LookAround();
 	
 	// kallar på LookAround() några gånger
 	GetWorldTimerManager().SetTimer(LookAroundTimerHandle, this, &AMeleeAIController::LookAround, 1.5f, true);
@@ -475,13 +598,53 @@ void AMeleeAIController::LookAround()
 	APawn* ControlledPawn = GetPawn();
 	if (!ControlledPawn) return;
 
-	//Slumpar rotation
-	FRotator NewRotation = ControlledPawn->GetActorRotation();
-	NewRotation.Yaw += FMath::RandRange(-90.f, 90.f);
-	ControlledPawn->SetActorRotation(NewRotation);
+	LookAroundCount++;
+	if (LookAroundCount > LookAroundMax)
+	{
+		// stoppa timer
+		//UE_LOG(LogTemp, Warning, TEXT("LookAround max count reached"));
+		GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
+		return;
+	}
 
-	// Rör fienden lite slumpmässigt
-	MoveToLocation(ControlledPawn->GetActorLocation() + ControlledPawn->GetActorForwardVector() * FMath::RandRange(100.f, 250.f));
+	//UE_LOG(LogTemp, Warning, TEXT("AMeleeAIController LookAround"));
+	
+	//Slumpar rotation
+	FRotator Current = ControlledPawn->GetActorRotation();
+	FRotator NewRotation = Current;
+	
+	//NewRotation.Yaw += FMath::RandRange(-360.f, 360.f);
+	float BaseStep = FMath::RandBool() ? 90.f : -90.f;
+	float Variation = FMath::RandRange(-20.f, 20.f);
+	float Step = BaseStep + Variation;
+	NewRotation.Yaw += Step;
+
+
+	StartSmoothRotationTowards(NewRotation.Vector(), 2.0f);
+
+	FVector LookDirection = NewRotation.Vector();
+
+	// Slumpa ett forward move
+	FVector RawTarget = ControlledPawn->GetActorLocation() + LookDirection * FMath::RandRange(100.f, 350.f);
+
+	
+	// Project to NavMesh 
+	FNavLocation Projected;
+	UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
+
+	if (NavSys && NavSys->ProjectPointToNavigation(RawTarget, Projected))
+	{
+		LookAroundTarget = Projected.Location;
+	}
+	else
+	{
+		// Stå still om den inte hittar en plats på navmeshen 
+		LookAroundTarget = ControlledPawn->GetActorLocation();
+	}
+
+	bHasLookAroundTarget = true;
+	
+	//MoveToLocation(ControlledPawn->GetActorLocation() + ControlledPawn->GetActorForwardVector() * FMath::RandRange(100.f, 250.f));
 }
 
 void AMeleeAIController::EndSearch()
@@ -515,6 +678,9 @@ void AMeleeAIController::EndSearch()
 void AMeleeAIController::OnHeardSound(FVector SoundLocation)
 {
 	if (!ControlledEnemy) return;
+
+	bHasLookAroundTarget = false;
+	LookAroundTarget = FVector::ZeroVector;
 
 	// Reset all searching states
 	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
@@ -575,8 +741,14 @@ void AMeleeAIController::OnHeardSound(FVector SoundLocation)
 	DrawDebugSphere(GetWorld(), GroundedLocation, 25.f, 12, FColor::Green, false, 5.f);
 
 	UE_LOG(LogTemp, Warning, TEXT("OnHeardSound triggered: Enemy moving toward sound at %s"), *GroundedLocation.ToString());
+
 	
-	MoveToLocation(GroundedLocation, -1.f, true, true, false, false, 0, true);
+	bIsInvestigatingTarget = true;
+	InvestigateTarget = GroundedLocation;
+	StartSmoothRotationTowards(GroundedLocation, 4.0f);
+	
+	
+	//MoveToLocation(GroundedLocation, -1.f, true, true, false, false, 0, true);
 }
 
 void AMeleeAIController::HandleSuspiciousLocation(FVector Location)
@@ -625,6 +797,42 @@ void AMeleeAIController::HandleSuspiciousLocation(FVector Location)
     }
 }
 
+
+void AMeleeAIController::StartSmoothRotationTowards(const FVector& TargetLocation, float RotationSpeed)
+{
+	if (!ControlledEnemy) return;
+
+	FVector Dir = TargetLocation - ControlledEnemy->GetActorLocation();
+	Dir.Z = 0.f; 
+
+	DesiredRotation = Dir.Rotation();
+	DesiredRotation.Pitch = 0.f;
+	DesiredRotation.Roll = 0.f;
+
+	CurrentRotationSpeed = RotationSpeed;
+	bIsRotating = true;
+}
+
+// Kallas just nu från kameran
+void AMeleeAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation)
+{
+	CurrentState = EEnemyState::Chasing;
+	
+	bChasingFromExternalOrder = true; 
+
+	if (ControlledEnemy)
+	{
+		ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
+		ControlledEnemy->bIsChasing = true;
+		LastKnownPlayerLocation = LastSpottedPlayerLocation;
+		ControlledEnemy->SetLastSeenPlayerLocation(LastSpottedPlayerLocation);
+		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetRunSpeed(); 
+	}
+
+	StopMovement();
+
+	MoveToLocation(LastKnownPlayerLocation);
+}
 
 
 void AMeleeAIController::OnUnPossess()
