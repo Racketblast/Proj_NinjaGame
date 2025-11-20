@@ -7,7 +7,6 @@
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Kismet/KismetMathLibrary.h"
 
 ADoor::ADoor()
 {
@@ -24,6 +23,8 @@ ADoor::ADoor()
 	DoorHitBox->SetupAttachment(DoorMesh);
 
 	DoorHitBox->OnComponentBeginOverlap.AddDynamic(this, &ADoor::DoorBeginOverlap);
+	//Does not work for some reason
+	//DoorHitBox->OnComponentEndOverlap.AddDynamic(this, &ADoor::DoorEndOverlap);
 }
 
 void ADoor::Use_Implementation(class AStealthCharacter* Player)
@@ -143,8 +144,7 @@ bool ADoor::CanPushCharacter(ACharacter* Character, FVector PushDir, float PushD
 	return !bHit || !Hit.bBlockingHit;
 }
 
-void ADoor::DoorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-                             UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void ADoor::DoorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (!bIsMoving) return;
 
@@ -172,5 +172,20 @@ void ADoor::DoorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* O
 	else
 	{
 		bIsMoving = false;
+		BlockingCharacter = Character;
+	}
+}
+
+void ADoor::DoorEndOverlap(UPrimitiveComponent* Overlapped, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	//This is used in the blueprint, it does not work unless its in the blueprint for some reason
+	ACharacter* Character = Cast<ACharacter>(OtherActor);
+
+	if (Character && Character == BlockingCharacter)
+	{
+		BlockingCharacter = nullptr;
+
+		// Door was moving before the block; start it again
+		bIsMoving = true;
 	}
 }
