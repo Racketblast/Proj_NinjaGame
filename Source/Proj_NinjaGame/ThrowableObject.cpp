@@ -4,6 +4,7 @@
 #include "ThrowableObject.h"
 
 #include "MeleeEnemy.h"
+#include "SecurityCamera.h"
 #include "StealthCharacter.h"
 #include "StealthGameInstance.h"
 #include "ThrowableWeapon.h"
@@ -92,6 +93,32 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation());
 		}
 		
+		Destroy();
+	}
+	else if (ASecurityCamera* Camera = Cast<ASecurityCamera>(OtherActor)) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Throwable hit Camera"));
+        
+		UGameplayStatics::ApplyPointDamage(
+			Camera,
+			DealtDamage,
+			GetVelocity().GetSafeNormal(),
+			Hit,
+			UGameplayStatics::GetPlayerController(this, 0),
+			this,
+			UDamageType::StaticClass()
+		);
+
+		if (ImpactEnemySound)
+		{
+			
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactEnemySound, GetActorLocation());
+		}
+		else if (ImpactGroundSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation());
+		}
+
 		Destroy();
 	}
 	else

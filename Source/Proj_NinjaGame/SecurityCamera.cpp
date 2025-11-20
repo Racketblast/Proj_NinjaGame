@@ -4,6 +4,8 @@
 #include "SecurityCamera.h"
 
 #include "EnemyHandler.h"
+#include "NavigationSystem.h"
+#include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -11,8 +13,21 @@ ASecurityCamera::ASecurityCamera()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	//Mesh
 	CameraMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CameraMesh"));
 	RootComponent = CameraMesh;
+
+	//hitbox
+	HitCollision = CreateDefaultSubobject<USphereComponent>(TEXT("HitCollision"));
+	HitCollision->SetupAttachment(CameraMesh);
+	HitCollision->InitSphereRadius(40.f);
+	HitCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	HitCollision->SetCollisionObjectType(ECC_Pawn);
+	HitCollision->SetCollisionResponseToAllChannels(ECR_Block);
+	HitCollision->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	HitCollision->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+	HitCollision->SetNotifyRigidBodyCollision(true);
+	
 }
 
 void ASecurityCamera::BeginPlay()
@@ -41,6 +56,9 @@ void ASecurityCamera::Tick(float DeltaTime)
 void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 {
 	if (!PlayerPawn || !CameraMesh)
+		return;
+
+	if (bIsCameraDisabled)
 		return;
 	
 	// Hämta position och forward från socket "Vision" i SKM
@@ -180,3 +198,93 @@ void ASecurityCamera::OnPlayerSpotted()
 	}
 }
 
+
+void ASecurityCamera::DisableCamera()
+{
+	if (bIsCameraDisabled)
+		return;
+
+	bIsCameraDisabled = true;
+
+	// Stoppa animation
+	if (CameraMesh)
+	{
+		CameraMesh->Stop();
+	}
+
+	// Slå av vision 
+	bPlayerInCone = false;
+	bHasSpottedPlayer = false;
+	SpotTimer = 0.f;
+
+	// Debug off om du vill
+	bVisionDebug = false;
+
+	UE_LOG(LogTemp, Warning, TEXT("SecurityCamera Disabled"));
+}
+
+
+float ASecurityCamera::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
+								  AController* EventInstigator, AActor* DamageCauser)
+{
+	if (bIsCameraDisabled)
+		return 0.f;
+
+	float AppliedDamage = FMath::Min(CurrentHealth, DamageAmount);
+	CurrentHealth -= AppliedDamage;
+
+	UE_LOG(LogTemp, Warning, TEXT("Camera took %f damage. Health: %f"), AppliedDamage, CurrentHealth);
+
+	if (CurrentHealth <= 0.f)
+	{
+		Die();
+	}
+
+	return AppliedDamage;
+}
+
+void ASecurityCamera::Die()
+{
+	/*if (bIsCameraDisabled)
+		return;*/
+	
+	//UE_LOG(LogTemp, Warning, TEXT("SecurityCamera destroyed!"));
+	
+	DisableCamera();
+
+	// Hämta EnemyHandler
+	AEnemyHandler* Handler = Cast<AEnemyHandler>(
+		UGameplayStatics::GetActorOfClass(GetWorld(), AEnemyHandler::StaticClass())
+	);
+
+	if (!Handler)
+	{
+		UE_LOG(LogTemp, Error, TEXT("CameraDie: No EnemyHandler found!"));
+		return;
+	}
+
+	// Hämta närmaste fienden till kameran
+	AMeleeEnemy* ClosestEnemy = Handler->GetClosestEnemyToLocation(GetActorLocation()); 
+
+	if (!ClosestEnemy)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CameraDie: No enemy found to investigate."));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("CameraDie: Closest enemy to investigate: %s"), *ClosestEnemy->GetName());
+
+	
+	// Hämta AI Controller
+	AMeleeAIController* AI = Cast<AMeleeAIController>(ClosestEnemy->GetController());
+
+	if (AI)
+	{
+		ClosestEnemy->OnSuspiciousLocation.Broadcast(GetActorLocation());
+	}
+	
+
+	//CameraMesh->SetVisibility(false);
+	SetActorEnableCollision(false);
+	
+}

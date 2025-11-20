@@ -78,6 +78,19 @@ AMeleeEnemy* AEnemyHandler::GetClosestEnemyToLocation(FVector TargetLocation)
 	UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(World);
 	if (!NavSys) return nullptr;
 
+	// Projektera målpunkten till navmesh
+	FNavLocation ProjectedLocation;
+	if (!NavSys->ProjectPointToNavigation(
+			TargetLocation,
+			ProjectedLocation,
+			FVector(200.f, 200.f, 500.f) 
+		))
+	{
+		return nullptr;
+	}
+
+	TargetLocation = ProjectedLocation.Location;
+
 	AMeleeEnemy* BestEnemy = nullptr;
 	float BestDistance = TNumericLimits<float>::Max();
 

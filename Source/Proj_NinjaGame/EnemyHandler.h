@@ -23,6 +23,8 @@ public:
 
 	TArray<AMeleeEnemy*> GetTwoClosestEnemies(FVector TargetLocation);
 
+	AMeleeEnemy* GetClosestEnemyToLocation(FVector TargetLocation);
+	
 protected:
 	UPROPERTY()
 	TArray<AActor*> AllEnemies;
@@ -30,6 +32,4 @@ protected:
 	bool bEnemySeesPlayer = false; 	// True om minst en fiende jagar spelaren
 	
 	void UpdateEnemyStates();
-
-	AMeleeEnemy* GetClosestEnemyToLocation(FVector TargetLocation);
 };

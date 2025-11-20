@@ -499,10 +499,6 @@ void AMeleeEnemy::StartAttack()
 	// aktiverar hitbox en kort stund 
 	EnableHitbox(0.2f);
 	
-	/*GetWorldTimerManager().SetTimer(AttackCooldownHandle, [this]()
-	{
-		bCanAttack = true;
-	}, AttackCooldown, false);*/
 	GetWorldTimerManager().SetTimer(AttackCooldownHandle, this, &AMeleeEnemy::ResetAttackCooldown, AttackCooldown, false);
 }
 

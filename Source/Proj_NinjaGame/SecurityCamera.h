@@ -20,6 +20,9 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	USkeletalMeshComponent* CameraMesh;
 
+	UPROPERTY(VisibleAnywhere, Category="Collision")
+	class USphereComponent* HitCollision;
+
 	UPROPERTY(EditAnywhere, Category="Camera")
 	UAnimationAsset* IdlePanAnimation;
 
@@ -46,11 +49,31 @@ protected:
 	bool bVisionDebug = true;
 	
 	APawn* PlayerPawn;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera")
+	float MaxHealth = 1.f;
+
+	float CurrentHealth = MaxHealth;
+
+	bool bIsCameraDisabled = false;
 
 	void CheckPlayerVisibility(float DeltaTime);
 	void OnPlayerSpotted();
 
+	virtual float TakeDamage(
+		float DamageAmount,
+		struct FDamageEvent const& DamageEvent,
+		AController* EventInstigator,
+		AActor* DamageCauser
+	) override;
+
+	void Die();
+
+
 public:	
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION(BlueprintCallable)
+	void DisableCamera();
 
 };
