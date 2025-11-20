@@ -123,6 +123,8 @@ void AMeleeEnemy::CheckImmediateProximityDetection()
 	AStealthCharacter* StealthPlayer = Cast<AStealthCharacter>(PlayerPawn);
 	if (!StealthPlayer) return;
 
+	if (StealthPlayer->bIsHiddenFromEnemy) return;
+
 	if (StealthPlayer->GetPlayerMovementState() == EPlayerMovementState::Crouch)
 		return; // om Spelaren smyger så ska fienden inte autoupptäcka
 
@@ -154,6 +156,11 @@ void AMeleeEnemy::CheckChaseProximityDetection()
 {
 	if (!bIsChasing) return; 
 	if (!PlayerPawn) return;
+
+	AStealthCharacter* StealthPlayer = Cast<AStealthCharacter>(PlayerPawn);
+	if (!StealthPlayer) return;
+	
+	if (StealthPlayer->bIsHiddenFromEnemy) return;
 
 	const float ChaseProximityRadius = 350.f; 
 	const float Distance = FVector::Dist(GetActorLocation(), PlayerPawn->GetActorLocation());
@@ -192,7 +199,11 @@ void AMeleeEnemy::CheckChaseProximityDetection()
 void AMeleeEnemy::CheckCloseDetection()
 {
 	if (!PlayerPawn) return;
-	if (bIsChasing) return; 
+	if (bIsChasing) return;
+	AStealthCharacter* StealthPlayer = Cast<AStealthCharacter>(PlayerPawn);
+	if (!StealthPlayer) return;
+	
+	if (StealthPlayer->bIsHiddenFromEnemy) return;
 
 	FVector Forward = GetActorForwardVector();
 	FVector BoxCenter = GetActorLocation() + FVector(0,0,40) + Forward * 130.f; // flytta boxen framåt
@@ -202,7 +213,6 @@ void AMeleeEnemy::CheckCloseDetection()
 	
 	// Rotera boxen så den matchar fiendens rotation
 	FQuat BoxRotation = GetActorRotation().Quaternion();
-
 	FCollisionShape Box = FCollisionShape::MakeBox(BoxHalfSize);
 
 	bool bHit = GetWorld()->OverlapBlockingTestByChannel(
@@ -235,8 +245,33 @@ void AMeleeEnemy::CheckCloseDetection()
 		{
 			if (R.GetActor() == PlayerPawn)
 			{
-				bCanSeePlayer = true;  
-				UpdateLastSeenPlayerLocation();
+				FVector Start = GetActorLocation() + FVector(0, 0, 65.f);
+				FVector End = PlayerPawn->GetActorLocation() + FVector(0, 0, 50.f);
+
+				FHitResult Hit;
+				FCollisionQueryParams Params;
+				Params.AddIgnoredActor(this);
+
+				bool bLineHit = GetWorld()->LineTraceSingleByChannel(
+					Hit,
+					Start,
+					End,
+					ECC_Visibility, 
+					Params
+				);
+
+				if (bVisionDebug)
+				{
+					DrawDebugLine(GetWorld(), Start, End, bLineHit ? FColor::Red : FColor::Green, false, 0.05f, 0, 1.f);
+				}
+
+				// Kålla om linetracen träffar spelaren 
+				if (!bLineHit || Hit.GetActor() == PlayerPawn)
+				{
+					bCanSeePlayer = true;
+					UpdateLastSeenPlayerLocation();
+				}
+
 				return;
 			}
 		}
@@ -246,6 +281,10 @@ void AMeleeEnemy::CheckCloseDetection()
 void AMeleeEnemy::CheckPlayerVisibility()
 {
 	if (!PlayerPawn) return;
+	AStealthCharacter* StealthPlayer = Cast<AStealthCharacter>(PlayerPawn);
+	if (!StealthPlayer) return;
+	
+	if (StealthPlayer->bIsHiddenFromEnemy) return;
 
 	FVector EnemyEyes = GetActorLocation() + FVector(0, 0, 60);
 	FVector PlayerLoc = PlayerPawn->GetActorLocation();
@@ -502,10 +541,6 @@ void AMeleeEnemy::StartAttack()
 	// aktiverar hitbox en kort stund 
 	EnableHitbox(0.2f);
 	
-	/*GetWorldTimerManager().SetTimer(AttackCooldownHandle, [this]()
-	{
-		bCanAttack = true;
-	}, AttackCooldown, false);*/
 	GetWorldTimerManager().SetTimer(AttackCooldownHandle, this, &AMeleeEnemy::ResetAttackCooldown, AttackCooldown, false);
 }
 

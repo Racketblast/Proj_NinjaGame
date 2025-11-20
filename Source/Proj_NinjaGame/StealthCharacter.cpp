@@ -182,6 +182,8 @@ void AStealthCharacter::DoJumpEnd()
 
 void AStealthCharacter::Attack()
 {
+	if(bIsHiding == true) return;
+	
 	if (bIsAiming)
 	{
 		UE_LOG(LogTemp, Display, TEXT("Ranged attack"));
@@ -249,6 +251,8 @@ void AStealthCharacter::Attack()
 }
 void AStealthCharacter::StartThrow()
 {
+	if(bIsHiding == true) return;
+	
 	if (ThrowSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ThrowSound, GetActorLocation());
@@ -303,6 +307,8 @@ void AStealthCharacter::EquipKunai()
 
 void AStealthCharacter::AimStart()
 {
+	if(bIsHiding == true) return;
+	
 	if (CurrentMovementState != EPlayerMovementState::Run ) 
 	{
 		if (HeldThrowableWeapon)
@@ -504,6 +510,11 @@ void AStealthCharacter::Tick(float DeltaTime)
 		{
 			StopSprint();
 		}
+	}
+
+	if(bIsHiding == true)
+	{
+		StopSprint();
 	}
 
 	if (FirstPersonCameraComponent)
@@ -837,7 +848,9 @@ void AStealthCharacter::Die()
 }
 
 void AStealthCharacter::ToggleSneak()
-{	
+{
+	if(bIsHiding == true) return;
+	
 	if (CurrentMovementState == EPlayerMovementState::Crouch)
 	{
 		if (CanUnCrouch())
@@ -901,6 +914,8 @@ bool AStealthCharacter::CanUnCrouch()
 
 void AStealthCharacter::StartSprint()
 {
+	if(bIsHiding == true) return;
+	
 	if (CurrentMovementState != EPlayerMovementState::Climb)
 	{
 		// Kolla om spelaren faktiskt försöker röra sig
@@ -961,4 +976,19 @@ void AStealthCharacter::StopSprint()
 		CurrentMovementState = EPlayerMovementState::Walk;
 		//UE_LOG(LogTemp, Warning, TEXT("Player stopped sprinting."));
 	}
+}
+
+
+
+// För HideSpot
+void AStealthCharacter::SetCustomCameraLocation(USceneComponent* NewCameraComponent)
+{
+	if (!NewCameraComponent) return;
+	FirstPersonCameraComponent->AttachToComponent(NewCameraComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+}
+
+void AStealthCharacter::ResetToNormalCamera()
+{
+	FirstPersonCameraComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ROOT"));
+	FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
 }

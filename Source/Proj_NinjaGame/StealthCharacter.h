@@ -53,6 +53,10 @@ public:
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
+
+	// För HideSpot
+	bool bIsHiddenFromEnemy = false;
+	bool bIsHiding = false;
 protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Player State")
@@ -339,6 +343,11 @@ public:
 	
 	UPROPERTY(BlueprintReadWrite)
 	bool bHasCompletedTheMission = false;
+
+
+	// För HideSpot
+	void SetCustomCameraLocation(USceneComponent* NewCameraComponent);
+	void ResetToNormalCamera();
 
 private:
 	float MoveInputForward = 0.f;
