@@ -117,19 +117,14 @@ void ADoor::DoorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* O
 	ACharacter* Character = Cast<ACharacter>(OtherActor);
 	if (!Character) return;
 
-	// The hinge is your StaticMeshComponent
 	FVector HingeLocation = StaticMeshComponent->GetComponentLocation();
 
-	// Hinge rotation axis (usually Z)
 	FVector HingeUp = StaticMeshComponent->GetUpVector();
 
-	// Vector from hinge to hit point
-	FVector ToHit = (SweepResult.ImpactPoint - HingeLocation).GetSafeNormal();
+	FVector ToHit = (Character->GetActorLocation() - HingeLocation).GetSafeNormal();
 
-	// Tangent direction = the direction the door edge moves
 	FVector PushDirection = FVector::CrossProduct(HingeUp, ToHit).GetSafeNormal();
 
-	// Reverse push direction when closing
 	if (!bOpen)
 	{
 		PushDirection *= -1.f;
