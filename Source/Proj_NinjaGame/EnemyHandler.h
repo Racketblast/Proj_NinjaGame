@@ -27,6 +27,7 @@ public:
 
 	TArray<AMeleeEnemy*> GetTwoClosestEnemies(FVector TargetLocation);
 	
+	AMeleeEnemy* GetClosestEnemyToLocation(FVector TargetLocation);
 protected:
 	bool bEnemySeesPlayer = false; 	// True om minst en fiende jagar spelaren
 	
@@ -36,6 +37,4 @@ protected:
 	TArray<AActor*> AllSecurityCamera;
 	
 	void UpdateEnemyStates();
-
-	AMeleeEnemy* GetClosestEnemyToLocation(FVector TargetLocation);
 };

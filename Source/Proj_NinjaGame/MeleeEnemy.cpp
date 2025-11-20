@@ -77,6 +77,9 @@ void AMeleeEnemy::BeginPlay()
 		AssassinationCapsule->OnComponentBeginOverlap.AddDynamic(this, &AMeleeEnemy::OnAssasinationOverlapBegin);
 		AssassinationCapsule->OnComponentEndOverlap.AddDynamic(this, &AMeleeEnemy::OnAssasinationOverlapEnd);
 	}
+
+	OriginalSuspiciousVisionRange = SuspiciousVisionRange;
+	OriginalVisionRange = VisionRange;
 }
 
 void AMeleeEnemy::FaceRotation(FRotator NewRotation, float DeltaTime)
@@ -568,6 +571,20 @@ void AMeleeEnemy::ApplyDamageTo(AActor* Target)
 	if (!Target) return;
 
 	UGameplayStatics::ApplyDamage(Target, AttackDamage, GetController(), this, nullptr);
+}
+
+void AMeleeEnemy::ReduceEnemyRange(bool bShouldReduce)
+{
+	if (bShouldReduce)
+	{
+		VisionRange = OriginalVisionRange / 2;
+		SuspiciousVisionRange = OriginalSuspiciousVisionRange / 2;
+	}
+	else
+	{
+		VisionRange = OriginalVisionRange;
+		SuspiciousVisionRange = OriginalSuspiciousVisionRange;
+	}
 }
 
 

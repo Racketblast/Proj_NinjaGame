@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "InteractableObject.h"
 #include "ElectricalCabinet.generated.h"
-
 /**
  * 
  */
@@ -22,7 +21,20 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	bool bPowerOff = false;
+	bool bPowerOn = true;
 
 	void TurnPowerOnOff();
+
+	void TurnLightsOnOff(bool bOnOff);
+	
+	void TurnCamerasOnOff(bool bOnOff);
+	
+	void ReduceEnemySight(bool bOnOff);
+	
+	void SendClosetEnemy();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Affected")
+	TArray<class ALight*> LightsToTurnOff;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Affected")
+	class AEnemyHandler* EnemyHandler;
 };
