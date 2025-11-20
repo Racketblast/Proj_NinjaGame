@@ -18,6 +18,10 @@ public:
 	ADoor();
 
 	virtual void Use_Implementation(class AStealthCharacter* Player) override;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Interact")
+	bool bOpen = false;
+	void OpenCloseDoor();
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -26,8 +30,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
 	bool bNeedsToBeUnlocked = false;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Interact")
-	bool bOpen = false;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Interact")
 	bool bIsMoving = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
@@ -38,8 +40,6 @@ protected:
 	float DoorSpeed = 90.f;
 	
 	FRotator DoorTargetRotation;
-	
-	void OpenCloseDoor();
 	
 	UPROPERTY(EditDefaultsOnly, Category="Sound")
 	USoundBase* UnlockSound;
@@ -58,6 +58,12 @@ protected:
 	UStaticMeshComponent* DoorMesh;
 	UPROPERTY(EditDefaultsOnly)
 	class UBoxComponent* DoorHitBox;
+	
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<class ADoorNavLink> DoorNavLinkClass;
+	UPROPERTY()
+	ADoorNavLink* DoorNavLink;
+	
 	UFUNCTION()
 	void DoorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

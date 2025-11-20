@@ -3,6 +3,7 @@
 
 #include "Door.h"
 
+#include "DoorNavLink.h"
 #include "StealthCharacter.h"
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
@@ -43,6 +44,27 @@ void ADoor::Use_Implementation(class AStealthCharacter* Player)
 				LockSoundComponent->Play();
 			}
 			bNeedsToBeUnlocked = false;
+			
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = this;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+			FVector SpawnLocation = DoorMesh->GetComponentLocation();
+			SpawnLocation.Z = StaticMeshComponent->GetComponentLocation().Z;
+			FRotator SpawnRotation = DoorMesh->GetComponentRotation();
+
+			if (DoorNavLinkClass)
+			{
+				DoorNavLink = GetWorld()->SpawnActor<ADoorNavLink>(
+					DoorNavLinkClass,
+					SpawnLocation,
+					SpawnRotation,
+					SpawnParams
+				);
+			
+				DoorNavLink->DoorAttached = this;
+			}
+			
 			OpenCloseDoor();
 		}
 		else
@@ -64,6 +86,32 @@ void ADoor::BeginPlay()
 {
 	Super::BeginPlay();
     ClosedDoorRotation = StaticMeshComponent->GetRelativeRotation();
+
+	if (GetWorld())
+	{
+		if (!bNeedsToBeUnlocked)
+		{
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = this;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+			FVector SpawnLocation = DoorMesh->GetComponentLocation();
+			SpawnLocation.Z = StaticMeshComponent->GetComponentLocation().Z;
+			FRotator SpawnRotation = DoorMesh->GetComponentRotation();
+			
+			if (DoorNavLinkClass)
+			{
+				DoorNavLink = GetWorld()->SpawnActor<ADoorNavLink>(
+					DoorNavLinkClass,
+					SpawnLocation,
+					SpawnRotation,
+					SpawnParams
+				);
+			
+				DoorNavLink->DoorAttached = this;
+			}
+		}
+	}
 }
 
 void ADoor::Tick(float DeltaSeconds)
@@ -164,6 +212,8 @@ void ADoor::DoorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* O
 		PushDirection *= -1.f;
 	}
 
+	PushDirection.Z = 0.f;
+	
 	float PushStrength = 10.f;
 	if (CanPushCharacter(Character, PushDirection, (PushDirection * PushStrength).Length()))
 	{
