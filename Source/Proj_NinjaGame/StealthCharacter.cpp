@@ -962,3 +962,18 @@ void AStealthCharacter::StopSprint()
 		//UE_LOG(LogTemp, Warning, TEXT("Player stopped sprinting."));
 	}
 }
+
+
+
+// För HideSpot
+void AStealthCharacter::SetCustomCameraLocation(USceneComponent* NewCameraComponent)
+{
+	if (!NewCameraComponent) return;
+	FirstPersonCameraComponent->AttachToComponent(NewCameraComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+}
+
+void AStealthCharacter::ResetToNormalCamera()
+{
+	FirstPersonCameraComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ROOT"));
+	FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
+}
