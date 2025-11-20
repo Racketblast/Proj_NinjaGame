@@ -58,33 +58,63 @@ void AMeleeWeapon::AssassinateEnemy()
 	TArray<AActor*> HitActors;
 	Player->PlayerMeleeBox->GetOverlappingActors(HitActors);
 	TArray<AActor*> ThatCanBeStabbed;
+	TArray<AMeleeEnemy*> ThatCannotBeStabbed;
 	
 	for (auto HitActor : HitActors)
 	{
-		if (AMeleeEnemy* BackStabbableEnemy = Cast<AMeleeEnemy>(HitActor))
+		if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(HitActor))
 		{
-			if (BackStabbableEnemy->bCanBeAssassinated && !BackStabbableEnemy->CanSeePlayer())
+			if (Enemy->bCanBeAssassinated && !Enemy->CanSeePlayer())
 			{
-				ThatCanBeStabbed.Add(BackStabbableEnemy);
+				ThatCanBeStabbed.Add(Enemy);
+			}
+			else
+			{
+				ThatCannotBeStabbed.Add(Enemy);
 			}
 		}
 	}
 
-	AMeleeEnemy* Enemy = GetEnemyClosestToCrosshair(ThatCanBeStabbed);
-	if (!Enemy) return;
-	
-	if (HitSound)
+	AMeleeEnemy* AssassinatedEnemy = GetEnemyClosestToCrosshair(ThatCanBeStabbed);
+	//Hit an Assassination
+	if (AssassinatedEnemy)
 	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, GetActorLocation());
-	}
+		if (HitSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, GetActorLocation());
+		}
 				
-	UGameplayStatics::ApplyDamage(
-		Enemy,
-		Enemy->GetHealth(),
-		UGameplayStatics::GetPlayerController(this,0),
-		UGameplayStatics::GetPlayerCharacter(this,0),
-		UDamageType::StaticClass()
+		UGameplayStatics::ApplyDamage(
+			AssassinatedEnemy,
+			AssassinatedEnemy->GetHealth(),
+			UGameplayStatics::GetPlayerController(this,0),
+			UGameplayStatics::GetPlayerCharacter(this,0),
+			UDamageType::StaticClass()
 		);
+	}
+	//Missed an Assassination
+	else
+	{
+		for (auto Enemy : ThatCannotBeStabbed)
+		{
+			if (HitSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, GetActorLocation());
+			}
+			UGameplayStatics::ApplyDamage(
+				Enemy,
+				MeleeDamage,
+				UGameplayStatics::GetPlayerController(this,0),
+				UGameplayStatics::GetPlayerCharacter(this,0),
+				UDamageType::StaticClass()
+				);
+				
+			//Sound för fienden
+			float NoiseLevel = 4.0f;
+
+			USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel);
+		}
+	}
 }
 
 AMeleeEnemy* AMeleeWeapon::GetEnemyClosestToCrosshair(const TArray<AActor*>& HitActors)

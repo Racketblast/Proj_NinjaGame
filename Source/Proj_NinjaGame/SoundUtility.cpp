@@ -6,7 +6,7 @@
 #include "MeleeEnemy.h"
 
 
-void USoundUtility::ReportNoise(UWorld* World, FVector Location, float Loudness)
+void USoundUtility::ReportNoise(UWorld* World, FVector Location, float Loudness, AActor* ActorThatMadeNoice)
 {
 	if (!World) return;
 
@@ -37,6 +37,10 @@ void USoundUtility::ReportNoise(UWorld* World, FVector Location, float Loudness)
 		// Line trace för att checka väggar
 		FCollisionQueryParams TraceParams;
 		TraceParams.AddIgnoredActor(Enemy);
+		if (ActorThatMadeNoice)
+		{
+			TraceParams.AddIgnoredActor(ActorThatMadeNoice);
+		}
 
 		FHitResult Hit;
 		bool bHit = World->LineTraceSingleByChannel(

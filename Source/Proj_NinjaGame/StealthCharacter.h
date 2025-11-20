@@ -27,6 +27,7 @@ enum class EPlayerMovementState : uint8
 	Run     UMETA(DisplayName = "Run"),
 	Crouch  UMETA(DisplayName = "Crouch"),
 	Climb  UMETA(DisplayName = "Climb")
+	//Hide UMETA(DisplayName = "Hide")
 };
 
 UENUM(BlueprintType)

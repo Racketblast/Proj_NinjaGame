@@ -31,7 +31,7 @@ void AElectricalCabinet::TurnPowerOnOff()
 	
 	ReduceEnemySight(bPowerOn);
 
-	//SendClosetEnemy();
+	SendClosetEnemy();
 	
 	bPowerOn = !bPowerOn;
 }
@@ -54,10 +54,14 @@ void AElectricalCabinet::TurnCamerasOnOff(bool bOnOff)
 	{
 		if (ASecurityCamera* Camera = Cast<ASecurityCamera>(CameraActor))
 		{
-			//CameraTurnOnOff
-			/*
-			 if(bOnOff)
-			 */
+			if (bOnOff)
+			{
+				Camera->DisableCamera();
+			}
+			else
+			{
+				Camera->ActivateCamera();
+			}
 		}
 	}
 }
@@ -87,7 +91,7 @@ void AElectricalCabinet::SendClosetEnemy()
 		UE_LOG(LogTemp, Warning, TEXT("Closest Enemy: %s"), *Enemy->GetActorNameOrLabel());
 		if (AMeleeAIController* AI = Cast<AMeleeAIController>(Enemy->GetController()))
 		{
-			AI->StartChasingFromExternalOrder(GetActorLocation());   
+			Enemy->OnSuspiciousLocation.Broadcast(GetActorLocation()); 
 		}
 	}
 }

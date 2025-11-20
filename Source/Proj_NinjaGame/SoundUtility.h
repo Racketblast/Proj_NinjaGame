@@ -13,7 +13,7 @@ class PROJ_NINJAGAME_API USoundUtility : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
-	static void ReportNoise(UWorld* World, FVector Location, float Loudness = 1.0f);
+	static void ReportNoise(UWorld* World, FVector Location, float Loudness = 1.0f, AActor* ActorThatMadeNoice = nullptr);
 	
 	/** Spelar ett ljud på en viss position, jag använder inte detta nu, men kanske kan använda det senare */
 	UFUNCTION(BlueprintCallable, Category = "Sound")

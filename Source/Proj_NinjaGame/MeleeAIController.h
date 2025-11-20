@@ -15,6 +15,15 @@ enum class EEnemyState : uint8
 	Searching
 };
 
+UENUM(BlueprintType)
+enum class EEnemyMission : uint8
+{
+	Patrol,
+	Camera, 
+	Electrical,
+	Sprinkler
+};
+
 UCLASS()
 class PROJ_NINJAGAME_API AMeleeAIController : public AAIController
 {
@@ -30,6 +39,8 @@ public:
 
 	EEnemyState GetCurrentState() const { return CurrentState; }
 
+	EEnemyMission GetCurrentMission() const { return CurrentMission; }
+
 	void StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation);
 	
 protected:
@@ -43,6 +54,7 @@ protected:
 
 	int32 CurrentPatrolIndex = 0;
 	EEnemyState CurrentState = EEnemyState::Patrolling;
+	EEnemyMission CurrentMission = EEnemyMission::Patrol;
 
 	FTimerHandle LoseSightTimerHandle;
 	
