@@ -6,6 +6,7 @@
 #include "StealthCharacter.h"
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
 ADoor::ADoor()
@@ -109,8 +110,41 @@ void ADoor::OpenCloseDoor()
 	bIsMoving = true;
 }
 
+
+bool ADoor::CanPushCharacter(ACharacter* Character, FVector PushDir, float PushDistance)
+{
+	if (!Character) return true;
+
+	UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
+	if (!Capsule) return true;
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Character);
+	Params.AddIgnoredActor(this);
+
+	FVector Start = Capsule->GetComponentLocation();
+	FVector End = Start + (PushDir * PushDistance);
+
+	FHitResult Hit;
+	bool bHit = Capsule->GetWorld()->SweepSingleByChannel(
+		Hit,
+		Start,
+		End,
+		Character->GetActorQuat(),
+		ECC_Pawn,
+		FCollisionShape::MakeCapsule(
+			Capsule->GetUnscaledCapsuleRadius(),
+			Capsule->GetUnscaledCapsuleHalfHeight()
+		),
+		Params
+	);
+
+	// Only block if the sweep hits a *blocking hit*, not overlap.
+	return !bHit || !Hit.bBlockingHit;
+}
+
 void ADoor::DoorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+                             UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (!bIsMoving) return;
 
@@ -130,6 +164,13 @@ void ADoor::DoorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* O
 		PushDirection *= -1.f;
 	}
 
-	float PushStrength = 100.f;
-	Character->LaunchCharacter(PushDirection * PushStrength, false, false);
+	float PushStrength = 10.f;
+	if (CanPushCharacter(Character, PushDirection, (PushDirection * PushStrength).Length()))
+	{
+		Character->LaunchCharacter(PushDirection * PushStrength, false, false);
+	}
+	else
+	{
+		bIsMoving = false;
+	}
 }

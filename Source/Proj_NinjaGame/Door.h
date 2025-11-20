@@ -52,6 +52,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Sound")
 	UAudioComponent* DoorSoundComponent;
 
+	bool CanPushCharacter(ACharacter* Character, FVector PushDir, float PushDistance);
+	
 	UPROPERTY(EditDefaultsOnly)
 	UStaticMeshComponent* DoorMesh;
 	UPROPERTY(EditDefaultsOnly)
