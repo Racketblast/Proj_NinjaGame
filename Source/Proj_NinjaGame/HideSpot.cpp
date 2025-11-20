@@ -86,12 +86,15 @@ void AHideSpot::EnterHideSpot(AStealthCharacter* Player)
 	Player->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// Gömmer spelaren
-	Player->GetMesh()->SetVisibility(false, true);
+	Player->FirstPersonMesh->SetHiddenInGame(true);
+	Player->FirstPersonMesh->SetVisibility(false, true);
+
 
 	Player->bIsHiddenFromEnemy = true;
+	
+	Player->bIsHiding = true;
 
 	// Stänger av movement
-	Player->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 	Player->GetCharacterMovement()->DisableMovement();
 
 	// Placerar spelaren vis hide spot
@@ -117,10 +120,14 @@ void AHideSpot::ExitHideSpot()
 	Player->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
 	// Visar spelaren igen
-	Player->GetMesh()->SetVisibility(true, true);
+	Player->FirstPersonMesh->SetHiddenInGame(false);
+	Player->FirstPersonMesh->SetVisibility(true, true);
+
 
 	// Gör att fienden kan se spelaren igen. 
 	Player->bIsHiddenFromEnemy = false;
+	
+	Player->bIsHiding = false;
 
 	// Återställer kameran
 	Player->ResetToNormalCamera();

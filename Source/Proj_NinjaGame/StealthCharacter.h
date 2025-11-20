@@ -56,6 +56,7 @@ public:
 
 	// För HideSpot
 	bool bIsHiddenFromEnemy = false;
+	bool bIsHiding = false;
 protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Player State")

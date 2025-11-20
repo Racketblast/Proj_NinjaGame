@@ -35,6 +35,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Vision")
 	float TimeToSpotPlayer = 1.5f;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool bIsCameraDead = false;
+
 	bool bPlayerInCone = false;
 	bool bHasSpottedPlayer = false;
 
@@ -75,5 +78,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void DisableCamera();
+
+	UFUNCTION(BlueprintCallable)
+	void ActivateCamera();
 
 };

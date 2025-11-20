@@ -198,6 +198,36 @@ void ASecurityCamera::OnPlayerSpotted()
 	}
 }
 
+void ASecurityCamera::ActivateCamera()
+{
+	if (bIsCameraDead)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ActivateCamera: Camera is dead and cannot be reactivated."));
+		return;
+	}
+
+	if (!bIsCameraDisabled)
+	{
+		return;
+	}
+
+	bIsCameraDisabled = false;
+
+	// Starta kamerarotationsanimation igen
+	if (CameraMesh)
+	{
+		CameraMesh->Play(true);
+	}
+
+	// Återställ vision
+	bPlayerInCone = false;
+	bHasSpottedPlayer = false;
+	SpotTimer = 0.f;
+	
+
+	UE_LOG(LogTemp, Warning, TEXT("SecurityCamera Activated"));
+}
+
 
 void ASecurityCamera::DisableCamera()
 {
@@ -216,9 +246,7 @@ void ASecurityCamera::DisableCamera()
 	bPlayerInCone = false;
 	bHasSpottedPlayer = false;
 	SpotTimer = 0.f;
-
-	// Debug off om du vill
-	bVisionDebug = false;
+	
 
 	UE_LOG(LogTemp, Warning, TEXT("SecurityCamera Disabled"));
 }
@@ -251,6 +279,7 @@ void ASecurityCamera::Die()
 	//UE_LOG(LogTemp, Warning, TEXT("SecurityCamera destroyed!"));
 	
 	DisableCamera();
+	bIsCameraDead = true;
 
 	// Hämta EnemyHandler
 	AEnemyHandler* Handler = Cast<AEnemyHandler>(
