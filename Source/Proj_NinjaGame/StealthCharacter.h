@@ -339,8 +339,6 @@ public:
 	
 	UPROPERTY(BlueprintReadWrite)
 	bool bHasCompletedTheMission = false;
-	UPROPERTY(BlueprintReadWrite)
-	bool bIsInCombat = false;
 
 private:
 	float MoveInputForward = 0.f;

@@ -7,6 +7,7 @@
 #include "MeleeAIController.h"
 #include "NavigationPath.h"
 #include "NavigationSystem.h"
+#include "SecurityCamera.h"
 
 
 AEnemyHandler::AEnemyHandler()
@@ -20,6 +21,7 @@ void AEnemyHandler::BeginPlay()
 
 	// Hitta alla AMeleeEnemy i leveln
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMeleeEnemy::StaticClass(), AllEnemies);
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASecurityCamera::StaticClass(), AllSecurityCamera);
 
 	UE_LOG(LogTemp, Warning, TEXT("EnemyHandler found %d enemies"), AllEnemies.Num());
 }
