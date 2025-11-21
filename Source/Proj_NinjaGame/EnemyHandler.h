@@ -22,8 +22,12 @@ public:
 	bool GetEnemySeesPlayer() const { return bEnemySeesPlayer; }
 	UFUNCTION(BlueprintPure)
 	TArray<AActor*> GetAllEnemies() const { return AllEnemies; }
+	UFUNCTION(BlueprintCallable)
+	void RemoveEnemy(AActor* EnemyRemoved);
+	UFUNCTION(BlueprintCallable)
+	void RemoveCamera(AActor* CameraRemoved);
 	UFUNCTION(BlueprintPure)
-	TArray<AActor*> GetAllCameras() const { return AllSecurityCamera; }
+	TArray<AActor*> GetAllCameras() const { return AllSecurityCameras; }
 
 	TArray<AMeleeEnemy*> GetTwoClosestEnemies(FVector TargetLocation);
 	
@@ -35,7 +39,8 @@ protected:
 	UPROPERTY()
 	TArray<AActor*> AllEnemies;
 	UPROPERTY()
-	TArray<AActor*> AllSecurityCamera;
+	TArray<AActor*> AllSecurityCameras;
 	
 	void UpdateEnemyStates();
 };
+

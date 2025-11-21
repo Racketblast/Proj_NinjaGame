@@ -76,9 +76,14 @@ protected:
 
 	void Die();
 
+	UPROPERTY(BlueprintReadWrite)
+	class AEnemyHandler* EnemyHandler;
 
 public:	
 	virtual void Tick(float DeltaTime) override;
+	
+	FORCEINLINE AEnemyHandler* GetEnemyHandler() const { return EnemyHandler; }
+	FORCEINLINE void SetEnemyHandler(AEnemyHandler* NewEnemyHandler) { EnemyHandler = NewEnemyHandler; }
 
 	UFUNCTION(BlueprintCallable)
 	void DisableCamera();
