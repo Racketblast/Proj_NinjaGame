@@ -33,6 +33,7 @@ void AThrowableWeapon::Throw(AStealthCharacter* Player)
 		
 		ThrownObject->StaticMeshComponent->SetSimulatePhysics(true);
 		ThrownObject->StaticMeshComponent->SetNotifyRigidBodyCollision(true);
+		ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);
 		
 		ThrownObject->StaticMeshComponent->SetPhysicsLinearVelocity(ThrownObject->ThrowVelocity, false);
 	}

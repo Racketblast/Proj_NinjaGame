@@ -4,6 +4,7 @@
 #include "Door.h"
 
 #include "DoorNavLink.h"
+#include "NavigationSystem.h"
 #include "StealthCharacter.h"
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
@@ -135,6 +136,7 @@ void ADoor::Tick(float DeltaSeconds)
 	{
 		StaticMeshComponent->SetRelativeRotation(DoorTargetRotation);
 		bIsMoving = false;
+		//DoorMesh->SetCanEverAffectNavigation(true);
 	}
 }
 
@@ -157,8 +159,8 @@ void ADoor::OpenCloseDoor()
 
 	bOpen = !bOpen;
 	bIsMoving = true;
+	//DoorMesh->SetCanEverAffectNavigation(false);
 }
-
 
 bool ADoor::CanPushCharacter(ACharacter* Character, FVector PushDir, float PushDistance)
 {
@@ -223,6 +225,7 @@ void ADoor::DoorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* O
 	{
 		bIsMoving = false;
 		BlockingCharacter = Character;
+		//DoorMesh->SetCanEverAffectNavigation(true);
 	}
 }
 
@@ -237,5 +240,6 @@ void ADoor::DoorEndOverlap(UPrimitiveComponent* Overlapped, AActor* OtherActor, 
 
 		// Door was moving before the block; start it again
 		bIsMoving = true;
+		//DoorMesh->SetCanEverAffectNavigation(false);
 	}
 }

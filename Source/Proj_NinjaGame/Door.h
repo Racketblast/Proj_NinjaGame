@@ -52,6 +52,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Sound")
 	UAudioComponent* DoorSoundComponent;
 
+	void UpdateNavMeshOnce();
 	bool CanPushCharacter(ACharacter* Character, FVector PushDir, float PushDistance);
 	
 	UPROPERTY(EditDefaultsOnly)

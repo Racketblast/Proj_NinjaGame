@@ -36,12 +36,12 @@ void ASecurityCamera::BeginPlay()
 	PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 
 	
-	if (CameraMesh && IdlePanAnimation)
+	/*if (CameraMesh && IdlePanAnimation)
 	{
 		CameraMesh->PlayAnimation(IdlePanAnimation, true);
 		CameraMesh->SetPlayRate(0.25f); 
 		bIsAnimationPlaying = true;
-	}
+	}*/
 }
 
 
@@ -135,12 +135,12 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 		bPlayerInCone = true;
 		SpotTimer += DeltaTime;
 
-		// Stoppa animation om den spelar
+		/*// Stoppa animation om den spelar
 		if (bIsAnimationPlaying)
 		{
 			CameraMesh->Stop();
 			bIsAnimationPlaying = false;
-		}
+		}*/
 
 		if (SpotTimer >= TimeToSpotPlayer && !bHasSpottedPlayer)
 		{
@@ -159,12 +159,12 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 		bHasSpottedPlayer = false;
 
 		// Starta animation igen om den inte längre spelar
-		if (!bIsAnimationPlaying && IdlePanAnimation)
+		/*if (!bIsAnimationPlaying && IdlePanAnimation)
 		{
 			CameraMesh->PlayAnimation(IdlePanAnimation, true);
 			CameraMesh->SetPlayRate(0.25f); 
 			bIsAnimationPlaying = true;
-		}
+		}*/
 	}
 }
 
@@ -213,11 +213,11 @@ void ASecurityCamera::ActivateCamera()
 
 	bIsCameraDisabled = false;
 
-	// Starta kamerarotationsanimation igen
+	/*// Starta kamerarotationsanimation igen
 	if (CameraMesh)
 	{
 		CameraMesh->Play(true);
-	}
+	}*/
 
 	// Återställ vision
 	bPlayerInCone = false;
@@ -236,11 +236,11 @@ void ASecurityCamera::DisableCamera()
 
 	bIsCameraDisabled = true;
 
-	// Stoppa animation
+	/*// Stoppa animation
 	if (CameraMesh)
 	{
 		CameraMesh->Stop();
-	}
+	}*/
 
 	// Slå av vision 
 	bPlayerInCone = false;
