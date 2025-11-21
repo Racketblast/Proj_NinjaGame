@@ -4,7 +4,7 @@
 #include "Door.h"
 
 #include "DoorNavLink.h"
-#include "NavigationSystem.h"
+#include "NavModifierComponent.h"
 #include "StealthCharacter.h"
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
@@ -24,6 +24,9 @@ ADoor::ADoor()
 	DoorHitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("DoorHitBox"));
 	DoorHitBox->SetupAttachment(DoorMesh);
 
+	//See how this could work.
+	//DoorNavModifierComponent = CreateDefaultSubobject<UNavModifierComponent>(TEXT("DoorMovementComponent"));
+	
 	DoorHitBox->OnComponentBeginOverlap.AddDynamic(this, &ADoor::DoorBeginOverlap);
 	//Does not work for some reason
 	//DoorHitBox->OnComponentEndOverlap.AddDynamic(this, &ADoor::DoorEndOverlap);
@@ -136,7 +139,7 @@ void ADoor::Tick(float DeltaSeconds)
 	{
 		StaticMeshComponent->SetRelativeRotation(DoorTargetRotation);
 		bIsMoving = false;
-		//DoorMesh->SetCanEverAffectNavigation(true);
+		DoorMesh->SetCanEverAffectNavigation(true);
 	}
 }
 
@@ -159,7 +162,7 @@ void ADoor::OpenCloseDoor()
 
 	bOpen = !bOpen;
 	bIsMoving = true;
-	//DoorMesh->SetCanEverAffectNavigation(false);
+	DoorMesh->SetCanEverAffectNavigation(false);
 }
 
 bool ADoor::CanPushCharacter(ACharacter* Character, FVector PushDir, float PushDistance)
@@ -190,7 +193,6 @@ bool ADoor::CanPushCharacter(ACharacter* Character, FVector PushDir, float PushD
 		Params
 	);
 
-	// Only block if the sweep hits a *blocking hit*, not overlap.
 	return !bHit || !Hit.bBlockingHit;
 }
 
@@ -225,7 +227,7 @@ void ADoor::DoorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* O
 	{
 		bIsMoving = false;
 		BlockingCharacter = Character;
-		//DoorMesh->SetCanEverAffectNavigation(true);
+		DoorMesh->SetCanEverAffectNavigation(true);
 	}
 }
 
@@ -238,8 +240,7 @@ void ADoor::DoorEndOverlap(UPrimitiveComponent* Overlapped, AActor* OtherActor, 
 	{
 		BlockingCharacter = nullptr;
 
-		// Door was moving before the block; start it again
 		bIsMoving = true;
-		//DoorMesh->SetCanEverAffectNavigation(false);
+		DoorMesh->SetCanEverAffectNavigation(false);
 	}
 }

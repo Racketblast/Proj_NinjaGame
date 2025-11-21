@@ -64,6 +64,8 @@ protected:
 	TSubclassOf<class ADoorNavLink> DoorNavLinkClass;
 	UPROPERTY()
 	ADoorNavLink* DoorNavLink;
+	UPROPERTY(EditDefaultsOnly)
+	class UNavModifierComponent* DoorNavModifierComponent;
 	
 	UFUNCTION()
 	void DoorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,

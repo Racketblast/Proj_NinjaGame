@@ -64,6 +64,9 @@ protected:
 
 	void Die();
 
+	UPROPERTY(BlueprintReadWrite)
+	class AEnemyHandler* EnemyHandler;
+	
 	UPROPERTY()
 	APawn* PlayerPawn;
 
@@ -175,6 +178,8 @@ public:
 	FORCEINLINE float GetSearchTime() const { return SearchTime; }
 	FORCEINLINE float GetWalkSpeed() const { return WalkSpeed; }
 	FORCEINLINE float GetRunSpeed() const { return RunSpeed; }
+	FORCEINLINE AEnemyHandler* GetEnemyHandler() const { return EnemyHandler; }
+	FORCEINLINE void SetEnemyHandler(AEnemyHandler* NewEnemyHandler) { EnemyHandler = NewEnemyHandler; }
 	float GetHealth() const { return Health; }
 
 	void UpdateLastSeenPlayerLocation();

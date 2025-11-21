@@ -313,6 +313,13 @@ void ASecurityCamera::Die()
 	}
 	
 
+	if (EnemyHandler)
+	{
+		if (EnemyHandler->GetAllEnemies().Contains(this))
+		{
+			EnemyHandler->RemoveEnemy(this);
+		}
+	}
 	//CameraMesh->SetVisibility(false);
 	SetActorEnableCollision(false);
 	

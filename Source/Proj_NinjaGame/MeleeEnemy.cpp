@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
+#include "EnemyHandler.h"
 #include "MeleeAIController.h"
 #include "StealthCharacter.h"
 #include "Components/AudioComponent.h"
@@ -526,7 +527,14 @@ void AMeleeEnemy::Die()
 		MyController->UnPossess();
 		MyController->Destroy();
 	}
-	
+
+	if (EnemyHandler)
+	{
+		if (EnemyHandler->GetAllEnemies().Contains(this))
+		{
+			EnemyHandler->RemoveEnemy(this);
+		}
+	}
 	Destroy(); 
 }
 

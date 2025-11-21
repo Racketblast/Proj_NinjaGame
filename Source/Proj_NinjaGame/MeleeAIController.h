@@ -40,6 +40,7 @@ public:
 	EEnemyState GetCurrentState() const { return CurrentState; }
 
 	EEnemyMission GetCurrentMission() const { return CurrentMission; }
+	void SetCurrentMission(EEnemyMission NewMission) { CurrentMission = NewMission; }
 
 	void StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation);
 	
