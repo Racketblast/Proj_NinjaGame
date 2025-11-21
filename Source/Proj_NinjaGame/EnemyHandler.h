@@ -20,16 +20,22 @@ public:
 	
 	UFUNCTION(BlueprintPure)
 	bool GetEnemySeesPlayer() const { return bEnemySeesPlayer; }
+	UFUNCTION(BlueprintPure)
+	TArray<AActor*> GetAllEnemies() const { return AllEnemies; }
+	UFUNCTION(BlueprintPure)
+	TArray<AActor*> GetAllCameras() const { return AllSecurityCamera; }
 
 	TArray<AMeleeEnemy*> GetTwoClosestEnemies(FVector TargetLocation);
-
+	
 	AMeleeEnemy* GetClosestEnemyToLocation(FVector TargetLocation);
 	
 protected:
+	bool bEnemySeesPlayer = false; 	// True om minst en fiende jagar spelaren
+	
 	UPROPERTY()
 	TArray<AActor*> AllEnemies;
-	
-	bool bEnemySeesPlayer = false; 	// True om minst en fiende jagar spelaren
+	UPROPERTY()
+	TArray<AActor*> AllSecurityCamera;
 	
 	void UpdateEnemyStates();
 };

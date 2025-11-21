@@ -19,7 +19,6 @@ void ADoorNavLink::BeginPlay()
 
 void ADoorNavLink::OpenDoor(AActor* MovingActor, const FVector& Destination)
 {
-	UE_LOG(LogTemp, Warning, TEXT("OpenDoor"));
 	if (!DoorAttached)
 		return;
 	

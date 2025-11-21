@@ -271,6 +271,9 @@ void AStealthCharacter::StopThrow()
 
 void AStealthCharacter::EquipKunai()
 {
+	if (bIsHiding)
+		return;
+	
 	if (!bIsAiming)
 	{
 		if (AmountOfKunai > 0)
@@ -907,9 +910,31 @@ bool AStealthCharacter::CanUnCrouch()
 		nullptr,
 		ActorsToIgnore,
 		Overlaps
-	);
+		);
+	
+	if (!bHit)
+	{
+		return true;
+	}
 
-	return !bHit;
+	//Looks for if we hit a collider that blocks uncrouch
+	for (UPrimitiveComponent* Comp : Overlaps)
+	{
+		if (!Comp)
+			continue;
+
+		if (Comp->GetCollisionEnabled() == ECollisionEnabled::NoCollision)
+			continue;
+
+		ECollisionResponse Response = Comp->GetCollisionResponseToChannel(ECC_Pawn);
+
+		if (Response == ECR_Block)
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 void AStealthCharacter::StartSprint()

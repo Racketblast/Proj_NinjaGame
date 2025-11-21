@@ -3,6 +3,7 @@
 
 #include "ExtractObject.h"
 
+#include "EnemyHandler.h"
 #include "StealthCharacter.h"
 #include "Blueprint/UserWidget.h"
 
@@ -18,7 +19,20 @@ void AExtractObject::Use_Implementation(class AStealthCharacter* Player)
 	
 	if (!Player) return;
 
-	if (!Player->bIsInCombat)
+	if (EnemyHandler)
+	{
+		if (!EnemyHandler->GetEnemySeesPlayer())
+		{
+			if (ExitWidgetClass)
+			{
+				if (UUserWidget* ExitWidget = CreateWidget<UUserWidget>(GetWorld(), ExitWidgetClass))
+				{
+					ExitWidget->AddToViewport();
+				}
+			}
+		}
+	}
+	else
 	{
 		if (ExitWidgetClass)
 		{

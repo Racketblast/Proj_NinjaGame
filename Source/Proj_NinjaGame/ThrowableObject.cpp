@@ -136,7 +136,7 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 	//Sound för fienden
 	float NoiseLevel = 4.0f;
 
-	USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel);
+	USoundUtility::ReportNoise(GetWorld(), Hit.ImpactPoint, NoiseLevel, this);
 }
 
 void AThrowableObject::HandlePickup(AStealthCharacter* Player)

@@ -36,6 +36,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "AI|Vision")
 	float VisionRange = 1500.f;
 
+	UPROPERTY(VisibleAnywhere, Category = "AI|Vision")
+	float OriginalVisionRange;
+
 	UPROPERTY(EditAnywhere, Category = "AI|Vision")
 	float VisionAngle = 45.f;
 
@@ -80,7 +83,10 @@ protected:
 	// Andra syn sättet för fienden / andra konen
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
 	float SuspiciousVisionRange = 3000.f;
-
+	
+	UPROPERTY(VisibleAnywhere, Category = "AI|Vision")
+	float OriginalSuspiciousVisionRange;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
 	float SuspiciousVisionAngle = 90.f;
 
@@ -190,6 +196,8 @@ public:
 	
 	virtual void ApplyDamageTo(AActor* Target);
 
+	void ReduceEnemyRange(bool bShouldReduce);
+	
 	void SetLastSeenPlayerLocation(FVector NewLocation);
 	
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSuspiciousLocationDelegate, FVector, Location);
