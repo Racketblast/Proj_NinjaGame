@@ -4,6 +4,7 @@
 #include "HideSpot.h"
 
 #include "StealthCharacter.h"
+#include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -65,9 +66,9 @@ void AHideSpot::Use_Implementation(AStealthCharacter* Player)
 {
 	if (!Player) return;
 	IPlayerUseInterface::Use_Implementation(Player);
-	
 	if (bOccupied)
 	{
+		//UE_LOG(LogTemp, Warning, TEXT("AHideSpot: exit"));
 		ExitHideSpot();
 		return;
 	}
@@ -93,16 +94,30 @@ void AHideSpot::EnterHideSpot(AStealthCharacter* Player)
 	Player->bIsHiddenFromEnemy = true;
 	
 	Player->bIsHiding = true;
-
+	
+	// sätt rotationsgränser
+	Player->HideMinPitch = MinPitch;
+	Player->HideMaxPitch = MaxPitch;
+	Player->HideMinYaw = MinYaw;
+	Player->HideMaxYaw = MaxYaw;
+	
 	// Stänger av movement
 	Player->GetCharacterMovement()->DisableMovement();
 
-	// Placerar spelaren vis hide spot
+	// Placerar spelaren vid hide spot
 	Player->SetActorLocation(CameraPosition->GetComponentLocation());
 	Player->SetActorRotation(CameraPosition->GetComponentRotation());
 
 	// Placerar kameran
 	Player->SetCustomCameraLocation(CameraPosition);
+	Player->HideBaseRotation = CameraPosition->GetComponentRotation();
+	
+
+	Player->bUseControllerRotationYaw = false;
+	Player->bUseControllerRotationPitch = false;
+	
+	if (AController* C = Player->GetController())
+		C->SetControlRotation(Player->HideBaseRotation);
 }
 
 void AHideSpot::ExitHideSpot()
@@ -131,6 +146,9 @@ void AHideSpot::ExitHideSpot()
 
 	// Återställer kameran
 	Player->ResetToNormalCamera();
+
+	Player->bUseControllerRotationYaw = true;
+	Player->bUseControllerRotationPitch = true;
 
 	bOccupied = false;
 
