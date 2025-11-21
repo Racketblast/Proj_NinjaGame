@@ -202,6 +202,7 @@ public:
 	virtual void ApplyDamageTo(AActor* Target);
 
 	void ReduceEnemyRange(bool bShouldReduce);
+	void ReduceEnemyHearingRange(bool bShouldReduce);
 	
 	void SetLastSeenPlayerLocation(FVector NewLocation);
 	
@@ -215,6 +216,8 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI|Perception")
 	float HearingRange = 800.f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="AI|Perception")
+	float OriginalHearingRange;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI|Perception")
 	float HearingMemoryTime = 5.f;

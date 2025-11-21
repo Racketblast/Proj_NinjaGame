@@ -81,6 +81,8 @@ void AMeleeEnemy::BeginPlay()
 
 	OriginalSuspiciousVisionRange = SuspiciousVisionRange;
 	OriginalVisionRange = VisionRange;
+	
+	OriginalHearingRange = HearingRange;
 }
 
 void AMeleeEnemy::FaceRotation(FRotator NewRotation, float DeltaTime)
@@ -627,6 +629,18 @@ void AMeleeEnemy::ReduceEnemyRange(bool bShouldReduce)
 	{
 		VisionRange = OriginalVisionRange;
 		SuspiciousVisionRange = OriginalSuspiciousVisionRange;
+	}
+}
+
+void AMeleeEnemy::ReduceEnemyHearingRange(bool bShouldReduce)
+{
+	if (bShouldReduce)
+	{
+		HearingRange = OriginalHearingRange / 4;
+	}
+	else
+	{
+		HearingRange = OriginalHearingRange;
 	}
 }
 

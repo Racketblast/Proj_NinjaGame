@@ -89,15 +89,16 @@ void AElectricalCabinet::SendClosetEnemy()
 {
 	if (!EnemyHandler)
 		return;
-	
-	UE_LOG(LogTemp, Warning, TEXT("Sending enemy"));
-	if (AMeleeEnemy* Enemy = EnemyHandler->GetClosestEnemyToLocation(GetActorLocation()))
+
+	if (bPowerOn)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Closest Enemy: %s"), *Enemy->GetActorNameOrLabel());
-		if (AMeleeAIController* AI = Cast<AMeleeAIController>(Enemy->GetController()))
+		if (AMeleeEnemy* Enemy = EnemyHandler->GetClosestEnemyToLocation(GetActorLocation()))
 		{
-			AI->SetCurrentMission(EEnemyMission::Electrical);
-			Enemy->OnSuspiciousLocation.Broadcast(EnemyHitBox->GetComponentLocation()); 
+			if (AMeleeAIController* AI = Cast<AMeleeAIController>(Enemy->GetController()))
+			{
+				AI->SetCurrentMission(EEnemyMission::Electrical);
+				Enemy->OnSuspiciousLocation.Broadcast(EnemyHitBox->GetComponentLocation()); 
+			}
 		}
 	}
 }
