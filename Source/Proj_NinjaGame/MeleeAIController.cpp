@@ -181,6 +181,8 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 				UE_LOG(LogTemp, Warning, TEXT("lost sight of player during chase. Calling StopChasing"));
 				GetWorldTimerManager().SetTimer(LoseSightTimerHandle, this, &AMeleeAIController::StopChasing, ControlledEnemy->GetLoseSightTime(), false);
 			}
+			
+			
 			break;
 		}
 	case EEnemyState::Searching:
@@ -276,6 +278,8 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 		
 		GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, this, &AMeleeAIController::ResetSoundFlag, 0.5f, false);
 	}
+
+	RunChaseFailsafe(DeltaSeconds);
 
 }
 
@@ -399,6 +403,10 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 		UE_LOG(LogTemp, Warning, TEXT("OnMoveCompleted invalid patrol index (%d / %d)."), CurrentPatrolIndex, PatrolPoints.Num());
 		return;
 	}
+
+	/*UE_LOG(LogTemp, Warning, TEXT("Move completed for %s: Code=%d Reason=%d"),
+	*ControlledEnemy->GetName(),
+	(int)Result.Code, (int)Result.Flags);*/
 	
 	if (CurrentState == EEnemyState::Patrolling)
 	{
@@ -830,6 +838,10 @@ void AMeleeAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayer
 	}
 
 	StopMovement();
+	
+	UE_LOG(LogTemp, Warning, TEXT("CHASE: %s is starting chase to %s"),
+	*ControlledEnemy->GetName(),
+	*LastKnownPlayerLocation.ToString());
 
 	MoveToLocation(LastKnownPlayerLocation);
 }
@@ -857,6 +869,50 @@ void AMeleeAIController::OnUnPossess()
 }
 
 
+void AMeleeAIController::RunChaseFailsafe(float DeltaSeconds)
+{
+	if (CurrentState != EEnemyState::Chasing) return;
+		
+	//UE_LOG(LogTemp, Warning, TEXT(" %s is starting to count for CHASE FAILSAFE "), *ControlledEnemy->GetName());
+		
+	FVector CurrentLocation = ControlledEnemy->GetActorLocation();
+	FVector Delta = CurrentLocation - LastChaseLocation;
+	float DistanceMoved = Delta.Size();
+
+	float Speed = ControlledEnemy->GetVelocity().Size();
+	
+	if (!ControlledEnemy->CanSeePlayer())
+	{
+		if (Speed < ChaseFailSpeedThreshold && DistanceMoved < 10.f)
+		{
+			TimeWithoutMovement_Chase += DeltaSeconds;
+		}
+		else
+		{
+			TimeWithoutMovement_Chase = 0.f;
+		}
+	}
+
+	LastChaseLocation = CurrentLocation;
+
+	// Trigga failsafe
+	if (TimeWithoutMovement_Chase >= ChaseFailTime)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CHASE FAILSAFE: Enemy %s stuck, returning to patrol."), *ControlledEnemy->GetName());
+
+		TimeWithoutMovement_Chase = 0.f;
+		bChasingFromExternalOrder = false;
+		ControlledEnemy->bIsChasing = false;
+
+		// Avbryt chase
+		CurrentState = EEnemyState::Patrolling;
+		ControlledEnemy->UpdateStateVFX(CurrentState);
+		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
+
+		StopMovement();
+		MoveToNextPatrolPoint();
+	}
+}
 
 
 

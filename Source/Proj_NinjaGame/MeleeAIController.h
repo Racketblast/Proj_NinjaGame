@@ -86,7 +86,7 @@ protected:
 	float RotationProgress = 0.f;
 
 
-	// Failsafe
+	// Search Failsafe 
 	FVector LastSearchLocation;
 	float TimeWithoutMovement = 0.f;
 
@@ -95,6 +95,14 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category="AI")
 	float SearchFailTime = 5.f; // Hur länge fienden kan vara stilla innan failsafe triggas
+
+	
+	// Chase Failsafe
+	float ChaseFailTime = 5.f;              
+	float ChaseFailSpeedThreshold = 5.f;    
+	float TimeWithoutMovement_Chase = 0.f;
+	FVector LastChaseLocation;
+	void RunChaseFailsafe(float DeltaSeconds);
 	
 	// Time handle Funktioner:
 	void ResetSoundFlag();
