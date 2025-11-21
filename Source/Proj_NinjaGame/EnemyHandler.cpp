@@ -21,8 +21,24 @@ void AEnemyHandler::BeginPlay()
 
 	// Hitta alla AMeleeEnemy i leveln
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMeleeEnemy::StaticClass(), AllEnemies);
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASecurityCamera::StaticClass(), AllSecurityCamera);
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASecurityCamera::StaticClass(), AllSecurityCameras);
 
+	for (auto Enemy : AllEnemies)
+	{
+		if (AMeleeEnemy* MeleeEnemy = Cast<AMeleeEnemy>(Enemy))
+		{
+			MeleeEnemy->SetEnemyHandler(this);
+		}
+	}
+	
+	for (auto Camera : AllSecurityCameras)
+	{
+		if (ASecurityCamera* SecurityCamera = Cast<ASecurityCamera>(Camera))
+		{
+			SecurityCamera->SetEnemyHandler(this);
+		}
+	}
+	
 	UE_LOG(LogTemp, Warning, TEXT("EnemyHandler found %d enemies"), AllEnemies.Num());
 }
 
@@ -31,6 +47,22 @@ void AEnemyHandler::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	UpdateEnemyStates();
+}
+
+void AEnemyHandler::RemoveEnemy(AActor* EnemyRemoved)
+{
+	if (AllEnemies.Contains(EnemyRemoved))
+	{
+		AllEnemies.Remove(EnemyRemoved);
+	}
+}
+
+void AEnemyHandler::RemoveCamera(AActor* CameraRemoved)
+{
+	if (AllSecurityCameras.Contains(CameraRemoved))
+	{
+		AllSecurityCameras.Remove(CameraRemoved);
+	}
 }
 
 void AEnemyHandler::UpdateEnemyStates()

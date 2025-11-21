@@ -37,4 +37,11 @@ protected:
 	TArray<class ALight*> LightsToTurnOff;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Affected")
 	class AEnemyHandler* EnemyHandler;
+	UPROPERTY(EditDefaultsOnly)
+	class UBoxComponent* EnemyHitBox;
+
+	
+	UFUNCTION()
+	void EnemyBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };

@@ -52,6 +52,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Sound")
 	UAudioComponent* DoorSoundComponent;
 
+	void UpdateNavMeshOnce();
 	bool CanPushCharacter(ACharacter* Character, FVector PushDir, float PushDistance);
 	
 	UPROPERTY(EditDefaultsOnly)
@@ -63,6 +64,8 @@ protected:
 	TSubclassOf<class ADoorNavLink> DoorNavLinkClass;
 	UPROPERTY()
 	ADoorNavLink* DoorNavLink;
+	UPROPERTY(EditDefaultsOnly)
+	class UNavModifierComponent* DoorNavModifierComponent;
 	
 	UFUNCTION()
 	void DoorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,

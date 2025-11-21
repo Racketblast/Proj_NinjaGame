@@ -38,19 +38,22 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool bIsCameraDead = false;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool bPlayerInCone = false;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool bHasSpottedPlayer = false;
 
 	float SpotTimer = 0.f;
 	
 	bool bIsAnimationPlaying = true;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FVector LastSpottedPlayerLocation;
 	
 	UPROPERTY(EditAnywhere, Category="Vision")
 	bool bVisionDebug = true;
 	
+	UPROPERTY()
 	APawn* PlayerPawn;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera")
@@ -58,6 +61,7 @@ protected:
 
 	float CurrentHealth = MaxHealth;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool bIsCameraDisabled = false;
 
 	void CheckPlayerVisibility(float DeltaTime);
@@ -72,9 +76,14 @@ protected:
 
 	void Die();
 
+	UPROPERTY(BlueprintReadWrite)
+	class AEnemyHandler* EnemyHandler;
 
 public:	
 	virtual void Tick(float DeltaTime) override;
+	
+	FORCEINLINE AEnemyHandler* GetEnemyHandler() const { return EnemyHandler; }
+	FORCEINLINE void SetEnemyHandler(AEnemyHandler* NewEnemyHandler) { EnemyHandler = NewEnemyHandler; }
 
 	UFUNCTION(BlueprintCallable)
 	void DisableCamera();
