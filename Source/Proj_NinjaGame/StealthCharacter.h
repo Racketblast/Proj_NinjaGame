@@ -26,7 +26,8 @@ enum class EPlayerMovementState : uint8
 	Walk    UMETA(DisplayName = "Walk"),
 	Run     UMETA(DisplayName = "Run"),
 	Crouch  UMETA(DisplayName = "Crouch"),
-	Climb  UMETA(DisplayName = "Climb")
+	Climb  UMETA(DisplayName = "Climb"),
+	Jump    UMETA(DisplayName = "Jump")
 	//Hide UMETA(DisplayName = "Hide")
 };
 
@@ -111,6 +112,11 @@ protected:
 	/** Handles jump end inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
+
+	UPROPERTY(BlueprintReadWrite, Category = "Jump")
+	EPlayerMovementState RememberedJumpState;
+
+	FString MovementStateToString(EPlayerMovementState State);
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void Attack();

@@ -177,6 +177,23 @@ void AStealthCharacter::DoJumpStart()
 	// pass Jump to the character
 	Jump();
 	bHoldingJump = true;
+	
+	if (IsCrouched())
+	{
+		RememberedJumpState = EPlayerMovementState::Crouch;
+	}
+	else
+	{
+		RememberedJumpState = EPlayerMovementState::Walk;
+	}
+	/*UE_LOG(LogTemp, Warning, TEXT("CurrentMovementState: %s"), *MovementStateToString(CurrentMovementState));
+	UE_LOG(LogTemp, Warning, TEXT("RememberedJumpState: %s"), *MovementStateToString(RememberedJumpState));*/
+
+	
+	if (CurrentMovementState != EPlayerMovementState::Climb)
+	{
+		CurrentMovementState = EPlayerMovementState::Jump;
+	}
 }
 
 void AStealthCharacter::DoJumpEnd()
@@ -465,6 +482,8 @@ void AStealthCharacter::Landed(const FHitResult& Hit)
 	if (CurrentMovementState == EPlayerMovementState::Climb)
 	{
 		CurrentMovementState = RememberedClimbState;
+		CurrentMovementState = RememberedJumpState;
+
 		if (CurrentMovementState == EPlayerMovementState::Walk)
 		{
 			if (CanUnCrouch())
@@ -482,6 +501,18 @@ void AStealthCharacter::Landed(const FHitResult& Hit)
 
 		bClimbCapsuleShrunk = false;
 		bHitLedge = false;
+	}
+	
+	else if (CurrentMovementState == EPlayerMovementState::Jump)
+	{
+		if (IsCrouched())
+		{
+			CurrentMovementState = EPlayerMovementState::Crouch;
+		}
+		else
+		{
+			CurrentMovementState = EPlayerMovementState::Walk;
+		}
 	}
 	
 	float NoiseLevel;
@@ -768,6 +799,12 @@ void AStealthCharacter::Climb()
 							{
 								RememberedClimbState = EPlayerMovementState::Walk;
 							}
+							else if (RememberedClimbState == EPlayerMovementState::Jump)
+							{
+								
+								CurrentMovementState = RememberedJumpState;
+								//UE_LOG(LogTemp, Warning, TEXT("Climb CurrentMovementState: %s"), *MovementStateToString(CurrentMovementState));
+							}
 							else
 							{
 								RememberedClimbState = CurrentMovementState;
@@ -1021,7 +1058,19 @@ void AStealthCharacter::StopSprint()
 	}
 }
 
-
+// För debugging 
+FString AStealthCharacter::MovementStateToString(EPlayerMovementState State)
+{
+	switch (State)
+	{
+	case EPlayerMovementState::Walk:   return TEXT("Walk");
+	case EPlayerMovementState::Run:    return TEXT("Run");
+	case EPlayerMovementState::Crouch: return TEXT("Crouch");
+	case EPlayerMovementState::Climb:  return TEXT("Climb");
+	case EPlayerMovementState::Jump:   return TEXT("Jump");
+	default: return TEXT("Unknown");
+	}
+}
 
 // För HideSpot
 void AStealthCharacter::SetCustomCameraLocation(USceneComponent* NewCameraComponent)
