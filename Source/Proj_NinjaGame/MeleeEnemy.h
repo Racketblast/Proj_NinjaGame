@@ -59,6 +59,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 	float Health = 5.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
+	bool bIsDead = false;
 	
 	float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
 
@@ -128,6 +131,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category="Combat")
 	UCapsuleComponent* HeadCapsule;
+
+	UPROPERTY(EditDefaultsOnly)
+	USkeletalMeshComponent* SkeletalMeshComp;
 	
 	UFUNCTION()
 	void OnAssasinationOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
