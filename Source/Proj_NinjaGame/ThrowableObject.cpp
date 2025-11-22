@@ -10,6 +10,8 @@
 #include "ThrowableWeapon.h"
 #include "SoundUtility.h"
 #include "Components/AudioComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/DamageType.h"
 #include "GeometryCollection/GeometryCollectionComponent.h"
@@ -73,16 +75,31 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 {
 	if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(OtherActor))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Throwable OnComponentHit %s"), *GetVelocity().GetSafeNormal().ToString());
-		UGameplayStatics::ApplyPointDamage(
-			Enemy,
-			DealtDamage,
-			GetVelocity().GetSafeNormal(),
-			Hit,
-			UGameplayStatics::GetPlayerController(this,0),
-			this,
-			UDamageType::StaticClass()
-		);
+		if (Hit.Component == Enemy->GetHeadComponent())
+		{
+			UGameplayStatics::ApplyPointDamage(
+				Enemy,
+				Enemy->GetHealth(),
+				GetVelocity().GetSafeNormal(),
+				Hit,
+				UGameplayStatics::GetPlayerController(this,0),
+				this,
+				UDamageType::StaticClass()
+			);
+		}
+		else
+		{
+			UGameplayStatics::ApplyPointDamage(
+				Enemy,
+				DealtDamage,
+				GetVelocity().GetSafeNormal(),
+				Hit,
+				UGameplayStatics::GetPlayerController(this,0),
+				this,
+				UDamageType::StaticClass()
+			);
+		}
+		
 		if (ImpactEnemySound)
 		{
 			
