@@ -42,7 +42,7 @@ AMeleeEnemy::AMeleeEnemy()
 	AssassinationCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("AssassinationCapsule"));
 	AssassinationCapsule->SetupAttachment(GetMesh());
 
-
+	// VFX
 	StateVFXComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("StateVFX"));
 	StateVFXComponent->SetupAttachment(GetMesh());
 	StateVFXComponent->SetRelativeLocation(FVector(0.f, 0.f, 120.f));

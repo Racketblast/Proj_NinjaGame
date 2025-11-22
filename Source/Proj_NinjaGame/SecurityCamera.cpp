@@ -5,6 +5,7 @@
 
 #include "EnemyHandler.h"
 #include "NavigationSystem.h"
+#include "Components/AudioComponent.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -27,7 +28,48 @@ ASecurityCamera::ASecurityCamera()
 	HitCollision->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 	HitCollision->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	HitCollision->SetNotifyRigidBodyCollision(true);
+
+	//Audio
+	StateAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("StateAudioComponent"));
+	StateAudioComponent->SetupAttachment(RootComponent);
 	
+	StateAudioComponent->bAutoActivate = false; 	// styr ljuden i koden, så detta ska vara false
+
+	// VFX
+	StateVFXComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("StateVFX"));
+	StateVFXComponent->SetupAttachment(CameraMesh);
+	StateVFXComponent->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
+
+
+	// Spotlight
+	VisionSpotlight = CreateDefaultSubobject<USpotLightComponent>(TEXT("VisionSpotlight"));
+	VisionSpotlight->SetupAttachment(CameraMesh);
+
+	// Spotlight: vinkel 
+	VisionSpotlight->SetInnerConeAngle(20.f);
+	VisionSpotlight->SetOuterConeAngle(35.f);
+
+	// Spotlight: styrka
+	VisionSpotlight->Intensity = 3000.f;   
+	VisionSpotlight->bUseInverseSquaredFalloff = false;
+
+	// Spotlight: Färge
+	VisionSpotlight->SetLightColor(FLinearColor::White);  
+
+	// Spotlight: Räckvid
+	VisionSpotlight->AttenuationRadius = 2200.f;
+
+	// Spotlight: Position
+	VisionSpotlight->SetRelativeLocation(FVector(0.f, 0.f, 0.f));
+	VisionSpotlight->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
+
+	// Spotlight: inställningar för skuggor
+	VisionSpotlight->SetMobility(EComponentMobility::Movable);
+	VisionSpotlight->CastShadows = true;
+	VisionSpotlight->bCastVolumetricShadow = true;
+	VisionSpotlight->ShadowResolutionScale = 2.0f; 
+	VisionSpotlight->ShadowBias = 0.5f;          
+	VisionSpotlight->ShadowSharpen = 1.0f;
 }
 
 void ASecurityCamera::BeginPlay()
@@ -42,6 +84,10 @@ void ASecurityCamera::BeginPlay()
 		CameraMesh->SetPlayRate(0.25f); 
 		bIsAnimationPlaying = true;
 	}*/
+
+	VisionSpotlight->AttachToComponent(CameraMesh,
+	FAttachmentTransformRules::SnapToTargetIncludingScale,
+	"Vision");
 }
 
 
@@ -135,6 +181,13 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 		bPlayerInCone = true;
 		SpotTimer += DeltaTime;
 
+		// VFX
+		if (StateVFXComponent && AlertVFX)
+		{
+			StateVFXComponent->SetAsset(AlertVFX);
+			StateVFXComponent->Activate(true);
+		}
+
 		/*// Stoppa animation om den spelar
 		if (bIsAnimationPlaying)
 		{
@@ -154,6 +207,21 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 	{
 		bPlayerInCone = false;
 		SpotTimer = 0.f;
+
+		// VFX
+		if (StateVFXComponent)
+		{
+			StateVFXComponent->SetAsset(nullptr);
+			StateVFXComponent->Activate(false);
+		}
+
+		// Audio
+		if (StateAudioComponent && AlertSound)
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("Camera: AlertSound!"));
+			StateAudioComponent->SetSound(AlertSound);
+			StateAudioComponent->Play();
+		}
 
 		// reseta bool
 		bHasSpottedPlayer = false;
@@ -182,6 +250,20 @@ void ASecurityCamera::OnPlayerSpotted()
 	{
 		UE_LOG(LogTemp, Error, TEXT("SecurityCamera: No EnemyHandler found!"));
 		return;
+	}
+
+	// Audio
+	if (StateAudioComponent && DetectedSound)
+	{
+		StateAudioComponent->SetSound(DetectedSound);
+		StateAudioComponent->Play();
+	}
+
+	// VFX
+	if (StateVFXComponent && DetectedVFX)
+	{
+		StateVFXComponent->SetAsset(DetectedVFX);
+		StateVFXComponent->Activate(true);
 	}
 
 	// Hämta två närmaste fiender
@@ -219,10 +301,17 @@ void ASecurityCamera::ActivateCamera()
 		CameraMesh->Play(true);
 	}*/
 
+	
 	// Återställ vision
 	bPlayerInCone = false;
 	bHasSpottedPlayer = false;
 	SpotTimer = 0.f;
+
+	if (VisionSpotlight)
+	{
+		VisionSpotlight->SetVisibility(true);
+		VisionSpotlight->SetIntensity(3000.f); 
+	}
 	
 
 	UE_LOG(LogTemp, Warning, TEXT("SecurityCamera Activated"));
@@ -246,7 +335,24 @@ void ASecurityCamera::DisableCamera()
 	bPlayerInCone = false;
 	bHasSpottedPlayer = false;
 	SpotTimer = 0.f;
-	
+
+	// VFX
+	if (StateVFXComponent)
+	{
+		StateVFXComponent->SetAsset(nullptr);
+		StateVFXComponent->Activate(false);
+	}
+
+	if (VisionSpotlight)
+	{
+		VisionSpotlight->SetVisibility(false);
+		VisionSpotlight->SetIntensity(0.f);
+	}
+
+	if (StateAudioComponent)
+	{
+		StateAudioComponent->Stop();
+	}
 
 	UE_LOG(LogTemp, Warning, TEXT("SecurityCamera Disabled"));
 }
@@ -280,6 +386,7 @@ void ASecurityCamera::Die()
 	
 	DisableCamera();
 	bIsCameraDead = true;
+
 
 	// Hämta EnemyHandler
 	AEnemyHandler* Handler = Cast<AEnemyHandler>(

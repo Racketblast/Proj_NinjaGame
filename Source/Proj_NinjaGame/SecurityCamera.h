@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "NiagaraSystem.h"
+#include "Components/SpotLightComponent.h"
 #include "GameFramework/Actor.h"
 #include "SecurityCamera.generated.h"
 
@@ -78,6 +80,31 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite)
 	class AEnemyHandler* EnemyHandler;
+
+	// VFX
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="VFX")
+	UNiagaraComponent* StateVFXComponent;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
+	UNiagaraSystem* AlertVFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
+	UNiagaraSystem* DetectedVFX;
+
+	// Audio
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Audio")
+	UAudioComponent* StateAudioComponent;
+
+	UPROPERTY(EditAnywhere, Category="Audio")
+	USoundBase* AlertSound;
+
+	UPROPERTY(EditAnywhere, Category="Audio")
+	USoundBase* DetectedSound;
+
+	//Spotlight
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Vision", meta=(AllowPrivateAccess="true"))
+	USpotLightComponent* VisionSpotlight;
+
 
 public:	
 	virtual void Tick(float DeltaTime) override;
