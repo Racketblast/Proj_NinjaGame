@@ -6,6 +6,7 @@
 #include "InteractableObject.h"
 #include "ThrowableObject.generated.h"
 
+class UGeometryCollection;
 class AThrowableWeapon;
 /**
  * 
@@ -35,6 +36,8 @@ public:
 	USoundBase* ImpactGroundSound;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	USoundBase* ImpactEnemySound;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UGeometryCollection* ImpactDebris;
 	
 protected:
 	// Called when the game starts or when spawned
@@ -46,4 +49,7 @@ protected:
 	virtual void ThrowableOnComponentHitFunction(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 	virtual void HandlePickup(class AStealthCharacter* Player);
+
+	virtual void DestroyObject();
 };
+

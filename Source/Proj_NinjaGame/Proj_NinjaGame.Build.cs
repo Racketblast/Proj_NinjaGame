@@ -20,7 +20,8 @@ public class Proj_NinjaGame : ModuleRules
 			"UMG",
 			"Slate",
 			"Niagara",
-			"NavigationSystem"
+			"NavigationSystem",
+			"GeometryCollectionEngine"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
