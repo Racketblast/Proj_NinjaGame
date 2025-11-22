@@ -21,6 +21,18 @@ protected:
 	void EnterHideSpot(AStealthCharacter* Player);
 	void ExitHideSpot();
 
+	UPROPERTY(EditAnywhere, Category = "HideSpot|Camera")
+	float MinPitch = -10.0f;
+
+	UPROPERTY(EditAnywhere, Category = "HideSpot|Camera")
+	float MaxPitch = 20.0f;
+
+	UPROPERTY(EditAnywhere, Category = "HideSpot|Camera")
+	float MinYaw = -30.0f;
+
+	UPROPERTY(EditAnywhere, Category = "HideSpot|Camera")
+	float MaxYaw = 30.0f;
+
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USceneComponent* Root;

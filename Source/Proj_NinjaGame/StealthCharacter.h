@@ -54,10 +54,6 @@ public:
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
-
-	// För HideSpot
-	bool bIsHiddenFromEnemy = false;
-	bool bIsHiding = false;
 protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Player State")
@@ -115,6 +111,8 @@ protected:
 	/** Handles jump end inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
+
+	FString MovementStateToString(EPlayerMovementState State);
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void Attack();
@@ -353,4 +351,22 @@ public:
 private:
 	float MoveInputForward = 0.f;
 	float MoveInputRight = 0.f;
+
+	float PendingYawInput = 0.f;
+	float PendingPitchInput  = 0.f;
+	float HideLookSpeed = 2.0f;
+
+public:
+	// För HideSpot
+	bool bIsHiddenFromEnemy = false;
+	bool bIsHiding = false;
+
+	float HideMinPitch;
+	float HideMaxPitch;
+	float HideMinYaw;
+	float HideMaxYaw;
+
+	FRotator HideBaseRotation;
+
+	void ApplyCameraClamp(float DeltaTime);
 };

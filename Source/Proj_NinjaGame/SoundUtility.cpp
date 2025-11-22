@@ -23,18 +23,14 @@ void USoundUtility::ReportNoise(UWorld* World, FVector Location, float Loudness,
 		//Bas-radius, alltså hur långt ett ljud med loudness = 1 hörs
 		const float BaseHearingDistance = 1000.f;
 
-		/*//Skala med Loudness
-		const float EffectiveHearingDistance = BaseHearingDistance * FMath::Pow(Loudness, 0.7f);
 
-		// Gör så att fienden inte kan höra saker som är utanför dens maximala hearing range. 
-		const float FinalHearingRadius = FMath::Min(EffectiveHearingDistance, Enemy->HearingRange);*/
 
 
 		
 		// Dämpningsfaktor per vägg
-		const float WallDamping = 0.5f; 
+		const float WallDamping = 0.5f;
 
-		// Line trace för att checka väggar
+		// Line trace params
 		FCollisionQueryParams TraceParams;
 		TraceParams.AddIgnoredActor(Enemy);
 		if (ActorThatMadeNoice)
@@ -42,37 +38,51 @@ void USoundUtility::ReportNoise(UWorld* World, FVector Location, float Loudness,
 			TraceParams.AddIgnoredActor(ActorThatMadeNoice);
 		}
 
-		FHitResult Hit;
-		bool bHit = World->LineTraceSingleByChannel(
-			Hit,
-			Location,
-			Enemy->GetActorLocation(),
-			ECC_Visibility,
-			TraceParams
-		);
+		// Lista med objekt som redan räknats som något som blockerade ljudet
+		TSet<TWeakObjectPtr<AActor>> CountedBlockers;
 
-		// Räkna antal väggar
 		int WallsBlocking = 0;
 
-		if (bHit)
+		FVector Start = Location;
+		FVector End = Enemy->GetActorLocation();
+
+		// Up till max 3 träffar
+		for (int i = 0; i < 3; i++)
 		{
-			WallsBlocking = 1;
+			FHitResult Hit;
 
-			// Fortsätt från hit-punkten vidare för att hitta flera väggar. Upp till 3 väggar 
-			FVector TraceStart = Hit.ImpactPoint + (Enemy->GetActorLocation() - Hit.ImpactPoint).GetSafeNormal() * 5.f;
-			FVector TraceEnd = Enemy->GetActorLocation();
+			bool bHit = World->LineTraceSingleByChannel(
+				Hit,
+				Start,
+				End,
+				ECC_Visibility,
+				TraceParams
+			);
 
-			for (int i = 0; i < 2; i++)
+			if (!bHit)
+				break;
+
+			AActor* HitActor = Hit.GetActor();
+			if (!HitActor)
+				break;
+
+			// Om objektet inte redan räknats, så lägger vi till det också
+			if (!CountedBlockers.Contains(HitActor))
 			{
-				if (World->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, TraceParams))
-				{
-					WallsBlocking++;
-					TraceStart = Hit.ImpactPoint + (TraceEnd - Hit.ImpactPoint).GetSafeNormal() * 5.f;
-				}
-				else break;
+				CountedBlockers.Add(HitActor);
+				WallsBlocking++;
 			}
-		}
 
+			// Se till att vi aldrig träffar samma objekt igen
+			TraceParams.AddIgnoredActor(HitActor);
+
+			// Flytta startpunkten lite för att fortsätta längre fram
+			Start = Hit.ImpactPoint + (End - Hit.ImpactPoint).GetSafeNormal() * 5.f;
+		}
+		
+
+		//UE_LOG(LogTemp, Warning, TEXT("WallsBlocking: %i"), WallsBlocking);
+		
 		// Hur mycket volym som finns kvar efter väggar
 		float OccludedLoudness = Loudness * FMath::Pow(WallDamping, WallsBlocking);
 
@@ -82,18 +92,15 @@ void USoundUtility::ReportNoise(UWorld* World, FVector Location, float Loudness,
 		// Gör så att fienden inte kan höra saker som är utanför dens maximala hearing range. 
 		const float FinalHearingRadius = FMath::Min(EffectiveHearingDistance, Enemy->HearingRange);
 		
-
-
 			
 		if (Distance <= FinalHearingRadius)
 		{
 			Enemy->HearSoundAtLocation(Location);
 		}
 
-		//DrawDebugLine(World, Location, Enemy->GetActorLocation(), WallsBlocking == 0 ? FColor::Green : FColor::Red,false, 0.2f, 0, 2.f);
-
 		// Debug visualisering
-		// DrawDebugSphere(World, Location, FinalHearingRadius, 16, FColor::Cyan, false, 0.2f);
+		/*DrawDebugLine(World, Location, Enemy->GetActorLocation(), WallsBlocking == 0 ? FColor::Green : FColor::Red,false, 0.2f, 0, 2.f);
+		DrawDebugSphere(World, Location, FinalHearingRadius, 16, FColor::Cyan, false, 0.2f);*/
 	}
 }
 

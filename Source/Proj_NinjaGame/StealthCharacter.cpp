@@ -107,6 +107,13 @@ void AStealthCharacter::LookInput(const FInputActionValue& Value)
 
 void AStealthCharacter::Look(float Yaw, float Pitch)
 {
+	if (bIsHiding)
+	{
+		PendingYawInput = Yaw;
+		PendingPitchInput = Pitch;
+		return;
+	}
+	
 	if (GetController())
 	{
 		
@@ -170,6 +177,9 @@ void AStealthCharacter::DoJumpStart()
 	// pass Jump to the character
 	Jump();
 	bHoldingJump = true;
+
+	/*UE_LOG(LogTemp, Warning, TEXT("CurrentMovementState: %s"), *MovementStateToString(CurrentMovementState));
+	UE_LOG(LogTemp, Warning, TEXT("RememberedJumpState: %s"), *MovementStateToString(RememberedJumpState));*/
 }
 
 void AStealthCharacter::DoJumpEnd()
@@ -458,6 +468,7 @@ void AStealthCharacter::Landed(const FHitResult& Hit)
 	if (CurrentMovementState == EPlayerMovementState::Climb)
 	{
 		CurrentMovementState = RememberedClimbState;
+
 		if (CurrentMovementState == EPlayerMovementState::Walk)
 		{
 			if (CanUnCrouch())
@@ -515,9 +526,20 @@ void AStealthCharacter::Tick(float DeltaTime)
 		}
 	}
 
-	if(bIsHiding == true)
+	if(bIsHiding)
 	{
 		StopSprint();
+		
+		FRotator Rot = FirstPersonCameraComponent->GetComponentRotation();
+
+		Rot.Yaw   += PendingYawInput * HideLookSpeed;
+		Rot.Pitch += PendingPitchInput * HideLookSpeed;
+
+		PendingYawInput   = 0.f;
+		PendingPitchInput = 0.f;
+		
+		FirstPersonCameraComponent->SetRelativeRotation(Rot);
+		ApplyCameraClamp(DeltaTime);
 	}
 
 	if (FirstPersonCameraComponent)
@@ -1003,7 +1025,18 @@ void AStealthCharacter::StopSprint()
 	}
 }
 
-
+// För debugging 
+FString AStealthCharacter::MovementStateToString(EPlayerMovementState State)
+{
+	switch (State)
+	{
+	case EPlayerMovementState::Walk:   return TEXT("Walk");
+	case EPlayerMovementState::Run:    return TEXT("Run");
+	case EPlayerMovementState::Crouch: return TEXT("Crouch");
+	case EPlayerMovementState::Climb:  return TEXT("Climb");
+	default: return TEXT("Unknown");
+	}
+}
 
 // För HideSpot
 void AStealthCharacter::SetCustomCameraLocation(USceneComponent* NewCameraComponent)
@@ -1016,4 +1049,21 @@ void AStealthCharacter::ResetToNormalCamera()
 {
 	FirstPersonCameraComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ROOT"));
 	FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
+}
+
+void AStealthCharacter::ApplyCameraClamp(float DeltaTime)
+{
+	FRotator CurrentRot = FirstPersonCameraComponent->GetRelativeRotation();
+
+	// Räkna ut yaw offset 
+	float YawOffset = FMath::FindDeltaAngleDegrees(CurrentRot.Yaw, HideBaseRotation.Yaw);
+
+	// Clampa pitch
+	CurrentRot.Pitch = FMath::Clamp(CurrentRot.Pitch, HideMinPitch, HideMaxPitch);
+
+	// Clampa yaw 
+	float ClampedYawOffset = FMath::Clamp(YawOffset, HideMinYaw, HideMaxYaw);
+	CurrentRot.Yaw = HideBaseRotation.Yaw + ClampedYawOffset;
+
+	FirstPersonCameraComponent->SetRelativeRotation(CurrentRot);
 }

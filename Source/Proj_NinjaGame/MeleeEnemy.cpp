@@ -286,8 +286,17 @@ void AMeleeEnemy::CheckPlayerVisibility()
 	if (!PlayerPawn) return;
 	AStealthCharacter* StealthPlayer = Cast<AStealthCharacter>(PlayerPawn);
 	if (!StealthPlayer) return;
-	
-	if (StealthPlayer->bIsHiddenFromEnemy) return;
+
+	// För hide object
+	if (StealthPlayer->bIsHiddenFromEnemy)
+	{
+		bCanSeePlayer = false;
+		bPlayerInSuspiciousZone = false;
+		bPlayerInAlertCone = false;
+		return;
+	}
+
+	//UE_LOG(LogTemp, Warning, TEXT("CheckPlayerVisibility"));
 
 	FVector EnemyEyes = GetActorLocation() + FVector(0, 0, 60);
 	FVector PlayerLoc = PlayerPawn->GetActorLocation();
