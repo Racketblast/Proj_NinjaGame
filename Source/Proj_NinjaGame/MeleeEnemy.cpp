@@ -42,6 +42,9 @@ AMeleeEnemy::AMeleeEnemy()
 	AssassinationCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("AssassinationCapsule"));
 	AssassinationCapsule->SetupAttachment(GetMesh());
 
+	HeadCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("HeadCapsule"));
+	HeadCapsule->SetupAttachment(GetMesh());
+
 
 	StateVFXComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("StateVFX"));
 	StateVFXComponent->SetupAttachment(GetMesh());
