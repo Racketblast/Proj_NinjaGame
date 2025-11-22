@@ -34,11 +34,13 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class AEnemyHandler* EnemyHandler;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	class UBoxComponent* EnemyHitBox;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UAudioComponent* WaterAudio;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	USoundBase* SprinklerSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<class ANiagaraActor*> Sprinklers;

@@ -29,6 +29,7 @@ void ASprinklerSwitch::Use_Implementation(class AStealthCharacter* Player)
 void ASprinklerSwitch::BeginPlay()
 {
 	Super::BeginPlay();
+	WaterAudio->SetSound(SprinklerSound);
 }
 
 void ASprinklerSwitch::TurnPowerOnOff()
@@ -44,6 +45,9 @@ void ASprinklerSwitch::TurnPowerOnOff()
 
 void ASprinklerSwitch::TurnWaterOnOff(bool bOnOff)
 {
+	if (Sprinklers.Num() <= 0)
+		return;
+	
 	if (bOnOff)
 	{
 		WaterAudio->Play();

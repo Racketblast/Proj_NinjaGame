@@ -37,7 +37,7 @@ protected:
 	TArray<class ALight*> LightsToTurnOff;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Affected")
 	class AEnemyHandler* EnemyHandler;
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	class UBoxComponent* EnemyHitBox;
 
 	
