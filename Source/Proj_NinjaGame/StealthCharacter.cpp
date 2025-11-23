@@ -107,13 +107,6 @@ void AStealthCharacter::LookInput(const FInputActionValue& Value)
 
 void AStealthCharacter::Look(float Yaw, float Pitch)
 {
-	if (bIsHiding)
-	{
-		PendingYawInput = Yaw;
-		PendingPitchInput = Pitch;
-		return;
-	}
-	
 	if (GetController())
 	{
 		
@@ -458,6 +451,18 @@ void AStealthCharacter::BeginPlay()
 		CurrentMeleeWeapon = GetWorld()->SpawnActor<AMeleeWeapon>(MeleeWeapon);
 		CurrentMeleeWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_R"));
 	}
+
+	// För HideSpot
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		if (APlayerCameraManager* Cam = PC->PlayerCameraManager)
+		{
+			HideMinPitch = Cam->ViewPitchMin;
+			HideMaxPitch = Cam->ViewPitchMax;
+			HideMinYaw = Cam->ViewYawMin;
+			HideMaxYaw = Cam->ViewYawMax;
+		}
+	}
 }
 
 void AStealthCharacter::Landed(const FHitResult& Hit)
@@ -529,17 +534,6 @@ void AStealthCharacter::Tick(float DeltaTime)
 	if(bIsHiding)
 	{
 		StopSprint();
-		
-		FRotator Rot = FirstPersonCameraComponent->GetComponentRotation();
-
-		Rot.Yaw   += PendingYawInput * HideLookSpeed;
-		Rot.Pitch += PendingPitchInput * HideLookSpeed;
-
-		PendingYawInput   = 0.f;
-		PendingPitchInput = 0.f;
-		
-		FirstPersonCameraComponent->SetRelativeRotation(Rot);
-		ApplyCameraClamp(DeltaTime);
 	}
 
 	if (FirstPersonCameraComponent)
@@ -1051,19 +1045,3 @@ void AStealthCharacter::ResetToNormalCamera()
 	FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
 }
 
-void AStealthCharacter::ApplyCameraClamp(float DeltaTime)
-{
-	FRotator CurrentRot = FirstPersonCameraComponent->GetRelativeRotation();
-
-	// Räkna ut yaw offset 
-	float YawOffset = FMath::FindDeltaAngleDegrees(CurrentRot.Yaw, HideBaseRotation.Yaw);
-
-	// Clampa pitch
-	CurrentRot.Pitch = FMath::Clamp(CurrentRot.Pitch, HideMinPitch, HideMaxPitch);
-
-	// Clampa yaw 
-	float ClampedYawOffset = FMath::Clamp(YawOffset, HideMinYaw, HideMaxYaw);
-	CurrentRot.Yaw = HideBaseRotation.Yaw + ClampedYawOffset;
-
-	FirstPersonCameraComponent->SetRelativeRotation(CurrentRot);
-}
