@@ -182,10 +182,9 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 		SpotTimer += DeltaTime;
 
 		// VFX
-		if (StateVFXComponent && AlertVFX)
+		if (!bHasSpottedPlayer)
 		{
-			StateVFXComponent->SetAsset(AlertVFX);
-			StateVFXComponent->Activate(true);
+			SetVFXState(ECameraVFXState::Alert);
 		}
 
 		/*// Stoppa animation om den spelar
@@ -209,11 +208,7 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 		SpotTimer = 0.f;
 
 		// VFX
-		if (StateVFXComponent)
-		{
-			StateVFXComponent->SetAsset(nullptr);
-			StateVFXComponent->Activate(false);
-		}
+		SetVFXState(ECameraVFXState::None);
 
 		// Audio
 		if (StateAudioComponent && AlertSound)
@@ -260,11 +255,7 @@ void ASecurityCamera::OnPlayerSpotted()
 	}
 
 	// VFX
-	if (StateVFXComponent && DetectedVFX)
-	{
-		StateVFXComponent->SetAsset(DetectedVFX);
-		StateVFXComponent->Activate(true);
-	}
+	SetVFXState(ECameraVFXState::Detected);
 
 	// Hämta två närmaste fiender
 	TArray<AMeleeEnemy*> Squad = Handler->GetTwoClosestEnemies(LastSpottedPlayerLocation);
@@ -427,7 +418,42 @@ void ASecurityCamera::Die()
 			EnemyHandler->RemoveEnemy(this);
 		}
 	}
-	//CameraMesh->SetVisibility(false);
+
 	SetActorEnableCollision(false);
-	
+}
+
+
+void ASecurityCamera::SetVFXState(ECameraVFXState NewState)
+{
+	if (CurrentVFXState == NewState)
+		return; 
+
+	CurrentVFXState = NewState;
+
+	if (!StateVFXComponent)
+		return;
+
+	switch (CurrentVFXState)
+	{
+	case ECameraVFXState::None:
+		StateVFXComponent->SetAsset(nullptr);
+		StateVFXComponent->Deactivate();
+		break;
+
+	case ECameraVFXState::Alert:
+		if (AlertVFX)
+		{
+			StateVFXComponent->SetAsset(AlertVFX);
+			StateVFXComponent->Activate(true);
+		}
+		break;
+
+	case ECameraVFXState::Detected:
+		if (DetectedVFX)
+		{
+			StateVFXComponent->SetAsset(DetectedVFX);
+			StateVFXComponent->Activate(true);
+		}
+		break;
+	}
 }

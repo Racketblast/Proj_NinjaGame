@@ -8,6 +8,14 @@
 #include "GameFramework/Actor.h"
 #include "SecurityCamera.generated.h"
 
+UENUM(BlueprintType)
+enum class ECameraVFXState : uint8
+{
+	None,
+	Alert,     
+	Detected   
+};
+
 UCLASS()
 class PROJ_NINJAGAME_API ASecurityCamera : public AActor
 {
@@ -18,6 +26,10 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+	ECameraVFXState CurrentVFXState = ECameraVFXState::None;
+
+	void SetVFXState(ECameraVFXState NewState);
 	
 	UPROPERTY(VisibleAnywhere)
 	USkeletalMeshComponent* CameraMesh;
