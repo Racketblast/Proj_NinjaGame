@@ -557,6 +557,7 @@ void AMeleeEnemy::Die()
 	}
 	
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	HeadCapsule()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	SkeletalMeshComp->SetCollisionObjectType(ECC_PhysicsBody);
 	SkeletalMeshComp->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
