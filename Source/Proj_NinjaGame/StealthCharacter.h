@@ -360,13 +360,11 @@ public:
 	// För HideSpot
 	bool bIsHiddenFromEnemy = false;
 	bool bIsHiding = false;
-
+	
 	float HideMinPitch;
 	float HideMaxPitch;
 	float HideMinYaw;
 	float HideMaxYaw;
 
 	FRotator HideBaseRotation;
-
-	void ApplyCameraClamp(float DeltaTime);
 };

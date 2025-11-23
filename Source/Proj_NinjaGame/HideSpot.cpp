@@ -89,17 +89,10 @@ void AHideSpot::EnterHideSpot(AStealthCharacter* Player)
 	// Gömmer spelaren
 	Player->FirstPersonMesh->SetHiddenInGame(true);
 	Player->FirstPersonMesh->SetVisibility(false, true);
-
-
+	
 	Player->bIsHiddenFromEnemy = true;
 	
 	Player->bIsHiding = true;
-	
-	// sätt rotationsgränser
-	Player->HideMinPitch = MinPitch;
-	Player->HideMaxPitch = MaxPitch;
-	Player->HideMinYaw = MinYaw;
-	Player->HideMaxYaw = MaxYaw;
 	
 	// Stänger av movement
 	Player->GetCharacterMovement()->DisableMovement();
@@ -111,13 +104,19 @@ void AHideSpot::EnterHideSpot(AStealthCharacter* Player)
 	// Placerar kameran
 	Player->SetCustomCameraLocation(CameraPosition);
 	Player->HideBaseRotation = CameraPosition->GetComponentRotation();
-	
 
-	Player->bUseControllerRotationYaw = false;
-	Player->bUseControllerRotationPitch = false;
-	
-	if (AController* C = Player->GetController())
-		C->SetControlRotation(Player->HideBaseRotation);
+	// sätt rotationsgränser
+	APlayerController* PC = Cast<APlayerController>(Player->GetController());
+	if (PC)
+	{
+		APlayerCameraManager* CamManager = PC->PlayerCameraManager;
+
+		CamManager->ViewPitchMin = MinPitch;
+		CamManager->ViewPitchMax = MaxPitch;
+
+		CamManager->ViewYawMin = Player->HideBaseRotation.Yaw + MinYaw;
+		CamManager->ViewYawMax = Player->HideBaseRotation.Yaw + MaxYaw;
+	}
 }
 
 void AHideSpot::ExitHideSpot()
@@ -137,8 +136,7 @@ void AHideSpot::ExitHideSpot()
 	// Visar spelaren igen
 	Player->FirstPersonMesh->SetHiddenInGame(false);
 	Player->FirstPersonMesh->SetVisibility(true, true);
-
-
+	
 	// Gör att fienden kan se spelaren igen. 
 	Player->bIsHiddenFromEnemy = false;
 	
@@ -151,6 +149,26 @@ void AHideSpot::ExitHideSpot()
 	Player->bUseControllerRotationPitch = true;
 
 	bOccupied = false;
+
+	APlayerController* PC = Cast<APlayerController>(Player->GetController());
+	if (PC)
+	{
+		APlayerCameraManager* CamManager = PC->PlayerCameraManager;
+
+		// Återställ rotationsgränser 
+		CamManager->ViewPitchMin = Player->HideMinPitch;
+		CamManager->ViewPitchMax = Player->HideMaxPitch;
+
+		CamManager->ViewYawMin = Player->HideMinYaw;
+		CamManager->ViewYawMax = Player->HideMaxYaw;
+
+		//Se till att kontrollerns rotation är valid  
+		FRotator ResetRot = PC->GetControlRotation();
+		ResetRot.Yaw = Player->GetActorRotation().Yaw;
+		PC->SetControlRotation(ResetRot);
+		
+		Player->FirstPersonCameraComponent->SetRelativeRotation(FRotator::ZeroRotator);
+	}
 
 	// Teleporterar spelaren till exitpoint
 	if (ExitPoint)
