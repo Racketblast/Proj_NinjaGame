@@ -38,11 +38,16 @@ AMeleeEnemy::AMeleeEnemy()
 	MeleeHitBox->SetCollisionResponseToAllChannels(ECR_Ignore);
 	MeleeHitBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
+	SkeletalMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComp"));
+	SkeletalMeshComp->SetupAttachment(GetCapsuleComponent());
 	
 	AssassinationCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("AssassinationCapsule"));
 	AssassinationCapsule->SetupAttachment(GetMesh());
 
-	// VFX
+	HeadCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("HeadCapsule"));
+	HeadCapsule->SetupAttachment(GetMesh());
+
+
 	StateVFXComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("StateVFX"));
 	StateVFXComponent->SetupAttachment(GetMesh());
 	StateVFXComponent->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
@@ -487,11 +492,23 @@ float AMeleeEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEven
 {
 	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
-	Health -= ActualDamage;
-
-	if (Health <= 0.0f)
+	if (!bIsDead)
 	{
-		Die();
+		Health -= ActualDamage;
+
+		if (Health <= 0.0f)
+		{
+			Die();
+			
+			if (DamageCauser)
+			{
+				FVector Direction = GetCapsuleComponent()->GetComponentLocation() - DamageCauser->GetActorLocation();
+				Direction.Normalize();
+				UE_LOG(LogTemp, Warning, TEXT("Direction: %s"), *Direction.ToString());
+				float ImpulseStrength = 1000.0f;
+				SkeletalMeshComp->AddImpulse(Direction * ImpulseStrength, NAME_None, true);
+			}
+		}
 	}
 
 	return ActualDamage;
@@ -500,6 +517,7 @@ float AMeleeEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEven
 void AMeleeEnemy::Die()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Enemy died!"));
+	bIsDead = true;
 	
 	SetActorTickEnabled(false);
 
@@ -529,7 +547,7 @@ void AMeleeEnemy::Die()
 		MyController->UnPossess();
 		MyController->Destroy();
 	}
-
+	
 	if (EnemyHandler)
 	{
 		if (EnemyHandler->GetAllEnemies().Contains(this))
@@ -537,7 +555,15 @@ void AMeleeEnemy::Die()
 			EnemyHandler->RemoveEnemy(this);
 		}
 	}
-	Destroy(); 
+	
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	SkeletalMeshComp->SetCollisionObjectType(ECC_PhysicsBody);
+	SkeletalMeshComp->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+
+	SkeletalMeshComp->SetSimulatePhysics(true);
+	
+	SetLifeSpan(15.0f);
 }
 
 void AMeleeEnemy::StartAttack()

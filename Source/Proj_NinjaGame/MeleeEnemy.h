@@ -59,6 +59,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 	float Health = 5.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
+	bool bIsDead = false;
 	
 	float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
 
@@ -123,8 +126,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category="Combat")
 	UBoxComponent* MeleeHitBox;
 
-	UPROPERTY(VisibleAnywhere, Category="Combat")
+	UPROPERTY(EditDefaultsOnly, Category="Combat")
 	UCapsuleComponent* AssassinationCapsule;
+
+	UPROPERTY(EditDefaultsOnly, Category="Combat")
+	UCapsuleComponent* HeadCapsule;
+
+	UPROPERTY(EditDefaultsOnly)
+	USkeletalMeshComponent* SkeletalMeshComp;
 	
 	UFUNCTION()
 	void OnAssasinationOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -178,6 +187,7 @@ public:
 	FORCEINLINE float GetSearchTime() const { return SearchTime; }
 	FORCEINLINE float GetWalkSpeed() const { return WalkSpeed; }
 	FORCEINLINE float GetRunSpeed() const { return RunSpeed; }
+	FORCEINLINE UCapsuleComponent* GetHeadComponent() const { return HeadCapsule; }
 	FORCEINLINE AEnemyHandler* GetEnemyHandler() const { return EnemyHandler; }
 	FORCEINLINE void SetEnemyHandler(AEnemyHandler* NewEnemyHandler) { EnemyHandler = NewEnemyHandler; }
 	float GetHealth() const { return Health; }
