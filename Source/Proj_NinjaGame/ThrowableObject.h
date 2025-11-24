@@ -37,6 +37,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	USoundBase* ImpactEnemySound;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	USoundAttenuation* ThrowableAttenuation;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UGeometryCollection* ImpactDebris;
 	
 protected:

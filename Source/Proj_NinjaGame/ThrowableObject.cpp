@@ -103,11 +103,11 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 		if (ImpactEnemySound)
 		{
 			
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactEnemySound, GetActorLocation());
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactEnemySound, GetActorLocation(), 1, 1,0, ThrowableAttenuation);
 		}
 		else if (ImpactGroundSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation());
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation(), 1, 1,0, ThrowableAttenuation);
 		}
 		
 		DestroyObject();
@@ -129,11 +129,11 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 		if (ImpactEnemySound)
 		{
 			
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactEnemySound, GetActorLocation());
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactEnemySound, GetActorLocation(), 1, 1,0, ThrowableAttenuation);
 		}
 		else if (ImpactGroundSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation());
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation(), 1, 1,0, ThrowableAttenuation);
 		}
 		
 		DestroyObject();
@@ -142,7 +142,7 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 	{
 		if (ImpactGroundSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation());
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation(), 1, 1,0, ThrowableAttenuation);
 		}
 		if (bBreaksOnImpact)
 		{
@@ -186,6 +186,8 @@ void AThrowableObject::BeginPlay()
 
 void AThrowableObject::DestroyObject()
 {
+	Destroy();
+	/*
 	if (ImpactDebris)
 	{
 		UGeometryCollectionComponent* GeoComp =
@@ -211,5 +213,5 @@ void AThrowableObject::DestroyObject()
 	else
 	{
 		Destroy();
-	}
+	}*/
 }
