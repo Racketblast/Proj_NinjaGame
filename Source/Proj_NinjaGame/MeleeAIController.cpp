@@ -68,6 +68,14 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 	{
 	case EEnemyState::Patrolling:
 		{
+			// Mission 
+			if (bHasMission && CurrentMission != EEnemyMission::Patrol)
+			{
+				HandleSuspiciousLocation(CurrentMissionLocation);
+				break;
+			}
+
+			//Vanlig patrullering
 			if (bIsRotatingTowardPatrolPoint)
 			{
 				RotationProgress += DeltaSeconds / 2.0f; 
@@ -407,6 +415,16 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 	/*UE_LOG(LogTemp, Warning, TEXT("Move completed for %s: Code=%d Reason=%d"),
 	*ControlledEnemy->GetName(),
 	(int)Result.Code, (int)Result.Flags);*/
+
+	// För mission
+	if (Result.IsSuccess())
+	{
+		if (CurrentMission != EEnemyMission::Patrol && FVector::Dist(ControlledEnemy->GetActorLocation(), CurrentMissionLocation) < 450.f)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("OnMoveCompleted: CompleteMission"));
+			CompleteMission();
+		}
+	}
 	
 	if (CurrentState == EEnemyState::Patrolling)
 	{
@@ -765,11 +783,15 @@ void AMeleeAIController::HandleSuspiciousLocation(FVector Location)
 
     //UE_LOG(LogTemp, Warning, TEXT("HandleSuspiciousLocation: Trying to move to: %s"), *Location.ToString());
 
-    if (CurrentState == EEnemyState::Chasing || CurrentState == EEnemyState::Searching)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("HandleSuspiciousLocation ignored because currently chasing/searching."));
-        return;
-    }
+	bool bIsMission = bHasMission && (Location == CurrentMissionLocation);
+	if (!bIsMission)
+	{
+		if (CurrentState == EEnemyState::Chasing || CurrentState == EEnemyState::Searching)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("HandleSuspiciousLocation ignored because currently chasing/searching."));
+			return;
+		}
+	}
 
     UE_LOG(LogTemp, Warning, TEXT("Enemy is investigating suspicious location!"));
     CurrentState = EEnemyState::Searching;
@@ -914,6 +936,41 @@ void AMeleeAIController::RunChaseFailsafe(float DeltaSeconds)
 	}
 }
 
+//Mission system
+void AMeleeAIController::AssignMission(EEnemyMission NewMission, FVector MissionLocation)
+{
+	if (bHasMission || NewMission == EEnemyMission::Patrol)
+		return;
+
+	CurrentMission = NewMission;
+	CurrentMissionLocation = MissionLocation;
+	bHasMission = true;
+
+	// Om fienden just nu patrullerar så starta direkt. 
+	if (CurrentState == EEnemyState::Patrolling)
+	{
+		/*MoveToLocation(CurrentMissionLocation, 50.f);
+		CurrentState = EEnemyState::Searching; 
+		ControlledEnemy->UpdateStateVFX(CurrentState);*/
+		HandleSuspiciousLocation(MissionLocation);
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Assigned mission %d with target %s"), (int)NewMission, *MissionLocation.ToString());
+}
+
+
+void AMeleeAIController::CompleteMission()
+{
+	UE_LOG(LogTemp, Error, TEXT("Mission complete!"));
+
+	bHasMission = false;
+	CurrentMission = EEnemyMission::Patrol;
+
+	// Gå tillbaka till patrull
+	CurrentState = EEnemyState::Patrolling;
+	ControlledEnemy->UpdateStateVFX(CurrentState);
+	MoveToNextPatrolPoint();
+}
 
 
 // Time handle funktioner:

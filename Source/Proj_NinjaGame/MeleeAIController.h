@@ -43,6 +43,9 @@ public:
 	void SetCurrentMission(EEnemyMission NewMission) { CurrentMission = NewMission; }
 
 	void StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation);
+
+	//För missions
+	void AssignMission(EEnemyMission NewMission, FVector MissionLocation);
 	
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
@@ -55,8 +58,7 @@ protected:
 
 	int32 CurrentPatrolIndex = 0;
 	EEnemyState CurrentState = EEnemyState::Patrolling;
-	EEnemyMission CurrentMission = EEnemyMission::Patrol;
-
+	
 	FTimerHandle LoseSightTimerHandle;
 	
 	void MoveToNextPatrolPoint();
@@ -70,6 +72,18 @@ protected:
 
 	UFUNCTION()
 	void HandleSuspiciousLocation(FVector Location);
+
+	// Nya mission system
+	UPROPERTY(BlueprintReadOnly)
+	EEnemyMission CurrentMission = EEnemyMission::Patrol;
+
+	UPROPERTY(BlueprintReadOnly)
+	FVector CurrentMissionLocation;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bHasMission = false;
+	
+	void CompleteMission();
 
 	// Rotation
 	void StartSmoothRotationTowards(const FVector& TargetLocation, float RotationSpeed);

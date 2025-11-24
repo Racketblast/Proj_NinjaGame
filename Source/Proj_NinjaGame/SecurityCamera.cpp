@@ -407,7 +407,8 @@ void ASecurityCamera::Die()
 
 	if (AI)
 	{
-		ClosestEnemy->OnSuspiciousLocation.Broadcast(GetActorLocation());
+		//ClosestEnemy->OnSuspiciousLocation.Broadcast(GetActorLocation());
+		AI->AssignMission(EEnemyMission::Camera, GetActorLocation());
 	}
 	
 
