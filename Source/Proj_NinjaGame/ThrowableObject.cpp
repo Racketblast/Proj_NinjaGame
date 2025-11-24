@@ -14,6 +14,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/DamageType.h"
+#include "GeometryCollection/GeometryCollectionComponent.h"
 
 AThrowableObject::AThrowableObject()
 {
@@ -102,14 +103,14 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 		if (ImpactEnemySound)
 		{
 			
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactEnemySound, GetActorLocation());
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactEnemySound, GetActorLocation(), 1, 1,0, ThrowableAttenuation);
 		}
 		else if (ImpactGroundSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation());
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation(), 1, 1,0, ThrowableAttenuation);
 		}
 		
-		Destroy();
+		DestroyObject();
 	}
 	else if (ASecurityCamera* Camera = Cast<ASecurityCamera>(OtherActor)) 
 	{
@@ -128,24 +129,24 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 		if (ImpactEnemySound)
 		{
 			
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactEnemySound, GetActorLocation());
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactEnemySound, GetActorLocation(), 1, 1,0, ThrowableAttenuation);
 		}
 		else if (ImpactGroundSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation());
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation(), 1, 1,0, ThrowableAttenuation);
 		}
-
-		Destroy();
+		
+		DestroyObject();
 	}
 	else
 	{
 		if (ImpactGroundSound)
 		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation());
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation(), 1, 1,0, ThrowableAttenuation);
 		}
 		if (bBreaksOnImpact)
 		{
-			Destroy();
+			DestroyObject();
 		}
 	}
 
@@ -181,4 +182,36 @@ void AThrowableObject::HandlePickup(AStealthCharacter* Player)
 void AThrowableObject::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void AThrowableObject::DestroyObject()
+{
+	Destroy();
+	/*
+	if (ImpactDebris)
+	{
+		UGeometryCollectionComponent* GeoComp =
+		NewObject<UGeometryCollectionComponent>(this, UGeometryCollectionComponent::StaticClass());
+
+		if (GeoComp)
+		{			
+			GeoComp->SetupAttachment(GetRootComponent());
+
+			GeoComp->RegisterComponent();
+
+			GeoComp->SetRelativeTransform(FTransform::Identity);
+
+			GeoComp->SetRestCollection(ImpactDebris);
+
+			GeoComp->SetCollisionProfileName(TEXT("Player"));
+		}
+		else
+		{
+			Destroy();
+		}
+	}
+	else
+	{
+		Destroy();
+	}*/
 }

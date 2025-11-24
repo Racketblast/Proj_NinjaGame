@@ -30,6 +30,9 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	UStaticMeshComponent* StaticMeshComponent;
 protected:
+	
+	UPROPERTY(EditDefaultsOnly)
+	USceneComponent* SceneRootComponent;
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 

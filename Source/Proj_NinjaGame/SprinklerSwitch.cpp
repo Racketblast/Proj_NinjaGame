@@ -53,7 +53,10 @@ void ASprinklerSwitch::TurnWaterOnOff(bool bOnOff)
 		WaterAudio->Play();
 		for (auto Sprinkler : Sprinklers)
 		{
-			Sprinkler->GetNiagaraComponent()->Activate();
+			if (Sprinkler)
+			{
+				Sprinkler->GetNiagaraComponent()->Activate();
+			}
 		}
 	}
 	else
@@ -61,7 +64,10 @@ void ASprinklerSwitch::TurnWaterOnOff(bool bOnOff)
 		WaterAudio->Stop();
 		for (auto Sprinkler : Sprinklers)
 		{
-			Sprinkler->GetNiagaraComponent()->Deactivate();
+			if (Sprinkler)
+			{
+				Sprinkler->GetNiagaraComponent()->Deactivate();
+			}
 		}
 	}
 }

@@ -43,9 +43,15 @@ void AElectricalCabinet::TurnPowerOnOff()
 
 void AElectricalCabinet::TurnLightsOnOff(bool bOnOff)
 {
+	if (LightsToTurnOff.Num() <= 0)
+		return;
+	
 	for (auto Light : LightsToTurnOff)
 	{
-		Light->GetLightComponent()->SetVisibility(!bOnOff);
+		if (Light)
+		{
+			Light->GetLightComponent()->SetVisibility(!bOnOff);
+		}
 	}
 }
 
