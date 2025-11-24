@@ -179,6 +179,18 @@ protected:
 
 	void PlayStateSound(USoundBase* NewSound);
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Audio")
+	UAudioComponent* VoiceAudioComponent;
+
+	UPROPERTY(EditAnywhere, Category="Audio")
+	USoundBase* HurtSoundOne;
+
+	UPROPERTY(EditAnywhere, Category="Audio")
+	USoundBase* HurtSoundTwo;
+
+	UFUNCTION()
+	void PlayHurtSound();
+
 public:
 	FORCEINLINE const TArray<AActor*>& GetPatrolPoints() const { return PatrolPoints; }
 	FORCEINLINE bool CanSeePlayer() const { return bCanSeePlayer; }
