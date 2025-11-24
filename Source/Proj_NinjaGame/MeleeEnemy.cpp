@@ -26,8 +26,11 @@ AMeleeEnemy::AMeleeEnemy()
 	FootstepsAudioComponent->SetupAttachment(RootComponent);
 	StateAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("StateAudioComponent"));
 	StateAudioComponent->SetupAttachment(RootComponent);
+	VoiceAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("VoiceAudioComponent"));
+	VoiceAudioComponent->SetupAttachment(RootComponent);
 	
 	StateAudioComponent->bAutoActivate = false; 	// styr ljuden i koden, så detta ska vara false
+	VoiceAudioComponent->bAutoActivate = false;
 
 	// Skapa hitbox och fäst vid mesh 
 	MeleeHitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("MeleeHitBox"));
@@ -496,6 +499,8 @@ float AMeleeEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEven
 	{
 		Health -= ActualDamage;
 
+		PlayHurtSound();
+
 		if (Health <= 0.0f)
 		{
 			Die();
@@ -878,6 +883,32 @@ void AMeleeEnemy::PlayStateSound(USoundBase* NewSound)
 		StateAudioComponent->Play();
 }
 
+void AMeleeEnemy::PlayHurtSound()
+{
+	if (!VoiceAudioComponent) return;
+
+	// Välj slumpmässigt mellan de två ljuden
+	USoundBase* SoundToPlay = nullptr;
+
+	if (HurtSoundOne && HurtSoundTwo)
+	{
+		SoundToPlay = (FMath::RandBool()) ? HurtSoundOne : HurtSoundTwo;
+	}
+	else if (HurtSoundOne)
+	{
+		SoundToPlay = HurtSoundOne;
+	}
+	else if (HurtSoundTwo)
+	{
+		SoundToPlay = HurtSoundTwo;
+	}
+
+	if (SoundToPlay)
+	{
+		VoiceAudioComponent->SetSound(SoundToPlay);
+		VoiceAudioComponent->Play();
+	}
+}
 
 
 void AMeleeEnemy::SetLastSeenPlayerLocation(FVector NewLocation)
