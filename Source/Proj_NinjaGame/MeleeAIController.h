@@ -85,6 +85,8 @@ protected:
 	
 	void CompleteMission();
 
+	FAIRequestID MissionRequestID;
+
 	// Rotation
 	void StartSmoothRotationTowards(const FVector& TargetLocation, float RotationSpeed);
 	bool bIsRotating = false;

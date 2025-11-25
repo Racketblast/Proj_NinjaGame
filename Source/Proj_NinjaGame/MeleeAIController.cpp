@@ -417,14 +417,25 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 	(int)Result.Code, (int)Result.Flags);*/
 
 	// För mission
-	if (Result.IsSuccess())
+	if (Result.IsSuccess() && bHasMission)
 	{
+		//UE_LOG(LogTemp, Warning, TEXT("OnMoveCompleted: RequestID = %d | MissionRequestID = %d | Success = %s"), RequestID.GetID(), MissionRequestID.GetID(), Result.IsSuccess() ? TEXT("TRUE") : TEXT("FALSE"));
 		if (CurrentMission != EEnemyMission::Patrol && FVector::Dist(ControlledEnemy->GetActorLocation(), CurrentMissionLocation) < 450.f)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("OnMoveCompleted: CompleteMission"));
 			CompleteMission();
 		}
+		/*if (RequestID == MissionRequestID)
+		{
+			UE_LOG(LogTemp, Error, TEXT("OnMoveCompleted: CompleteMission"));
+			CompleteMission();
+		}*/
 	}
+	/*if (Result.IsSuccess() && RequestID == MissionRequestID)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnMoveCompleted: CompleteMission"));
+		CompleteMission();
+	}*/
 	
 	if (CurrentState == EEnemyState::Patrolling)
 	{
@@ -813,10 +824,13 @@ void AMeleeAIController::HandleSuspiciousLocation(FVector Location)
         // Debug draw
         DrawDebugSphere(GetWorld(), Location, 30.f, 12, FColor::Yellow, false, 8.f);
         DrawDebugSphere(GetWorld(), NavLoc.Location, 30.f, 12, FColor::Green, false, 8.f);
-        DrawDebugLine(GetWorld(), ControlledEnemy->GetActorLocation(), NavLoc.Location, FColor::Blue, false, 8.f, 0, 2.f);
+        //DrawDebugLine(GetWorld(), ControlledEnemy->GetActorLocation(), NavLoc.Location, FColor::Blue, false, 8.f, 0, 2.f);
     	
-        const float AcceptanceRadius = 50.f;
+        const float AcceptanceRadius = 150.f;
+    	//MissionRequestID = MoveToLocation(NavLoc.Location, AcceptanceRadius, true, true, true, false, nullptr);
         MoveToLocation(NavLoc.Location, AcceptanceRadius, true, true, true, false, nullptr);
+    	
+    	//UE_LOG(LogTemp, Warning, TEXT("MISSION: Assigned MissionRequestID = %d | MissionLocation = %s"), MissionRequestID.GetID(), *CurrentMissionLocation.ToString());
     }
     else
     {
