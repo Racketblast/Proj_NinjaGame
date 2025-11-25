@@ -4,27 +4,28 @@
 #include "BreakableObject.h"
 
 #include "SoundUtility.h"
+#include "ThrowableObject.h"
 #include "Components/AudioComponent.h"
 #include "GeometryCollection/GeometryCollectionComponent.h"
 #include "Misc/MapErrors.h"
 
 ABreakableObject::ABreakableObject()
 {
+	RootSceneComp = CreateDefaultSubobject<USceneComponent>(TEXT("RootSceneComp"));
+	RootComponent = RootSceneComp;
+	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
+	StaticMeshComponent->SetupAttachment(RootSceneComp);
+	StaticMeshComponent->SetNotifyRigidBodyCollision(true);
 	AudioComp = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComp"));
-	AudioComp->SetupAttachment(RootComponent);
+	AudioComp->SetupAttachment(StaticMeshComponent);
 	AudioComp->bAutoActivate = false;
-	
-	GetGeometryCollectionComponent()->SetPerLevelCollisionProfileNames({"None","Debris","Debris"});
-	GetGeometryCollectionComponent()->SetNotifyBreaks(true);
-	
-	GetGeometryCollectionComponent()->OnChaosBreakEvent.AddDynamic(this, &ABreakableObject::OnChaosBreak);
+
+	StaticMeshComponent->OnComponentHit.AddDynamic(this, &ABreakableObject::OnCompHit);
 }
 
 void ABreakableObject::BeginPlay()
 {
 	Super::BeginPlay();
-
-	GetGeometryCollectionComponent()->PutRigidBodyToSleep();
 }
 
 void ABreakableObject::OnChaosBreak(const FChaosBreakEvent& BreakEvent)
@@ -45,4 +46,46 @@ void ABreakableObject::OnChaosBreak(const FChaosBreakEvent& BreakEvent)
 void ABreakableObject::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+
+void ABreakableObject::OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
+{
+	if (AThrowableObject* ThrowableObject = Cast<AThrowableObject>(OtherActor))
+	{
+		BreakObject();
+	}
+}
+
+void ABreakableObject::BreakObject()
+{
+	FVector StaticScale = StaticMeshComponent->GetComponentScale();
+	StaticMeshComponent->DestroyComponent(true);
+	
+	SetLifeSpan(10);
+
+	if (ImpactDebris)
+	{
+		UGeometryCollectionComponent* GeoComp =
+			NewObject<UGeometryCollectionComponent>(this, UGeometryCollectionComponent::StaticClass());
+		if (GeoComp)
+		{
+			GeoComp->SetMaterial(0, BreakMaterial);
+			GeoComp->SetCanEverAffectNavigation(false);
+			GeoComp->SetWorldScale3D(StaticScale);
+			GeoComp->SetupAttachment(GetRootComponent());
+
+			GeoComp->RegisterComponent();
+
+			GeoComp->SetRelativeTransform(FTransform::Identity);
+
+			GeoComp->SetRestCollection(ImpactDebris);
+
+			GeoComp->SetCollisionProfileName(TEXT("Player"));
+			GeoComp->SetPerLevelCollisionProfileNames({"None","Debris","Debris"});
+			GeoComp->SetNotifyBreaks(true);
+	
+			GeoComp->OnChaosBreakEvent.AddDynamic(this, &ABreakableObject::OnChaosBreak);
+		}
+	}
 }
