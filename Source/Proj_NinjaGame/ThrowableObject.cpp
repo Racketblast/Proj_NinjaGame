@@ -231,6 +231,7 @@ void AThrowableObject::DestroyObject()
 
 			GeoComp->SetCollisionProfileName(TEXT("Player"));
 			GeoComp->SetPerLevelCollisionProfileNames({"None","Debris","Debris"});
+			GeoComp->SetCanEverAffectNavigation(false);
 		}
 	}
 }
