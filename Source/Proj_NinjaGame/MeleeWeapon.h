@@ -41,6 +41,12 @@ protected:
 	float MeleeBoxWidth = 32.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	float MeleeBoxHeight = 32.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	TSubclassOf<class AFieldSystemActor> FieldActorClass;
+	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
+	AFieldSystemActor* FieldActor;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase* HitSound;
 public:
@@ -54,16 +60,14 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void AssassinateEnemy();
 
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void SpawnFieldActor();
+	
 	AMeleeEnemy* GetEnemyClosestToCrosshair(const TArray<AActor*>& HitActors);
 	
 	FTimerHandle MeleeAttackingTimer;
 	UPROPERTY()
 	TArray<AActor*> ActorsHit;
-	
-	UPROPERTY(EditDefaultsOnly)
-	USceneComponent* StartOfBladePos;
-	UPROPERTY(EditDefaultsOnly)
-	USceneComponent* EndOfBladePos;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

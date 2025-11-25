@@ -21,6 +21,7 @@ public class Proj_NinjaGame : ModuleRules
 			"Slate",
 			"Niagara",
 			"NavigationSystem",
+			"FieldSystemEngine",
 			"GeometryCollectionEngine"
 		});
 
