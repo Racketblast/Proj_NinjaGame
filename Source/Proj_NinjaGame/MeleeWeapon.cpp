@@ -7,6 +7,7 @@
 #include "SoundUtility.h"
 #include "StealthCharacter.h"
 #include "Components/BoxComponent.h"
+#include "Field/FieldSystemActor.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -18,15 +19,12 @@ AMeleeWeapon::AMeleeWeapon()
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	RootComponent = StaticMeshComponent;
 	StaticMeshComponent->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
-	
-	StartOfBladePos = CreateDefaultSubobject<USceneComponent>(TEXT("StartOfBladePos"));
-	EndOfBladePos = CreateDefaultSubobject<USceneComponent>(TEXT("EndOfBladePos"));
-	StartOfBladePos->SetupAttachment(StaticMeshComponent);
-	EndOfBladePos->SetupAttachment(StaticMeshComponent);
 }
 
 void AMeleeWeapon::StartMeleeAttack()
 {
+	SpawnFieldActor();
+	
 	TArray<AActor*> HitActors;
 	Player->PlayerMeleeBox->GetOverlappingActors(HitActors);
 	for (auto HitActor : HitActors)
@@ -115,6 +113,20 @@ void AMeleeWeapon::AssassinateEnemy()
 			USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel);
 		}
 	}
+}
+
+void AMeleeWeapon::SpawnFieldActor()
+{
+	if (!FieldActorClass)
+		return;
+	
+	FieldActor = GetWorld()->SpawnActor<AFieldSystemActor>(
+		FieldActorClass,
+		Player->PlayerMeleeBox->GetComponentLocation(),
+		Player->PlayerMeleeBox->GetComponentRotation()
+	);
+
+	FieldActor->AttachToComponent(Player->PlayerMeleeBox, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 }
 
 AMeleeEnemy* AMeleeWeapon::GetEnemyClosestToCrosshair(const TArray<AActor*>& HitActors)

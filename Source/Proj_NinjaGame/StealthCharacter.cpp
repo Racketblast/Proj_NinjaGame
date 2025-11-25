@@ -225,12 +225,10 @@ void AStealthCharacter::Attack()
 						PlayerMeleeBox->GetOverlappingActors(HitActors);
 						for (auto HitActor : HitActors)
 						{
-							UE_LOG(LogTemp, Warning, TEXT("Looking at Actors"));
 							if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(HitActor))
 							{
 								if (Enemy->bCanBeAssassinated && !Enemy->CanSeePlayer())
 								{
-									UE_LOG(LogTemp, Warning, TEXT("Assassinating enemy"));
 									CurrentMeleeWeapon->bAssassinatingEnemy = true;
 									CurrentMeleeWeapon->bCanMeleeAttack = false;
 									break;
@@ -240,7 +238,6 @@ void AStealthCharacter::Attack()
 					
 						if (!CurrentMeleeWeapon->bAssassinatingEnemy)
 						{
-							UE_LOG(LogTemp, Warning, TEXT("Slashing at enemy"));
 							CurrentMeleeWeapon->bMeleeAttacking = true;
 							CurrentMeleeWeapon->bCanMeleeAttack = false;
 						}
@@ -289,7 +286,6 @@ void AStealthCharacter::EquipKunai()
 					{
 						HeldThrowableWeapon->Destroy();
 					}
-					UE_LOG(LogTemp, Display, TEXT("Unequipping Kunai"));
 					HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(LastHeldWeapon);
 					HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
 				}
@@ -302,7 +298,6 @@ void AStealthCharacter::EquipKunai()
 					{
 						HeldThrowableWeapon->Destroy();
 					}
-					UE_LOG(LogTemp, Display, TEXT("Equipping Kunai"));
 					HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(KunaiWeapon);
 					HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
 				}
@@ -433,7 +428,6 @@ void AStealthCharacter::BeginPlay()
 	
 	if (KunaiWeapon && AmountOfKunai > 1)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Equip Kunai"));
 		if (HeldThrowableWeapon)
 		{
 			HeldThrowableWeapon->Destroy();

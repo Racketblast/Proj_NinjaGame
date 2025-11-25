@@ -537,6 +537,13 @@ void AMeleeEnemy::Die()
 		MeleeHitBox = nullptr;
 	}
 
+	if (AssassinationCapsule)
+	{
+		AssassinationCapsule->OnComponentBeginOverlap.Clear(); 
+		AssassinationCapsule->DestroyComponent();
+		AssassinationCapsule = nullptr;
+	}
+
 	// ta bort VFX-komponent
 	if (StateVFXComponent)
 	{

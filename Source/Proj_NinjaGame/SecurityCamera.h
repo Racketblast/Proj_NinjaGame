@@ -123,6 +123,7 @@ public:
 	
 	FORCEINLINE AEnemyHandler* GetEnemyHandler() const { return EnemyHandler; }
 	FORCEINLINE void SetEnemyHandler(AEnemyHandler* NewEnemyHandler) { EnemyHandler = NewEnemyHandler; }
+	FORCEINLINE bool GetIsDead() const { return bIsCameraDead; }
 
 	UFUNCTION(BlueprintCallable)
 	void DisableCamera();
