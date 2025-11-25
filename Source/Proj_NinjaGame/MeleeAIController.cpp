@@ -1028,8 +1028,34 @@ void AMeleeAIController::AssignMission(EEnemyMission NewMission, FVector Mission
 	if (bHasMission || NewMission == EEnemyMission::Patrol)
 		return;
 
+
+	
+	UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
+	FNavLocation ProjectedLoc;
+
+	FVector Extent(50.f, 50.f, 500.f); 
+
+	// Project to navmesh
+	if (NavSys && NavSys->ProjectPointToNavigation(MissionLocation, ProjectedLoc, Extent))
+	{
+		CurrentMissionLocation = ProjectedLoc.Location;
+
+		UE_LOG(LogTemp, Warning, TEXT("AssignMission: Projected mission point from %s to %s"),
+			*MissionLocation.ToString(),
+			*CurrentMissionLocation.ToString());
+
+		// Debug
+		DrawDebugSphere(GetWorld(), MissionLocation, 25.f, 12, FColor::Yellow, false, 8.f);
+		DrawDebugSphere(GetWorld(), CurrentMissionLocation, 25.f, 12, FColor::Green, false, 8.f);
+	}
+	else
+	{
+		// Om projicering misslyckas så behåll originalet
+		CurrentMissionLocation = MissionLocation;
+		UE_LOG(LogTemp, Error, TEXT("AssignMission: FAILED to project mission point: %s"), *MissionLocation.ToString());
+	}
+	
 	CurrentMission = NewMission;
-	CurrentMissionLocation = MissionLocation;
 	bHasMission = true;
 
 	// Om fienden just nu patrullerar så starta direkt. 
