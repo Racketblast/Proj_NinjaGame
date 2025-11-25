@@ -87,6 +87,9 @@ protected:
 	UInputAction* KunaiAction;
 	
 	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* DropAction;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* AimAction;
 	
 	/** Called from Input Actions for movement input */
@@ -124,6 +127,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void EquipKunai();
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void DropWeapon();
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void AimStart();

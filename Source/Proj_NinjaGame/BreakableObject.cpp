@@ -61,6 +61,8 @@ void ABreakableObject::BreakObject()
 {
 	FVector StaticScale = StaticMeshComponent->GetComponentScale();
 	StaticMeshComponent->DestroyComponent(true);
+	
+	SetLifeSpan(10);
 
 	if (ImpactDebris)
 	{

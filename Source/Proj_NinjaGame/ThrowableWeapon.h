@@ -20,6 +20,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void Throw(AStealthCharacter* Player);
 	
+	UFUNCTION(BlueprintCallable)
+	virtual void Drop(AStealthCharacter* Player);
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float ThrowDamage = 5.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

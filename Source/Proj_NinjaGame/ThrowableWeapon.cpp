@@ -54,6 +54,32 @@ void AThrowableWeapon::Throw(AStealthCharacter* Player)
 	Destroy();
 }
 
+void AThrowableWeapon::Drop(AStealthCharacter* Player)
+{
+	FVector SpawnLocation = Player->FirstPersonCameraComponent->GetComponentLocation() + Player->FirstPersonCameraComponent->GetForwardVector() * Player->CameraForwardMultiplier;
+	FRotator SpawnRotation =  Player->FirstPersonCameraComponent->GetComponentRotation();
+	if (ThrownWeaponObject)
+	{
+		AThrowableObject* ThrownObject = GetWorld()->SpawnActor<AThrowableObject>(ThrownWeaponObject, SpawnLocation, SpawnRotation);
+		
+		ThrownObject->StaticMeshComponent->SetSimulatePhysics(true);
+		ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);
+		ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	}
+	if (Player->AmountOfKunai > 0)
+	{
+		Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(Player->KunaiWeapon);
+		Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
+	}
+	else
+	{
+		Player->HeldThrowableWeapon = nullptr;
+	}
+	
+	Player->LastHeldWeapon = nullptr;
+	Destroy();
+}
+
 // Called when the game starts or when spawned
 void AThrowableWeapon::BeginPlay()
 {

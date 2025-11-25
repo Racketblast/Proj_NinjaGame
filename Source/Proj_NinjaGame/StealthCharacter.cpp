@@ -306,6 +306,25 @@ void AStealthCharacter::EquipKunai()
 	}
 }
 
+void AStealthCharacter::DropWeapon()
+{
+	if (bIsHiding)
+		return;
+	if (!bIsAiming)
+	{
+		if (HeldThrowableWeapon)
+		{
+			if (AKunaiWeapon* Kunai = Cast<AKunaiWeapon>(HeldThrowableWeapon))
+			{
+			}
+			else
+			{
+				HeldThrowableWeapon->Drop(this);
+			}
+		}
+	}
+}
+
 void AStealthCharacter::AimStart()
 {
 	if(bIsHiding == true) return;
@@ -346,13 +365,13 @@ void AStealthCharacter::UpdateProjectilePrediction()
     FCollisionQueryParams Params;
     Params.AddIgnoredActor(this);
 	
-	
     FPredictProjectilePathParams PredictParams;
     PredictParams.StartLocation = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector() * CameraForwardMultiplier;
     PredictParams.LaunchVelocity = FirstPersonCameraComponent->GetForwardVector() * HeldThrowableWeapon->ThrowSpeed;
 	if (UStaticMesh* WeaponMesh = HeldThrowableWeapon->StaticMeshComponent->GetStaticMesh())
 	{
 		FVector BoundsExtent = WeaponMesh->GetBounds().BoxExtent;
+		//Should be better if I could predict the mesh instead of just the absolutes
 		PredictParams.ProjectileRadius = BoundsExtent.GetAbsMax();
 	}
 	else
@@ -566,6 +585,7 @@ void AStealthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 		//Use
 		EnhancedInputComponent->BindAction(UseAction, ETriggerEvent::Triggered, this, &AStealthCharacter::Use);
+		EnhancedInputComponent->BindAction(DropAction, ETriggerEvent::Triggered, this, &AStealthCharacter::DropWeapon);
 
 		//Attacks
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AStealthCharacter::Attack);
