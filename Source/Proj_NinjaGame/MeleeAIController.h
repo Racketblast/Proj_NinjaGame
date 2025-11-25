@@ -46,6 +46,8 @@ public:
 
 	//För missions
 	void AssignMission(EEnemyMission NewMission, FVector MissionLocation);
+
+	bool GetHasMission() const { return bHasMission; }
 	
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
@@ -82,10 +84,13 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bHasMission = false;
+
+	bool bIsDoingMissionMoveTo = false;
 	
 	void CompleteMission();
 
-	FAIRequestID MissionRequestID;
+	UFUNCTION()
+	void StartMissionMoveTo(FVector Location);
 
 	// Rotation
 	void StartSmoothRotationTowards(const FVector& TargetLocation, float RotationSpeed);

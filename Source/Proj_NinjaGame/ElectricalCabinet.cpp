@@ -103,7 +103,8 @@ void AElectricalCabinet::SendClosetEnemy()
 			if (AMeleeAIController* AI = Cast<AMeleeAIController>(Enemy->GetController()))
 			{
 				AI->SetCurrentMission(EEnemyMission::Electrical);
-				Enemy->OnSuspiciousLocation.Broadcast(EnemyHitBox->GetComponentLocation()); 
+				//Enemy->OnSuspiciousLocation.Broadcast(EnemyHitBox->GetComponentLocation()); 
+				AI->AssignMission(EEnemyMission::Electrical, GetActorLocation());
 			}
 		}
 	}
@@ -120,11 +121,11 @@ void AElectricalCabinet::EnemyBeginOverlap(UPrimitiveComponent* OverlappedCompon
 			{
 				if (bPowerOn)
 				{
-					AI->SetCurrentMission(EEnemyMission::Patrol);
+					//AI->SetCurrentMission(EEnemyMission::Patrol);
 				}
 				else
 				{
-					AI->SetCurrentMission(EEnemyMission::Patrol);
+					//AI->SetCurrentMission(EEnemyMission::Patrol);
 					TurnPowerOnOff();
 				}
 			}

@@ -803,6 +803,21 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 {
 	if (!StateVFXComponent) return;
 
+	if (NewState == EEnemyState::Patrolling)
+	{
+		if (AMeleeAIController* AI = Cast<AMeleeAIController>(GetController()))
+		{
+			StateVFXComponent->SetAsset(nullptr);
+			StateVFXComponent->Deactivate();
+			
+			if (AI->GetCurrentMission() != EEnemyMission::Patrol)
+			{
+				StateVFXComponent->SetAsset(SearchVFX);
+				StateVFXComponent->Activate(true);
+			}
+		}
+	}
+
 	// Om state inte ändrats, gör inget, borde fungera både för VFX och ljud
 	if (PreviousState == NewState)
 	{
@@ -837,7 +852,7 @@ void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 			break;
 		}
 	}
-
+	
 	// Uppdatera VFX 
 	switch (NewState)
 	{
