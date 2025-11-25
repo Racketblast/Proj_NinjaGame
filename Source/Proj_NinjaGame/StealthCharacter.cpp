@@ -366,7 +366,17 @@ void AStealthCharacter::UpdateProjectilePrediction()
     Params.AddIgnoredActor(this);
 	
     FPredictProjectilePathParams PredictParams;
-    PredictParams.StartLocation = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector() * CameraForwardMultiplier;
+	FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+	FVector End = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector() * CameraForwardMultiplier;
+
+	FHitResult HitResult;
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+	{
+		End = HitResult.Location;
+	}
+	
+    PredictParams.StartLocation = End;
     PredictParams.LaunchVelocity = FirstPersonCameraComponent->GetForwardVector() * HeldThrowableWeapon->ThrowSpeed;
 	if (UStaticMesh* WeaponMesh = HeldThrowableWeapon->StaticMeshComponent->GetStaticMesh())
 	{

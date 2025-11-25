@@ -18,12 +18,26 @@ AThrowableWeapon::AThrowableWeapon()
 	RootComponent = SceneRootComponent;
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	StaticMeshComponent->SetupAttachment(SceneRootComponent);
+	StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	StaticMeshComponent->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
 }
 
 void AThrowableWeapon::Throw(AStealthCharacter* Player)
 {
-	FVector SpawnLocation = Player->FirstPersonCameraComponent->GetComponentLocation() + Player->FirstPersonCameraComponent->GetForwardVector() * Player->CameraForwardMultiplier;
+	FVector Start = Player->FirstPersonCameraComponent->GetComponentLocation();
+	FVector End = Player->FirstPersonCameraComponent->GetComponentLocation() + Player->FirstPersonCameraComponent->GetForwardVector() * Player->CameraForwardMultiplier;
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Player);
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+	{
+		End = Player->FirstPersonCameraComponent->GetComponentLocation();
+	}
+	
+	FVector SpawnLocation = End;
 	FRotator SpawnRotation =  Player->FirstPersonCameraComponent->GetComponentRotation();
 	if (ThrownWeaponObject)
 	{
