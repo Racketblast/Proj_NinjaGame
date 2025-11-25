@@ -91,6 +91,12 @@ protected:
 
 	UFUNCTION()
 	void StartMissionMoveTo(FVector Location);
+	
+	// Mission failsafe
+	float MissionFailSafeTime = 5.f; 
+	float MissionFailSafeSpeedThreshold = 5.f; 
+	float MissionTimeWithoutMovement = 0.f;
+	FVector MissionLastLocation;
 
 	// Rotation
 	void StartSmoothRotationTowards(const FVector& TargetLocation, float RotationSpeed);
