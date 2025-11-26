@@ -24,6 +24,24 @@ AThrowableWeapon::AThrowableWeapon()
 
 void AThrowableWeapon::Throw(AStealthCharacter* Player)
 {
+	ThrowObjectLogic(Player);
+
+	if (Player->AmountOfOwnWeapon > 0)
+	{
+		Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(Player->CurrentOwnThrowWeapon);
+		Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
+	}
+	else
+	{
+		Player->HeldThrowableWeapon = nullptr;
+		Player->AimEnd();
+	}
+	Player->LastHeldWeapon = nullptr;
+	Destroy();
+}
+
+void AThrowableWeapon::ThrowObjectLogic(AStealthCharacter* Player)
+{
 	FVector Start = Player->FirstPersonCameraComponent->GetComponentLocation();
 	FVector End = Player->FirstPersonCameraComponent->GetComponentLocation() + Player->FirstPersonCameraComponent->GetForwardVector() * Player->CameraForwardMultiplier;
 
@@ -50,22 +68,10 @@ void AThrowableWeapon::Throw(AStealthCharacter* Player)
 		ThrownObject->StaticMeshComponent->SetSimulatePhysics(true);
 		ThrownObject->StaticMeshComponent->SetNotifyRigidBodyCollision(true);
 		ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);
+		ThrownObject->StaticMeshComponent->SetUseCCD(true);
 		
 		ThrownObject->StaticMeshComponent->SetPhysicsLinearVelocity(ThrownObject->ThrowVelocity, false);
 	}
-
-	if (Player->AmountOfKunai > 0)
-	{
-		Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(Player->KunaiWeapon);
-		Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
-	}
-	else
-	{
-		Player->HeldThrowableWeapon = nullptr;
-		Player->AimEnd();
-	}
-	Player->LastHeldWeapon = nullptr;
-	Destroy();
 }
 
 void AThrowableWeapon::Drop(AStealthCharacter* Player)
@@ -80,9 +86,9 @@ void AThrowableWeapon::Drop(AStealthCharacter* Player)
 		ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);
 		ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 	}
-	if (Player->AmountOfKunai > 0)
+	if (Player->AmountOfOwnWeapon > 0)
 	{
-		Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(Player->KunaiWeapon);
+		Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(Player->CurrentOwnThrowWeapon);
 		Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
 	}
 	else

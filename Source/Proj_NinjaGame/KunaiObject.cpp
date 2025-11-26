@@ -3,7 +3,9 @@
 
 #include "KunaiObject.h"
 
+#include "KunaiWeapon.h"
 #include "StealthCharacter.h"
+#include "StealthGameInstance.h"
 #include "ThrowableWeapon.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -13,22 +15,34 @@ AKunaiObject::AKunaiObject()
 
 void AKunaiObject::HandlePickup(class AStealthCharacter* Player)
 {
-	if (InteractSound)
+	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), InteractSound, GetActorLocation());
-	}
-	
-	
-	if (ThrowableWeapon)
-	{
-		if (Player->HeldThrowableWeapon)
+		if (GI->CurrentOwnThrowWeaponEnum != EPlayerOwnThrowWeapon::Kunai)
 		{
-			Player->HeldThrowableWeapon->Destroy();
+			GI->SwitchOwnWeapon(EPlayerOwnThrowWeapon::Kunai);
+			Destroy();
+			return;
 		}
-		Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
-		Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
 	}
+	if (Player->AmountOfOwnWeapon < Player->MaxAmountOfOwnWeapon)
+	{
+		if (InteractSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), InteractSound, GetActorLocation());
+		}
+	
+	
+		if (ThrowableWeapon)
+		{
+			if (Player->HeldThrowableWeapon)
+			{
+				Player->HeldThrowableWeapon->Destroy();
+			}
+			Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
+			Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
+		}
 
-	Player->AmountOfKunai++;
-	Destroy();
+		Player->AmountOfOwnWeapon++;
+		Destroy();
+	}
 }

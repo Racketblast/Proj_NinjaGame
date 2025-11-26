@@ -4,7 +4,12 @@
 #include "SmokeBombObject.h"
 
 #include "NiagaraComponent.h"
+#include "SmokeBombWeapon.h"
+#include "StealthCharacter.h"
+#include "StealthGameInstance.h"
+#include "ThrowableWeapon.h"
 #include "Components/SphereComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 ASmokeBombObject::ASmokeBombObject()
 {
@@ -24,4 +29,38 @@ void ASmokeBombObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 	SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	SmokeComponent->SetAsset(SmokeEffect);
 	SmokeComponent->Activate();
+}
+
+void ASmokeBombObject::HandlePickup(class AStealthCharacter* Player)
+{
+	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+	{
+		if (GI->CurrentOwnThrowWeaponEnum != EPlayerOwnThrowWeapon::SmokeBomb)
+		{
+			GI->SwitchOwnWeapon(EPlayerOwnThrowWeapon::SmokeBomb);
+			Destroy();
+			return;
+		}
+	}
+	
+	if (Player->AmountOfOwnWeapon < Player->MaxAmountOfOwnWeapon)
+	{
+		if (InteractSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), InteractSound, GetActorLocation());
+		}
+	
+		if (ThrowableWeapon)
+		{
+			if (Player->HeldThrowableWeapon)
+			{
+				Player->HeldThrowableWeapon->Destroy();
+			}
+			Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
+			Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
+		}
+
+		Player->AmountOfOwnWeapon++;
+		Destroy();
+	}
 }

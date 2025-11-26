@@ -2,7 +2,10 @@
 
 
 #include "StealthGameInstance.h"
+
+#include "StealthCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "ThrowableWeapon.h"
 #include "StealthSaveGame.h"
 
 void UStealthGameInstance::Init()
@@ -53,6 +56,8 @@ void UStealthGameInstance::FillSaveGame()
 	//Saves Gameplay data
 	Save->SavedCurrentGameFlag = CurrentGameFlag;
 	Save->SavedMissionsCleared = MissionsCleared;
+	Save->SavedOwnThrowWeapon = CurrentOwnThrowWeapon;
+	Save->SavedOwnThrowWeaponEnum = CurrentOwnThrowWeaponEnum;
 	
 	//Saves options data
 	FillSaveOptions();
@@ -74,6 +79,8 @@ void UStealthGameInstance::LoadGame()
 		{
 			CurrentGameFlag = Save->SavedCurrentGameFlag;
 			MissionsCleared = Save->SavedMissionsCleared;
+			CurrentOwnThrowWeapon = Save->SavedOwnThrowWeapon;
+			CurrentOwnThrowWeaponEnum = Save->SavedOwnThrowWeaponEnum;
 			
 			SensitivityScale = Save->SavedSensitivityScale;
 			MasterVolumeScale = Save->SavedMasterVolumeScale;
@@ -105,6 +112,8 @@ void UStealthGameInstance::RestartGame()
 {
 	CurrentGameFlag = 0;
 	MissionsCleared = {};
+	CurrentOwnThrowWeapon = nullptr;
+	CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::None;
 }
 
 bool UStealthGameInstance::HasGameChanged()
@@ -118,6 +127,10 @@ bool UStealthGameInstance::HasGameChanged()
 				return true;
 			if (MissionsCleared != Save->SavedMissionsCleared)
 				return true;
+			if (CurrentOwnThrowWeapon != Save->SavedOwnThrowWeapon)
+				return true;
+			if (CurrentOwnThrowWeaponEnum != Save->SavedOwnThrowWeaponEnum)
+				return true;
 			
 			if (SensitivityScale != Save->SavedSensitivityScale)
 				return true;
@@ -128,4 +141,30 @@ bool UStealthGameInstance::HasGameChanged()
 	}
 	
 	return true;
+}
+
+void UStealthGameInstance::SwitchOwnWeapon(EPlayerOwnThrowWeapon WeaponToSwitchTo)
+{
+	if (AStealthCharacter* Player = Cast<AStealthCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)))
+	{
+		if (WeaponToSwitchTo == EPlayerOwnThrowWeapon::Kunai)
+		{
+			CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::Kunai;
+			CurrentOwnThrowWeapon = Player->KunaiWeapon;
+		}
+		else if (WeaponToSwitchTo == EPlayerOwnThrowWeapon::SmokeBomb)
+		{
+			CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::SmokeBomb;
+			CurrentOwnThrowWeapon = Player->SmokeBombWeapon;
+		}
+		else
+		{
+			CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::None;
+			return;
+		}
+
+		Player->AmountOfOwnWeapon = Player->MaxAmountOfOwnWeapon;
+		Player->CurrentOwnThrowWeapon = CurrentOwnThrowWeapon;
+		Player->EquipThrowWeapon(Player->CurrentOwnThrowWeapon);
+	}
 }

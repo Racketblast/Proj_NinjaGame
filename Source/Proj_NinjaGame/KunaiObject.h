@@ -17,6 +17,6 @@ public:
 	// Sets default values for this actor's properties
 	AKunaiObject();
 
-	virtual void HandlePickup(class AStealthCharacter* Player) override;;
+	virtual void HandlePickup(class AStealthCharacter* Player) override;
 	
 };

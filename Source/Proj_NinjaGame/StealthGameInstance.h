@@ -10,7 +10,6 @@
  * 
  */
 
-
 UENUM(BlueprintType)
 enum class EMission : uint8
 {
@@ -19,6 +18,14 @@ enum class EMission : uint8
 	SecondMission		UMETA(DisplayName = "SecondMission"),
 	ThirdMission		UMETA(DisplayName = "ThirdMission"),
 	FourthMission		UMETA(DisplayName = "FourthMission"),
+};
+
+UENUM(BlueprintType)
+enum class EPlayerOwnThrowWeapon : uint8
+{
+	None    UMETA(DisplayName = "None"),
+	Kunai     UMETA(DisplayName = "Kunai"),
+	SmokeBomb  UMETA(DisplayName = "SmokeBomb"),
 };
 
 UCLASS()
@@ -32,6 +39,10 @@ public:
 	bool bUsingGamepad = false;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int CurrentGameFlag;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<class AThrowableWeapon> CurrentOwnThrowWeapon;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	EPlayerOwnThrowWeapon CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::None;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TArray<EMission> MissionsCleared;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
@@ -75,6 +86,10 @@ public:
 	void RestartGame();
 	UFUNCTION(BlueprintCallable)
 	bool HasGameChanged();
+
+	//WeaponSwitch
+	UFUNCTION(BlueprintCallable)
+	void SwitchOwnWeapon(EPlayerOwnThrowWeapon WeaponToSwitchTo);
 };
 
 

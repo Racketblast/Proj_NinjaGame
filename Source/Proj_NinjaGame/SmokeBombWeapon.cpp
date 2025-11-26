@@ -1,16 +1,17 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "KunaiWeapon.h"
+#include "SmokeBombWeapon.h"
 #include "StealthCharacter.h"
 
-AKunaiWeapon::AKunaiWeapon()
+ASmokeBombWeapon::ASmokeBombWeapon()
 {
 }
 
-void AKunaiWeapon::Throw(AStealthCharacter* Player)
+void ASmokeBombWeapon::Throw(AStealthCharacter* Player)
 {
 	ThrowObjectLogic(Player);
+	
 
 	Player->AmountOfOwnWeapon--;
 	if (Player->AmountOfOwnWeapon <= 0)

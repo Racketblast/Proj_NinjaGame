@@ -17,6 +17,8 @@ class PROJ_NINJAGAME_API ASmokeBombObject : public AThrowableObject
 protected:
 	virtual void ThrowableOnComponentHitFunction(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+
+	virtual void HandlePickup(class AStealthCharacter* Player) override;
 	UPROPERTY(EditDefaultsOnly)
 	class USphereComponent* SphereComp;
 	
