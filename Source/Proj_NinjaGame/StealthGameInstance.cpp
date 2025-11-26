@@ -6,6 +6,7 @@
 #include "StealthCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "ThrowableWeapon.h"
+#include "GameFramework/GameUserSettings.h"
 #include "StealthSaveGame.h"
 
 void UStealthGameInstance::Init()
@@ -86,10 +87,9 @@ void UStealthGameInstance::LoadGame()
 			MasterVolumeScale = Save->SavedMasterVolumeScale;
 		}
 	}
-	
-	//For Graphics if needed
 	/*else
 	{
+		//For Graphics Hardware Check
 		UGameUserSettings::GetGameUserSettings()->RunHardwareBenchmark();
 		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
 	}*/
