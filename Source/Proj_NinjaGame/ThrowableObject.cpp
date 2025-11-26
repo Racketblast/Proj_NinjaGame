@@ -129,8 +129,6 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 	}
 	else if (ASecurityCamera* Camera = Cast<ASecurityCamera>(OtherActor)) 
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Throwable hit Camera"));
-
 		if (!Camera->GetIsDead())
 		{
 			UGameplayStatics::ApplyPointDamage(
@@ -176,25 +174,32 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 
 void AThrowableObject::HandlePickup(AStealthCharacter* Player)
 {
-	if (!Player->LastHeldWeapon)
+	UE_LOG(LogTemp, Warning, TEXT("Pickup"));
+
+	//Drop item if I have something in my inventory
+	if (Player->LastHeldWeapon)
 	{
-		if (InteractSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), InteractSound, GetActorLocation());
-		}
-		if (ThrowableWeapon)
-		{
-			if (Player->HeldThrowableWeapon)
-			{
-				Player->HeldThrowableWeapon->Destroy();
-			}
-			Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
-			Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
-			Player->LastHeldWeapon = ThrowableWeapon;
-		}
-		
-		Destroy();
+		Player->HeldThrowableWeapon->Destroy();
+		AThrowableWeapon* DropWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(Player->LastHeldWeapon);
+		DropWeapon->Drop(Player);
 	}
+	
+	if (InteractSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), InteractSound, GetActorLocation());
+	}
+	if (ThrowableWeapon)
+	{
+		if (Player->HeldThrowableWeapon)
+		{
+			Player->HeldThrowableWeapon->Destroy();
+		}
+		Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
+		Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
+		Player->LastHeldWeapon = ThrowableWeapon;
+	}
+		
+	Destroy();
 }
 
 void AThrowableObject::BeginPlay()
@@ -204,17 +209,20 @@ void AThrowableObject::BeginPlay()
 
 void AThrowableObject::DestroyObject()
 {
-	Destroy();
-	/*
+	StaticMeshComponent->SetStaticMesh(nullptr);
+	SetLifeSpan(10);
+	
 	if (ImpactDebris)
 	{
 		UGeometryCollectionComponent* GeoComp =
 		NewObject<UGeometryCollectionComponent>(this, UGeometryCollectionComponent::StaticClass());
 
 		if (GeoComp)
-		{			
+		{
+			FTransform MeshTransform = StaticMeshComponent->GetComponentTransform();
+			
 			GeoComp->SetupAttachment(GetRootComponent());
-
+			GeoComp->SetWorldTransform(MeshTransform);
 			GeoComp->RegisterComponent();
 
 			GeoComp->SetRelativeTransform(FTransform::Identity);
@@ -222,14 +230,8 @@ void AThrowableObject::DestroyObject()
 			GeoComp->SetRestCollection(ImpactDebris);
 
 			GeoComp->SetCollisionProfileName(TEXT("Player"));
-		}
-		else
-		{
-			Destroy();
+			GeoComp->SetPerLevelCollisionProfileNames({"None","Debris","Debris"});
+			GeoComp->SetCanEverAffectNavigation(false);
 		}
 	}
-	else
-	{
-		Destroy();
-	}*/
 }

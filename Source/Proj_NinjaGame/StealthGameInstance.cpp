@@ -2,7 +2,11 @@
 
 
 #include "StealthGameInstance.h"
+
+#include "StealthCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "ThrowableWeapon.h"
+#include "GameFramework/GameUserSettings.h"
 #include "StealthSaveGame.h"
 
 void UStealthGameInstance::Init()
@@ -53,6 +57,8 @@ void UStealthGameInstance::FillSaveGame()
 	//Saves Gameplay data
 	Save->SavedCurrentGameFlag = CurrentGameFlag;
 	Save->SavedMissionsCleared = MissionsCleared;
+	Save->SavedOwnThrowWeapon = CurrentOwnThrowWeapon;
+	Save->SavedOwnThrowWeaponEnum = CurrentOwnThrowWeaponEnum;
 	
 	//Saves options data
 	FillSaveOptions();
@@ -74,15 +80,16 @@ void UStealthGameInstance::LoadGame()
 		{
 			CurrentGameFlag = Save->SavedCurrentGameFlag;
 			MissionsCleared = Save->SavedMissionsCleared;
+			CurrentOwnThrowWeapon = Save->SavedOwnThrowWeapon;
+			CurrentOwnThrowWeaponEnum = Save->SavedOwnThrowWeaponEnum;
 			
 			SensitivityScale = Save->SavedSensitivityScale;
 			MasterVolumeScale = Save->SavedMasterVolumeScale;
 		}
 	}
-	
-	//For Graphics if needed
 	/*else
 	{
+		//For Graphics Hardware Check
 		UGameUserSettings::GetGameUserSettings()->RunHardwareBenchmark();
 		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
 	}*/
@@ -105,6 +112,8 @@ void UStealthGameInstance::RestartGame()
 {
 	CurrentGameFlag = 0;
 	MissionsCleared = {};
+	CurrentOwnThrowWeapon = nullptr;
+	CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::None;
 }
 
 bool UStealthGameInstance::HasGameChanged()
@@ -118,6 +127,10 @@ bool UStealthGameInstance::HasGameChanged()
 				return true;
 			if (MissionsCleared != Save->SavedMissionsCleared)
 				return true;
+			if (CurrentOwnThrowWeapon != Save->SavedOwnThrowWeapon)
+				return true;
+			if (CurrentOwnThrowWeaponEnum != Save->SavedOwnThrowWeaponEnum)
+				return true;
 			
 			if (SensitivityScale != Save->SavedSensitivityScale)
 				return true;
@@ -128,4 +141,29 @@ bool UStealthGameInstance::HasGameChanged()
 	}
 	
 	return true;
+}
+
+void UStealthGameInstance::SwitchOwnWeapon(EPlayerOwnThrowWeapon WeaponToSwitchTo)
+{
+	if (AStealthCharacter* Player = Cast<AStealthCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)))
+	{
+		switch (WeaponToSwitchTo)
+		{
+		case EPlayerOwnThrowWeapon::None:
+			CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::None;
+			break;
+		case EPlayerOwnThrowWeapon::Kunai:
+			CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::Kunai;
+			CurrentOwnThrowWeapon = Player->KunaiWeapon;
+			break;
+		case EPlayerOwnThrowWeapon::SmokeBomb:
+			CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::SmokeBomb;
+			CurrentOwnThrowWeapon = Player->SmokeBombWeapon;
+			break;
+		}
+
+		Player->AmountOfOwnWeapon = Player->MaxAmountOfOwnWeapon;
+		Player->CurrentOwnThrowWeapon = CurrentOwnThrowWeapon;
+		Player->EquipThrowWeapon(Player->CurrentOwnThrowWeapon);
+	}
 }

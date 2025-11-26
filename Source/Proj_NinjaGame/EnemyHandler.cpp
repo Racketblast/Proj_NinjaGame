@@ -132,6 +132,17 @@ AMeleeEnemy* AEnemyHandler::GetClosestEnemyToLocation(FVector TargetLocation)
 	{
 		AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(EnemyActor);
 		if (!Enemy) continue;
+		
+		// Skippa fiender som redan har ett mission
+		AAIController* AICon = Cast<AAIController>(Enemy->GetController());
+		if (AICon)
+		{
+			AMeleeAIController* AI = Cast<AMeleeAIController>(AICon);
+			if (AI && AI->GetHasMission())
+			{
+				continue; 
+			}
+		}
 
 		UNavigationPath* NavPath = NavSys->FindPathToLocationSynchronously(
 			World,
@@ -159,8 +170,6 @@ AMeleeEnemy* AEnemyHandler::GetClosestEnemyToLocation(FVector TargetLocation)
 
 	return BestEnemy;
 }
-
-
 
 TArray<AMeleeEnemy*> AEnemyHandler::GetTwoClosestEnemies(FVector TargetLocation)
 {

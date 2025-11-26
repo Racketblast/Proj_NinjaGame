@@ -24,8 +24,6 @@ protected:
 	void OnChaosBreak(const struct FChaosBreakEvent& BreakEvent);
 	UFUNCTION()
 	void OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-
-	void BreakObject();
 	
 	bool bBroken = false;
 
@@ -42,6 +40,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UMaterial* BreakMaterial;
 public:	
+	UFUNCTION(BlueprintCallable)
+	void BreakObject();
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 };

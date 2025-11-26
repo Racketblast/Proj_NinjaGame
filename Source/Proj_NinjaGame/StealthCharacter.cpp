@@ -23,6 +23,7 @@
 #include "Components/BoxComponent.h"
 #include "EnvironmentQuery/EnvQueryTypes.h"
 #include "MeleeEnemy.h"
+#include "SmokeBombWeapon.h"
 #include "Navigation/PathFollowingComponent.h"
 
 
@@ -269,38 +270,69 @@ void AStealthCharacter::StopThrow()
 	}
 }
 
-void AStealthCharacter::EquipKunai()
+void AStealthCharacter::ChangeWeapon()
 {
 	if (bIsHiding)
 		return;
 	
 	if (!bIsAiming)
 	{
-		if (AmountOfKunai > 0)
+		if (AmountOfOwnWeapon > 0)
 		{
 			if (AKunaiWeapon* Kunai = Cast<AKunaiWeapon>(HeldThrowableWeapon))
 			{
 				if (LastHeldWeapon != nullptr)
 				{
-					if (HeldThrowableWeapon)
-					{
-						HeldThrowableWeapon->Destroy();
-					}
-					HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(LastHeldWeapon);
-					HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
+					EquipThrowWeapon(LastHeldWeapon);
+				}
+			}
+			else if (ASmokeBombWeapon* SmokeBomb = Cast<ASmokeBombWeapon>(HeldThrowableWeapon))
+			{
+				if (LastHeldWeapon != nullptr)
+				{
+					EquipThrowWeapon(LastHeldWeapon);
 				}
 			}
 			else
 			{
-				if (KunaiWeapon != nullptr)
+				if (CurrentOwnThrowWeapon != nullptr)
 				{
-					if (HeldThrowableWeapon)
-					{
-						HeldThrowableWeapon->Destroy();
-					}
-					HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(KunaiWeapon);
-					HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
+					EquipThrowWeapon(CurrentOwnThrowWeapon);
 				}
+			}
+		}
+	}
+}
+
+void AStealthCharacter::EquipThrowWeapon(TSubclassOf<AThrowableWeapon> EquipWeapon)
+{
+	
+	if (HeldThrowableWeapon)
+	{
+		HeldThrowableWeapon->Destroy();
+	}
+	
+	HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(EquipWeapon);
+	HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
+}
+
+void AStealthCharacter::DropWeapon()
+{
+	if (bIsHiding)
+		return;
+	if (!bIsAiming)
+	{
+		if (HeldThrowableWeapon)
+		{
+			if (AKunaiWeapon* Kunai = Cast<AKunaiWeapon>(HeldThrowableWeapon))
+			{
+			}
+			else if (ASmokeBombWeapon* SmokeBomb = Cast<ASmokeBombWeapon>(HeldThrowableWeapon))
+			{
+			}
+			else
+			{
+				HeldThrowableWeapon->Drop(this);
 			}
 		}
 	}
@@ -310,18 +342,20 @@ void AStealthCharacter::AimStart()
 {
 	if(bIsHiding == true) return;
 	
-	if (CurrentMovementState != EPlayerMovementState::Run ) 
+	if (CurrentMovementState == EPlayerMovementState::Run ) 
 	{
-		if (HeldThrowableWeapon)
-		{
-			bIsAiming = true;
+		StopSprint();
+	}
 	
-			if (MarkerClass && !SpawnedMarker)
-			{
-				FVector SpawnLoc = GetActorLocation();
-				FRotator SpawnRot = FRotator::ZeroRotator;
-				SpawnedMarker = GetWorld()->SpawnActor<AActor>(MarkerClass, SpawnLoc, SpawnRot);
-			}
+	if (HeldThrowableWeapon)
+	{
+		bIsAiming = true;
+	
+		if (MarkerClass && !SpawnedMarker)
+		{
+			FVector SpawnLoc = GetActorLocation();
+			FRotator SpawnRot = FRotator::ZeroRotator;
+			SpawnedMarker = GetWorld()->SpawnActor<AActor>(MarkerClass, SpawnLoc, SpawnRot);
 		}
 	}
 }
@@ -346,13 +380,23 @@ void AStealthCharacter::UpdateProjectilePrediction()
     FCollisionQueryParams Params;
     Params.AddIgnoredActor(this);
 	
-	
     FPredictProjectilePathParams PredictParams;
-    PredictParams.StartLocation = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector() * CameraForwardMultiplier;
+	FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+	FVector End = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector() * CameraForwardMultiplier;
+
+	FHitResult HitResult;
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+	{
+		End = HitResult.Location;
+	}
+	
+    PredictParams.StartLocation = End;
     PredictParams.LaunchVelocity = FirstPersonCameraComponent->GetForwardVector() * HeldThrowableWeapon->ThrowSpeed;
 	if (UStaticMesh* WeaponMesh = HeldThrowableWeapon->StaticMeshComponent->GetStaticMesh())
 	{
 		FVector BoundsExtent = WeaponMesh->GetBounds().BoxExtent;
+		//Should be better if I could predict the mesh instead of just the absolutes
 		PredictParams.ProjectileRadius = BoundsExtent.GetAbsMax();
 	}
 	else
@@ -426,14 +470,32 @@ void AStealthCharacter::BeginPlay()
 		NormalFOV = FirstPersonCameraComponent->FieldOfView;
 	}
 	
-	if (KunaiWeapon && AmountOfKunai > 1)
+	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
-		if (HeldThrowableWeapon)
+		if (GI->CurrentOwnThrowWeapon)
 		{
-			HeldThrowableWeapon->Destroy();
+			CurrentOwnThrowWeapon = GI->CurrentOwnThrowWeapon;
 		}
-		HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(KunaiWeapon);
-		HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
+	}
+	
+	if (CurrentOwnThrowWeapon && AmountOfOwnWeapon > 1)
+	{
+		EquipThrowWeapon(CurrentOwnThrowWeapon);
+	}
+	else
+	{
+		//If we have nothing in the GameInstance
+		if (KunaiWeapon && AmountOfOwnWeapon > 1)
+		{
+			CurrentOwnThrowWeapon = KunaiWeapon;
+			if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+			{
+				GI->CurrentOwnThrowWeapon = CurrentOwnThrowWeapon;
+				GI->CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::Kunai;
+			}
+			
+			EquipThrowWeapon(CurrentOwnThrowWeapon);
+		}
 	}
 	
 	if (MeleeWeapon)
@@ -457,6 +519,8 @@ void AStealthCharacter::BeginPlay()
 			HideMaxYaw = Cam->ViewYawMax;
 		}
 	}
+
+	MaxAmountOfOwnWeapon = AmountOfOwnWeapon;
 }
 
 void AStealthCharacter::Landed(const FHitResult& Hit)
@@ -566,13 +630,14 @@ void AStealthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 		//Use
 		EnhancedInputComponent->BindAction(UseAction, ETriggerEvent::Triggered, this, &AStealthCharacter::Use);
+		EnhancedInputComponent->BindAction(DropAction, ETriggerEvent::Triggered, this, &AStealthCharacter::DropWeapon);
 
 		//Attacks
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AStealthCharacter::Attack);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &AStealthCharacter::AimStart);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AStealthCharacter::AimEnd);
 		
-		EnhancedInputComponent->BindAction(KunaiAction, ETriggerEvent::Triggered, this, &AStealthCharacter::EquipKunai);
+		EnhancedInputComponent->BindAction(ChangeWeaponAction, ETriggerEvent::Triggered, this, &AStealthCharacter::ChangeWeapon);
 		
 		//Sneak
 		EnhancedInputComponent->BindAction(StealthCrouch, ETriggerEvent::Started, this, &AStealthCharacter::ToggleSneak);
@@ -997,7 +1062,49 @@ void AStealthCharacter::LoopSprint()
 {
 	if (CurrentMovementState != EPlayerMovementState::Run)
 	{
-		StartSprint();
+		if(bIsHiding == true) return;
+		
+		if(bIsAiming == true) return;
+	
+		if (CurrentMovementState != EPlayerMovementState::Climb)
+		{
+			// Kolla om spelaren faktiskt försöker röra sig
+			FVector2D MovementInput(MoveInputForward, MoveInputRight);
+		
+			if (MovementInput.IsNearlyZero())
+			{
+				//UE_LOG(LogTemp, Warning, TEXT("Cannot sprint without MovementInput."));
+				return;
+			}
+	
+			if (CurrentStamina > 0)
+			{
+				if (CurrentStamina > 0)
+				{
+					// Om spelaren är i crouch så lämna det läget först
+					if (CurrentMovementState == EPlayerMovementState::Crouch)
+					{
+						if (CanUnCrouch())
+						{
+							UnCrouch();
+							UpdateStaminaStart(SprintStaminaAmount);
+				
+							GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+							CurrentMovementState = EPlayerMovementState::Run;
+						}
+					}
+					else
+					{
+						UpdateStaminaStart(SprintStaminaAmount);
+	
+						GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+						CurrentMovementState = EPlayerMovementState::Run;
+					}
+	
+					//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
+				}
+			}
+		}
 	}
 }
 

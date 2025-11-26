@@ -22,7 +22,11 @@ public:
 	int SavedCurrentGameFlag;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TArray<EMission> SavedMissionsCleared;
-
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<class AThrowableWeapon> SavedOwnThrowWeapon;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	EPlayerOwnThrowWeapon SavedOwnThrowWeaponEnum;
+	
 	//Options saved
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float SavedMasterVolumeScale;

@@ -84,7 +84,10 @@ protected:
 	UInputAction* AttackAction;
 	
 	UPROPERTY(EditAnywhere, Category="Input")
-	UInputAction* KunaiAction;
+	UInputAction* ChangeWeaponAction;
+	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* DropAction;
 	
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* AimAction;
@@ -123,13 +126,19 @@ protected:
 	void StopThrow();
 
 	UFUNCTION(BlueprintCallable, Category="Input")
-	void EquipKunai();
+	void ChangeWeapon();
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void DropWeapon();
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void AimStart();
 public:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void AimEnd();
+	
+	UFUNCTION(BlueprintCallable)
+	void EquipThrowWeapon(TSubclassOf<AThrowableWeapon> EquipWeapon);
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -188,12 +197,18 @@ public:
 	TSubclassOf<AThrowableWeapon> LastHeldWeapon;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
-	int AmountOfKunai = 3;
+	int AmountOfOwnWeapon = 3;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
+	int MaxAmountOfOwnWeapon;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
-	TSubclassOf<AKunaiWeapon> KunaiWeapon;
+	TSubclassOf<AThrowableWeapon> KunaiWeapon;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	TSubclassOf<AThrowableWeapon> SmokeBombWeapon;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
+	TSubclassOf<AThrowableWeapon> CurrentOwnThrowWeapon;
+	
 protected:
-
 	//Projectile marker
 	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
 	AActor* SpawnedMarker;

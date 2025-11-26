@@ -3,6 +3,7 @@
 
 #include "MeleeWeapon.h"
 
+#include "BreakableObject.h"
 #include "MeleeEnemy.h"
 #include "SoundUtility.h"
 #include "StealthCharacter.h"
@@ -48,6 +49,10 @@ void AMeleeWeapon::StartMeleeAttack()
 
 			USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel);
 		}
+		else if (ABreakableObject* BreakableObject = Cast<ABreakableObject>(HitActor))
+		{
+			BreakableObject->BreakObject();
+		}
 	}
 }
 
@@ -70,6 +75,10 @@ void AMeleeWeapon::AssassinateEnemy()
 			{
 				ThatCannotBeStabbed.Add(Enemy);
 			}
+		}
+		else if (ABreakableObject* BreakableObject = Cast<ABreakableObject>(HitActor))
+		{
+			BreakableObject->BreakObject();
 		}
 	}
 

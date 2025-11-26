@@ -3,10 +3,6 @@
 
 #include "KunaiWeapon.h"
 #include "StealthCharacter.h"
-#include "ThrowableObject.h"
-#include "Camera/CameraComponent.h"
-#include "GameFramework/ProjectileMovementComponent.h"
-#include "Kismet/GameplayStatics.h"
 
 AKunaiWeapon::AKunaiWeapon()
 {
@@ -14,26 +10,11 @@ AKunaiWeapon::AKunaiWeapon()
 
 void AKunaiWeapon::Throw(AStealthCharacter* Player)
 {
-	FVector SpawnLocation = Player->FirstPersonCameraComponent->GetComponentLocation() + Player->FirstPersonCameraComponent->GetForwardVector() * Player->CameraForwardMultiplier;
-	FRotator SpawnRotation =  Player->FirstPersonCameraComponent->GetComponentRotation();
-	if (ThrownWeaponObject)
-	{
-		AThrowableObject* ThrownObject = GetWorld()->SpawnActor<AThrowableObject>(ThrownWeaponObject, SpawnLocation, SpawnRotation);
-		ThrownObject->Thrown = true;
-		ThrownObject->bBreaksOnImpact = bBreakOnImpact;
-		ThrownObject->ThrowVelocity = Player->FirstPersonCameraComponent->GetForwardVector() * ThrowSpeed;
-		
-		ThrownObject->StaticMeshComponent->SetSimulatePhysics(true);
-		ThrownObject->StaticMeshComponent->SetNotifyRigidBodyCollision(true);
-		ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);
-		
-		ThrownObject->StaticMeshComponent->SetPhysicsLinearVelocity(ThrownObject->ThrowVelocity, false);
-	}
+	ThrowObjectLogic(Player);
 
-	Player->AmountOfKunai--;
-	if (Player->AmountOfKunai <= 0)
+	Player->AmountOfOwnWeapon--;
+	if (Player->AmountOfOwnWeapon <= 0)
 	{
-		UE_LOG(LogTemp, Display, TEXT("No Kunai"));
 		if (Player->LastHeldWeapon != nullptr)
 		{
 			Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(Player->LastHeldWeapon);

@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "AIController.h"
+#include "NavigationPath.h"
 #include "NavigationSystem.h"
 #include "PatrolPoint.h"
 #include "GameFramework/Character.h"
@@ -68,6 +69,33 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 	{
 	case EEnemyState::Patrolling:
 		{
+			if (ControlledEnemy->bPlayerInAlertCone) 
+			{
+				CurrentState = EEnemyState::Alert;
+				StartAlert();
+				//UE_LOG(LogTemp, Warning, TEXT("StartAlert"));
+			}
+			else if (ControlledEnemy->CanSeePlayer())
+			{
+				StartChasing();
+			}
+			else if (ControlledEnemy->bHeardSoundRecently && !bIsInvestigatingSound)
+			{
+				//UE_LOG(LogTemp, Warning, TEXT("Patrolling: Heard sound at %s"), *ControlledEnemy->LastHeardSoundLocation.ToString());
+				OnHeardSound(ControlledEnemy->LastHeardSoundLocation);
+				bIsInvestigatingSound = true;
+				
+				GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, this, &AMeleeAIController::ResetSoundFlag, 0.5f, false);
+			}
+			
+			// Mission 
+			if (bHasMission && CurrentMission != EEnemyMission::Patrol && CurrentState != EEnemyState::Alert)
+			{
+				StartMissionMoveTo(CurrentMissionLocation);
+				break;
+			}
+
+			// Rotation
 			if (bIsRotatingTowardPatrolPoint)
 			{
 				RotationProgress += DeltaSeconds / 2.0f; 
@@ -91,23 +119,6 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 						ControlledEnemy->GetPatrolPoints()[CurrentPatrolIndex]
 					);
 				}
-			}
-			if (ControlledEnemy->bPlayerInAlertCone) 
-			{
-				StartAlert();
-				//UE_LOG(LogTemp, Warning, TEXT("StartAlert"));
-			}
-			else if (ControlledEnemy->CanSeePlayer())
-			{
-				StartChasing();
-			}
-			else if (ControlledEnemy->bHeardSoundRecently && !bIsInvestigatingSound)
-			{
-				//UE_LOG(LogTemp, Warning, TEXT("Patrolling: Heard sound at %s"), *ControlledEnemy->LastHeardSoundLocation.ToString());
-				OnHeardSound(ControlledEnemy->LastHeardSoundLocation);
-				bIsInvestigatingSound = true;
-				
-				GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, this, &AMeleeAIController::ResetSoundFlag, 0.5f, false);
 			}
 			break;
 		}
@@ -192,12 +203,14 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 				// Gör inget om vi roterar
 				if (!bIsRotating)
 				{
+					bIsDoingMissionMoveTo = false;
 					MoveToLocation(InvestigateTarget, -1.f, true, true, false, false, 0, true);
 				}
 			}
 
 			if (bHasLookAroundTarget && !bIsRotating)
 			{
+				bIsDoingMissionMoveTo = false;
 				MoveToLocation(LookAroundTarget);
 			}
 			
@@ -264,6 +277,41 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 				MoveToNextPatrolPoint();
 			}
 
+			//Mission failsafe
+			if (bIsDoingMissionMoveTo)
+			{
+				FVector CurrentLocationMission = GetPawn()->GetActorLocation();
+				FVector DeltaMission = CurrentLocationMission - MissionLastLocation;
+				float DistanceMovedMission = DeltaMission.Size();
+				float SpeedMission = GetPawn()->GetVelocity().Size();
+
+				if (SpeedMission < MissionFailSafeSpeedThreshold && DistanceMovedMission < 5.f)
+				{
+					// Fienden står still eller fastnat
+					MissionTimeWithoutMovement += DeltaSeconds;
+				}
+				else
+				{
+					// Nollställ failsafe om fienden börjar röra sig igen
+					MissionTimeWithoutMovement = 0.f;
+				}
+
+				// Uppdatera sista positionen
+				MissionLastLocation = CurrentLocationMission;
+
+				// Trigga failsafe
+				if (MissionTimeWithoutMovement >= MissionFailSafeTime)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("MISSION FAILSAFE TRIGGERED: Enemy stuck, aborting mission-move."));
+
+					MissionTimeWithoutMovement = 0.f;
+					bIsDoingMissionMoveTo = false;
+
+					StartMissionMoveTo(CurrentMissionLocation);
+					return;
+				}
+			}
+
 			break;
 		}
 	}
@@ -291,6 +339,8 @@ void AMeleeAIController::StartAlert()
 	CurrentState = EEnemyState::Alert;
 	ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX 
 	ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = 0.f; // stannar helt
+
+	bIsDoingMissionMoveTo = false;
 
 	// Titta mot spelaren direkt
 	APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
@@ -407,6 +457,22 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 	/*UE_LOG(LogTemp, Warning, TEXT("Move completed for %s: Code=%d Reason=%d"),
 	*ControlledEnemy->GetName(),
 	(int)Result.Code, (int)Result.Flags);*/
+
+	// För mission
+	if (Result.IsSuccess() && bHasMission && bIsDoingMissionMoveTo)
+	{
+		if (CurrentMission != EEnemyMission::Patrol) //  && FVector::Dist(ControlledEnemy->GetActorLocation(), CurrentMissionLocation) < 350.f
+		{
+			UE_LOG(LogTemp, Warning, TEXT("OnMoveCompleted: CompleteMission"));
+			bIsDoingMissionMoveTo = false;
+			CompleteMission();
+		}
+	}
+	/*if (Result.IsSuccess() && RequestID == MissionRequestID)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("OnMoveCompleted: CompleteMission"));
+		CompleteMission();
+	}*/
 	
 	if (CurrentState == EEnemyState::Patrolling)
 	{
@@ -464,12 +530,6 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 		bHasLookAroundTarget = false;
 	}
 	
-	
-	/*if (CurrentState == EEnemyState::Searching)
-	{
-		bChasingFromExternalOrder = false; 
-	}*/
-	
 	float Dist = FVector::Dist(ControlledEnemy->GetActorLocation(), LastKnownPlayerLocation);
 	if (bChasingFromExternalOrder && Dist < 150.f)
 	{
@@ -481,29 +541,6 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 
 	/*UE_LOG(LogTemp, Warning, TEXT("PatrolPoints num: %d, index: %d, success: %d"),
 		PatrolPoints.Num(), CurrentPatrolIndex, Result.IsSuccess());*/
-
-	
-	// Failsafe för searching moves 
-	/*if (CurrentState == EEnemyState::Searching)
-	{
-		if (!Result.IsSuccess())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Searching move failed. Ending search early."));
-
-			// Avsluta search
-			StopMovement();
-			bIsLookingAround = false;
-			bIsMovingToSound = false;
-			bIsInvestigatingSound = false;
-
-			// Återgå till patrullering
-			CurrentState = EEnemyState::Patrolling;
-			ControlledEnemy->UpdateStateVFX(CurrentState);
-
-			// Starta patrull igen
-			MoveToNextPatrolPoint();
-		}
-	}*/
 }
 
 
@@ -567,7 +604,8 @@ void AMeleeAIController::OnTargetLost()
 		TimeWithoutMovement = 0.f; // För failsafe
 		LastSearchLocation = ControlledEnemy->GetActorLocation(); // För failsafe
 		ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
-		
+
+		bIsDoingMissionMoveTo = false;
 		MoveToLocation(LastKnownPlayerLocation);
 	}
 }
@@ -632,7 +670,70 @@ void AMeleeAIController::LookAround()
 
 	FVector LookDirection = NewRotation.Vector();
 
-	// Slumpa ett forward move
+
+	// Hämta NavSys
+	UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
+	if (!NavSys) return;
+
+	const float MinDistance = 100.f;
+	const float MaxDistance = 350.f;
+	const float MaxAllowedPathLength = 400.f; 
+
+	FVector Origin = ControlledPawn->GetActorLocation();
+
+	bool bFoundGoodPoint = false;
+	FVector BestPoint = Origin;
+
+	// Gör upp till 5 försök att hitta en bra punkt
+	for (int i = 0; i < 5; i++)
+	{
+		// Slumpa mål
+		FVector RawTarget = Origin + LookDirection * FMath::RandRange(MinDistance, MaxDistance);
+
+		// Project to NavMesh
+		FNavLocation Projected;
+		if (!NavSys->ProjectPointToNavigation(RawTarget, Projected))
+			continue;
+
+		// Kolla path
+		UNavigationPath* Path = NavSys->FindPathToLocationSynchronously(GetWorld(), Origin, Projected.Location);
+
+		if (Path && Path->IsValid() && Path->PathPoints.Num() > 1)
+		{
+			float PathLength = 0.f;
+
+			for (int32 p = 1; p < Path->PathPoints.Num(); p++)
+			{
+				PathLength += FVector::Distance(Path->PathPoints[p - 1], Path->PathPoints[p]);
+			}
+
+			// DEBUG LOG
+			//UE_LOG(LogTemp, Warning, TEXT("LookAround path length: %.1f"), PathLength);
+
+			if (PathLength <= MaxAllowedPathLength)
+			{
+				BestPoint = Projected.Location;
+				bFoundGoodPoint = true;
+				break;
+			}
+		}
+	}
+
+	// Gå till punkten om en bra punkt hittadfes
+	if (bFoundGoodPoint)
+	{
+		LookAroundTarget = BestPoint;
+	}
+	else
+	{
+		// Stå kvar om ingen bra punkt hittades
+		LookAroundTarget = Origin;
+	}
+
+	bHasLookAroundTarget = true;
+	
+
+	/*// Slumpa ett forward move
 	FVector RawTarget = ControlledPawn->GetActorLocation() + LookDirection * FMath::RandRange(100.f, 350.f);
 
 	
@@ -650,7 +751,7 @@ void AMeleeAIController::LookAround()
 		LookAroundTarget = ControlledPawn->GetActorLocation();
 	}
 
-	bHasLookAroundTarget = true;
+	bHasLookAroundTarget = true;*/
 	
 	//MoveToLocation(ControlledPawn->GetActorLocation() + ControlledPawn->GetActorForwardVector() * FMath::RandRange(100.f, 250.f));
 }
@@ -765,11 +866,15 @@ void AMeleeAIController::HandleSuspiciousLocation(FVector Location)
 
     //UE_LOG(LogTemp, Warning, TEXT("HandleSuspiciousLocation: Trying to move to: %s"), *Location.ToString());
 
-    if (CurrentState == EEnemyState::Chasing || CurrentState == EEnemyState::Searching)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("HandleSuspiciousLocation ignored because currently chasing/searching."));
-        return;
-    }
+	bool bIsMission = bHasMission && (Location == CurrentMissionLocation);
+	if (!bIsMission)
+	{
+		if (CurrentState == EEnemyState::Chasing || CurrentState == EEnemyState::Searching)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("HandleSuspiciousLocation ignored because currently chasing/searching."));
+			return;
+		}
+	}
 
     UE_LOG(LogTemp, Warning, TEXT("Enemy is investigating suspicious location!"));
     CurrentState = EEnemyState::Searching;
@@ -791,9 +896,11 @@ void AMeleeAIController::HandleSuspiciousLocation(FVector Location)
         // Debug draw
         DrawDebugSphere(GetWorld(), Location, 30.f, 12, FColor::Yellow, false, 8.f);
         DrawDebugSphere(GetWorld(), NavLoc.Location, 30.f, 12, FColor::Green, false, 8.f);
-        DrawDebugLine(GetWorld(), ControlledEnemy->GetActorLocation(), NavLoc.Location, FColor::Blue, false, 8.f, 0, 2.f);
+        //DrawDebugLine(GetWorld(), ControlledEnemy->GetActorLocation(), NavLoc.Location, FColor::Blue, false, 8.f, 0, 2.f);
     	
         const float AcceptanceRadius = 50.f;
+
+    	bIsDoingMissionMoveTo = false;
         MoveToLocation(NavLoc.Location, AcceptanceRadius, true, true, true, false, nullptr);
     }
     else
@@ -843,6 +950,7 @@ void AMeleeAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayer
 	*ControlledEnemy->GetName(),
 	*LastKnownPlayerLocation.ToString());
 
+	bIsDoingMissionMoveTo = true;
 	MoveToLocation(LastKnownPlayerLocation);
 }
 
@@ -914,7 +1022,121 @@ void AMeleeAIController::RunChaseFailsafe(float DeltaSeconds)
 	}
 }
 
+//Mission system
+void AMeleeAIController::AssignMission(EEnemyMission NewMission, FVector MissionLocation)
+{
+	if (bHasMission || NewMission == EEnemyMission::Patrol)
+		return;
 
+
+	
+	UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
+	FNavLocation ProjectedLoc;
+
+	FVector Extent(50.f, 50.f, 500.f); 
+
+	// Project to navmesh
+	if (NavSys && NavSys->ProjectPointToNavigation(MissionLocation, ProjectedLoc, Extent))
+	{
+		CurrentMissionLocation = ProjectedLoc.Location;
+
+		UE_LOG(LogTemp, Warning, TEXT("AssignMission: Projected mission point from %s to %s"),
+			*MissionLocation.ToString(),
+			*CurrentMissionLocation.ToString());
+
+		// Debug
+		DrawDebugSphere(GetWorld(), MissionLocation, 25.f, 12, FColor::Yellow, false, 8.f);
+		DrawDebugSphere(GetWorld(), CurrentMissionLocation, 25.f, 12, FColor::Green, false, 8.f);
+	}
+	else
+	{
+		// Om projicering misslyckas så behåll originalet
+		CurrentMissionLocation = MissionLocation;
+		UE_LOG(LogTemp, Error, TEXT("AssignMission: FAILED to project mission point: %s"), *MissionLocation.ToString());
+	}
+	
+	CurrentMission = NewMission;
+	bHasMission = true;
+
+	// Om fienden just nu patrullerar så starta direkt. 
+	if (CurrentState == EEnemyState::Patrolling)
+	{
+		StartMissionMoveTo(MissionLocation);
+	}
+
+	//UE_LOG(LogTemp, Warning, TEXT("Assigned mission %d with target %s"), (int)NewMission, *MissionLocation.ToString());
+}
+
+
+void AMeleeAIController::CompleteMission()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Mission complete!"));
+
+	bHasMission = false;
+	bIsDoingMissionMoveTo = false;
+	CurrentMission = EEnemyMission::Patrol;
+
+	// Gå tillbaka till patrull
+	CurrentState = EEnemyState::Patrolling;
+	ControlledEnemy->UpdateStateVFX(CurrentState);
+	MoveToNextPatrolPoint();
+}
+
+void AMeleeAIController::StartMissionMoveTo(FVector Location)
+{
+    if (!IsValid(this) || !ControlledEnemy || !IsValid(ControlledEnemy)) return;
+
+	if (bIsDoingMissionMoveTo) return;
+
+	bool bIsMission = bHasMission && (Location == CurrentMissionLocation);
+	if (!bIsMission)
+	{
+		if (CurrentState == EEnemyState::Chasing || CurrentState == EEnemyState::Alert)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("MissionMoveTo ignored because currently chasing/searching."));
+			return;
+		}
+	}
+	
+	ControlledEnemy->UpdateStateVFX(CurrentState);
+    ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
+	
+	// Initiera failsafe-data
+	MissionTimeWithoutMovement = 0.f;
+	MissionLastLocation = ControlledEnemy->GetActorLocation();
+
+    // Project to navmesh
+    UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
+    FNavLocation NavLoc;
+    if (NavSys && NavSys->ProjectPointToNavigation(Location, NavLoc, FVector(ControlledEnemy->HearingRange)))
+    {
+        LastKnownPlayerLocation = NavLoc.Location;
+
+        UE_LOG(LogTemp, Warning, TEXT("StartMissionMoveTo: Moving to projected navmesh point: %s"), *NavLoc.Location.ToString());
+
+        // Debug draw
+        DrawDebugSphere(GetWorld(), Location, 30.f, 12, FColor::Yellow, false, 8.f);
+        DrawDebugSphere(GetWorld(), NavLoc.Location, 30.f, 12, FColor::Green, false, 8.f);
+        //DrawDebugLine(GetWorld(), ControlledEnemy->GetActorLocation(), NavLoc.Location, FColor::Blue, false, 8.f, 0, 2.f);
+
+    	bIsDoingMissionMoveTo = true;
+    	
+        float AcceptanceRadius = 50.f;
+
+    	if (CurrentMission == EEnemyMission::Electrical)
+    	{
+    		AcceptanceRadius = 20;
+    	}
+    	
+        MoveToLocation(NavLoc.Location, AcceptanceRadius, true, true, true, false, nullptr);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("MissionMoveTo location not on navmesh! Location: %s"), *Location.ToString());
+        // Fallback, ifall den inte kan ta sig till locationen så bara undersök lite på stället innan den går tillbaka till patrullering.  
+        BeginSearch();
+    }
+}
 
 // Time handle funktioner:
 void AMeleeAIController::ResetSoundFlag()

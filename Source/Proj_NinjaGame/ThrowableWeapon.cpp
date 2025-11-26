@@ -18,12 +18,44 @@ AThrowableWeapon::AThrowableWeapon()
 	RootComponent = SceneRootComponent;
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	StaticMeshComponent->SetupAttachment(SceneRootComponent);
+	StaticMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	StaticMeshComponent->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
 }
 
 void AThrowableWeapon::Throw(AStealthCharacter* Player)
 {
-	FVector SpawnLocation = Player->FirstPersonCameraComponent->GetComponentLocation() + Player->FirstPersonCameraComponent->GetForwardVector() * Player->CameraForwardMultiplier;
+	ThrowObjectLogic(Player);
+
+	if (Player->AmountOfOwnWeapon > 0)
+	{
+		Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(Player->CurrentOwnThrowWeapon);
+		Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
+	}
+	else
+	{
+		Player->HeldThrowableWeapon = nullptr;
+		Player->AimEnd();
+	}
+	Player->LastHeldWeapon = nullptr;
+	Destroy();
+}
+
+void AThrowableWeapon::ThrowObjectLogic(AStealthCharacter* Player)
+{
+	FVector Start = Player->FirstPersonCameraComponent->GetComponentLocation();
+	FVector End = Player->FirstPersonCameraComponent->GetComponentLocation() + Player->FirstPersonCameraComponent->GetForwardVector() * Player->CameraForwardMultiplier;
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(Player);
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+	{
+		End = Player->FirstPersonCameraComponent->GetComponentLocation();
+	}
+	
+	FVector SpawnLocation = End;
 	FRotator SpawnRotation =  Player->FirstPersonCameraComponent->GetComponentRotation();
 	if (ThrownWeaponObject)
 	{
@@ -36,20 +68,34 @@ void AThrowableWeapon::Throw(AStealthCharacter* Player)
 		ThrownObject->StaticMeshComponent->SetSimulatePhysics(true);
 		ThrownObject->StaticMeshComponent->SetNotifyRigidBodyCollision(true);
 		ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);
+		ThrownObject->StaticMeshComponent->SetUseCCD(true);
 		
 		ThrownObject->StaticMeshComponent->SetPhysicsLinearVelocity(ThrownObject->ThrowVelocity, false);
 	}
+}
 
-	if (Player->AmountOfKunai > 0)
+void AThrowableWeapon::Drop(AStealthCharacter* Player)
+{
+	FVector SpawnLocation = Player->FirstPersonCameraComponent->GetComponentLocation() + Player->FirstPersonCameraComponent->GetForwardVector() * Player->CameraForwardMultiplier;
+	FRotator SpawnRotation =  Player->FirstPersonCameraComponent->GetComponentRotation();
+	if (ThrownWeaponObject)
 	{
-		Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(Player->KunaiWeapon);
+		AThrowableObject* ThrownObject = GetWorld()->SpawnActor<AThrowableObject>(ThrownWeaponObject, SpawnLocation, SpawnRotation);
+		
+		ThrownObject->StaticMeshComponent->SetSimulatePhysics(true);
+		ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);
+		ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	}
+	if (Player->AmountOfOwnWeapon > 0)
+	{
+		Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(Player->CurrentOwnThrowWeapon);
 		Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
 	}
 	else
 	{
 		Player->HeldThrowableWeapon = nullptr;
-		Player->AimEnd();
 	}
+	
 	Player->LastHeldWeapon = nullptr;
 	Destroy();
 }
