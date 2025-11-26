@@ -497,7 +497,25 @@ float AMeleeEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEven
 
 	if (!bIsDead)
 	{
-		Health -= ActualDamage;
+		//Health -= ActualDamage;
+		float NewHealth = Health - ActualDamage;
+
+		// Kolla om fienden kan överleva attacken 
+		bool bWillSurvive = NewHealth > 0.0f;
+
+		// Om fienden kommer överleva och DamageCauser är spelaren så upptäcker fienden spelaren
+		if (bWillSurvive)
+		{
+			if (DamageCauser && DamageCauser->IsA(AStealthCharacter::StaticClass()))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Enemy hit by player and survived, Enemy spotted player!"));
+				bCanSeePlayer = true;     
+			}
+		}
+
+		// Uppdatera HP 
+		Health = NewHealth;
+		
 
 		PlayHurtSound();
 
