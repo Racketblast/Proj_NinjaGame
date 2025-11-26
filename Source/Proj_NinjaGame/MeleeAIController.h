@@ -48,6 +48,9 @@ public:
 	void AssignMission(EEnemyMission NewMission, FVector MissionLocation);
 
 	bool GetHasMission() const { return bHasMission; }
+
+	// För stun
+	void StunEnemy(float Duration, TOptional<EEnemyState> WantedState = TOptional<EEnemyState>()); 
 	
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
@@ -74,6 +77,18 @@ protected:
 
 	UFUNCTION()
 	void HandleSuspiciousLocation(FVector Location);
+
+	//Stun
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stun")
+	bool bIsStunned = false;
+	
+	EEnemyState StateAfterStun = EEnemyState::Patrolling; 
+
+	EEnemyState StateBeforeStun; 
+	
+	FTimerHandle StunTimerHandle;
+
+	void EndStun();
 
 	// Nya mission system
 	UPROPERTY(BlueprintReadOnly)

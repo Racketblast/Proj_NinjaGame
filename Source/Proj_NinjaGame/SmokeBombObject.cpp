@@ -10,6 +10,8 @@
 #include "ThrowableWeapon.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "MeleeAIController.h"
+#include "MeleeEnemy.h"
 
 ASmokeBombObject::ASmokeBombObject()
 {
@@ -25,6 +27,25 @@ void ASmokeBombObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
                                                        UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	Super::ThrowableOnComponentHitFunction(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
+
+
+	// Stun
+	if (OtherActor)
+	{
+		// Kolla om vi träffade en MeleeEnemy
+		AMeleeEnemy* HitEnemy = Cast<AMeleeEnemy>(OtherActor);
+		if (HitEnemy)
+		{
+			AMeleeAIController* EnemyController = Cast<AMeleeAIController>(HitEnemy->GetController());
+
+			if (EnemyController)
+			{
+				// Stunna fienden i 3 sekunder 
+				EnemyController->StunEnemy(3.0f, EEnemyState::Chasing); 
+			}
+		}
+	}
+
 
 	SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	SmokeComponent->SetAsset(SmokeEffect);

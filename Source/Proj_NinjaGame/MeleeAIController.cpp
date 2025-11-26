@@ -46,6 +46,11 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 	
 	if (!ControlledEnemy) return;
 
+	if (bIsStunned)
+	{
+		return; 
+	}
+
 	// Rotation
 	if (bIsRotating)
 	{
@@ -974,6 +979,7 @@ void AMeleeAIController::OnUnPossess()
 	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
 	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
 	GetWorldTimerManager().ClearTimer(AlertTimerHandle);
+	GetWorldTimerManager().ClearTimer(StunTimerHandle);
 }
 
 
@@ -1138,6 +1144,40 @@ void AMeleeAIController::StartMissionMoveTo(FVector Location)
     }
 }
 
+//Stun
+void AMeleeAIController::StunEnemy(float Duration, TOptional<EEnemyState> WantedState)
+{
+	if (!IsValid(this) || !ControlledEnemy || !IsValid(ControlledEnemy)) return;
+	
+	if (bIsStunned) return; 
+
+	bIsStunned = true;
+
+	UE_LOG(LogTemp, Warning, TEXT("StunEnemy"));
+
+	StateBeforeStun = CurrentState;
+
+	// Stoppa all movement
+	StopMovement();
+	ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = 0.f; // stannar helt
+
+	// Sätt StateAfterStun
+	if (WantedState.IsSet())
+	{
+		StateAfterStun = WantedState.GetValue();
+	}
+
+	// Kör en timer som slutar stunen
+	GetWorldTimerManager().SetTimer(
+		StunTimerHandle,
+		this,
+		&AMeleeAIController::EndStun,
+		Duration,
+		false
+	);
+}
+
+
 // Time handle funktioner:
 void AMeleeAIController::ResetSoundFlag()
 {
@@ -1176,3 +1216,23 @@ void AMeleeAIController::RetryMoveToNextPatrolPoint()
 	MoveToNextPatrolPoint();
 }
 
+void AMeleeAIController::EndStun()
+{
+	if (!ControlledEnemy || !IsValid(ControlledEnemy)) return;
+	
+	bIsStunned = false;
+
+	if (StateBeforeStun == EEnemyState::Chasing && StateAfterStun != EEnemyState::Chasing)
+	{
+		StopChasing();
+	}
+	else if (StateBeforeStun == EEnemyState::Chasing && StateAfterStun == EEnemyState::Chasing)
+	{
+		LastKnownPlayerLocation = ControlledEnemy->GetLastSeenPlayerLocation();
+		StartChasingFromExternalOrder(LastKnownPlayerLocation);
+	}
+	
+	ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
+	CurrentState = StateAfterStun;
+	ControlledEnemy->UpdateStateVFX(CurrentState);
+}
