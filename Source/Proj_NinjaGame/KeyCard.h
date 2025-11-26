@@ -23,5 +23,5 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
-	class ADoor* DoorToUnlock;
+	TArray<class ADoor*> DoorsToUnlock;
 };
