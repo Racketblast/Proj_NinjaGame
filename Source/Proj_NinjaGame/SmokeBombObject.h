@@ -26,4 +26,7 @@ protected:
 	class UNiagaraComponent* SmokeComponent;
 	UPROPERTY(EditDefaultsOnly)
 	class UNiagaraSystem* SmokeEffect;
+
+
+	virtual bool ShouldApplyDefaultStun() const override { return false; }
 };

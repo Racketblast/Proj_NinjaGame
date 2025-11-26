@@ -1224,15 +1224,20 @@ void AMeleeAIController::EndStun()
 
 	if (StateBeforeStun == EEnemyState::Chasing && StateAfterStun != EEnemyState::Chasing)
 	{
+		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
 		StopChasing();
 	}
 	else if (StateBeforeStun == EEnemyState::Chasing && StateAfterStun == EEnemyState::Chasing)
 	{
 		LastKnownPlayerLocation = ControlledEnemy->GetLastSeenPlayerLocation();
+		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetRunSpeed();
 		StartChasingFromExternalOrder(LastKnownPlayerLocation);
 	}
+	else
+	{
+		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
+	}
 	
-	ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
 	CurrentState = StateAfterStun;
 	ControlledEnemy->UpdateStateVFX(CurrentState);
 }

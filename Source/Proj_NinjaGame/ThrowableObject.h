@@ -61,5 +61,7 @@ protected:
 	virtual void HandlePickup(class AStealthCharacter* Player);
 
 	virtual void DestroyObject();
+
+	virtual bool ShouldApplyDefaultStun() const { return true; }
 };
 

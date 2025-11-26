@@ -29,27 +29,33 @@ void ASmokeBombObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 	Super::ThrowableOnComponentHitFunction(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
 
 
-	// Stun
-	if (OtherActor)
-	{
-		// Kolla om vi träffade en MeleeEnemy
-		AMeleeEnemy* HitEnemy = Cast<AMeleeEnemy>(OtherActor);
-		if (HitEnemy)
-		{
-			AMeleeAIController* EnemyController = Cast<AMeleeAIController>(HitEnemy->GetController());
-
-			if (EnemyController)
-			{
-				// Stunna fienden i 3 sekunder 
-				EnemyController->StunEnemy(3.0f, EEnemyState::Chasing); 
-			}
-		}
-	}
-
-
 	SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	SmokeComponent->SetAsset(SmokeEffect);
 	SmokeComponent->Activate();
+
+	SphereComp->SetGenerateOverlapEvents(true);
+	SphereComp->SetCollisionObjectType(ECC_WorldDynamic);
+	SphereComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+	SphereComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap); 
+	SphereComp->UpdateOverlaps();
+
+	// Stun
+	TArray<AActor*> OverlappingActors;
+	SphereComp->GetOverlappingActors(OverlappingActors);
+
+	for (AActor* Actor : OverlappingActors)
+	{
+		AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(Actor);
+		if (Enemy)
+		{
+			AMeleeAIController* EnemyController = Cast<AMeleeAIController>(Enemy->GetController());
+			if (EnemyController)
+			{
+				EnemyController->StunEnemy(3.0f, EEnemyState::Chasing);
+				//UE_LOG(LogTemp, Warning, TEXT("SmokeBomb stunned: %s"), *Enemy->GetName());
+			}
+		}
+	}
 }
 
 void ASmokeBombObject::HandlePickup(class AStealthCharacter* Player)

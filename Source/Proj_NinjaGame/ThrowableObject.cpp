@@ -112,6 +112,21 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 					this,
 					UDamageType::StaticClass()
 				);
+
+				// Stun
+				if (ShouldApplyDefaultStun())
+				{
+					if (Enemy)
+					{
+						AMeleeAIController* EnemyController = Cast<AMeleeAIController>(Enemy->GetController());
+
+						if (EnemyController)
+						{
+							// Stunna fienden i 1 sekunder 
+							EnemyController->StunEnemy(1.0f, EEnemyState::Chasing); 
+						}
+					}
+				}
 			}
 		
 			if (ImpactEnemySound)
@@ -124,6 +139,10 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 				UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation(), 1, 1,0, ThrowableAttenuation);
 			}
 		
+			DestroyObject();
+		}
+		else
+		{
 			DestroyObject();
 		}
 	}
