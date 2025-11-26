@@ -4,6 +4,7 @@
 #include "HideSpot.h"
 
 #include "StealthCharacter.h"
+#include "StealthGameInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -59,6 +60,28 @@ void AHideSpot::ShowInteractable_Implementation(bool bShow)
 	else
 	{
 		HideMesh->SetRenderCustomDepth(false);
+	}
+	HideMesh->SetRenderCustomDepth(bShow);
+	TArray<USceneComponent*> SceneChildren;
+	HideMesh->GetChildrenComponents(true, SceneChildren);
+	for (USceneComponent* Child : SceneChildren)
+	{
+		if (UStaticMeshComponent* ChildMesh = Cast<UStaticMeshComponent>(Child))
+		{
+			ChildMesh->SetRenderCustomDepth(bShow);
+		}
+	}
+	
+	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance()))
+	{
+		if (bShow)
+		{
+			GI->CurrentInteractText = InteractText;
+		}
+		else
+		{
+			GI->CurrentInteractText = "";
+		}
 	}
 }
 
@@ -145,9 +168,6 @@ void AHideSpot::ExitHideSpot()
 	// Återställer kameran
 	Player->ResetToNormalCamera();
 
-	Player->bUseControllerRotationYaw = true;
-	Player->bUseControllerRotationPitch = true;
-
 	bOccupied = false;
 
 	APlayerController* PC = Cast<APlayerController>(Player->GetController());
@@ -173,7 +193,9 @@ void AHideSpot::ExitHideSpot()
 	// Teleporterar spelaren till exitpoint
 	if (ExitPoint)
 	{
-		Player->SetActorLocation(ExitPoint->GetComponentLocation());
+		FVector ExitLoction = ExitPoint->GetComponentLocation();
+		ExitLoction.Z +=  Player->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+		Player->SetActorLocation(ExitLoction);
 		Player->SetActorRotation(ExitPoint->GetComponentRotation());
 	}
 	else

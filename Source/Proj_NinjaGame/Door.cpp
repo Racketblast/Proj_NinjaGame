@@ -17,6 +17,8 @@ ADoor::ADoor()
 
 	DoorMesh = CreateDefaultSubobject<UStaticMeshComponent>("DoorMesh");
 	DoorMesh->SetupAttachment(RootComponent);
+	DoorNavLinkPos = CreateDefaultSubobject<USceneComponent>("DoorNavLinkPos");
+	DoorNavLinkPos->SetupAttachment(DoorMesh);
 	DoorSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("DoorSoundComponent"));
 	DoorSoundComponent->SetupAttachment(DoorMesh);
 	LockSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("LockSoundComponent"));
@@ -53,9 +55,9 @@ void ADoor::Use_Implementation(class AStealthCharacter* Player)
 			SpawnParams.Owner = this;
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-			FVector SpawnLocation = DoorMesh->GetComponentLocation();
+			FVector SpawnLocation = DoorNavLinkPos->GetComponentLocation();
 			SpawnLocation.Z = StaticMeshComponent->GetComponentLocation().Z;
-			FRotator SpawnRotation = DoorMesh->GetComponentRotation();
+			FRotator SpawnRotation = DoorNavLinkPos->GetComponentRotation();
 
 			if (DoorNavLinkClass)
 			{
@@ -99,9 +101,9 @@ void ADoor::BeginPlay()
 			SpawnParams.Owner = this;
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-			FVector SpawnLocation = DoorMesh->GetComponentLocation();
+			FVector SpawnLocation = DoorNavLinkPos->GetComponentLocation();
 			SpawnLocation.Z = StaticMeshComponent->GetComponentLocation().Z;
-			FRotator SpawnRotation = DoorMesh->GetComponentRotation();
+			FRotator SpawnRotation = DoorNavLinkPos->GetComponentRotation();
 			
 			if (DoorNavLinkClass)
 			{

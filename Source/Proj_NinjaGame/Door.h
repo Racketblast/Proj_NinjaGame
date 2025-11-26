@@ -59,6 +59,8 @@ protected:
 	UStaticMeshComponent* DoorMesh;
 	UPROPERTY(EditDefaultsOnly)
 	class UBoxComponent* DoorHitBox;
+	UPROPERTY(EditDefaultsOnly)
+	USceneComponent* DoorNavLinkPos;
 	
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class ADoorNavLink> DoorNavLinkClass;
