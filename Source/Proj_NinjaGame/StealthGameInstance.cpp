@@ -147,7 +147,7 @@ void UStealthGameInstance::SwitchOwnWeapon(EPlayerOwnThrowWeapon WeaponToSwitchT
 {
 	if (AStealthCharacter* Player = Cast<AStealthCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)))
 	{
-		switch (CurrentOwnThrowWeaponEnum)
+		switch (WeaponToSwitchTo)
 		{
 		case EPlayerOwnThrowWeapon::None:
 			CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::None;
