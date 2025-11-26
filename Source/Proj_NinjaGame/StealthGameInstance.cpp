@@ -147,20 +147,19 @@ void UStealthGameInstance::SwitchOwnWeapon(EPlayerOwnThrowWeapon WeaponToSwitchT
 {
 	if (AStealthCharacter* Player = Cast<AStealthCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)))
 	{
-		if (WeaponToSwitchTo == EPlayerOwnThrowWeapon::Kunai)
+		switch (CurrentOwnThrowWeaponEnum)
 		{
+		case EPlayerOwnThrowWeapon::None:
+			CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::None;
+			break;
+		case EPlayerOwnThrowWeapon::Kunai:
 			CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::Kunai;
 			CurrentOwnThrowWeapon = Player->KunaiWeapon;
-		}
-		else if (WeaponToSwitchTo == EPlayerOwnThrowWeapon::SmokeBomb)
-		{
+			break;
+		case EPlayerOwnThrowWeapon::SmokeBomb:
 			CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::SmokeBomb;
 			CurrentOwnThrowWeapon = Player->SmokeBombWeapon;
-		}
-		else
-		{
-			CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::None;
-			return;
+			break;
 		}
 
 		Player->AmountOfOwnWeapon = Player->MaxAmountOfOwnWeapon;
