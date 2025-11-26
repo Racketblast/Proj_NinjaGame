@@ -98,7 +98,7 @@ void ASprinklerSwitch::SendClosetEnemy()
 			{
 				AI->SetCurrentMission(EEnemyMission::Sprinkler);
 				//Enemy->OnSuspiciousLocation.Broadcast(EnemyHitBox->GetComponentLocation()); 
-				AI->AssignMission(EEnemyMission::Sprinkler, GetActorLocation());
+				AI->AssignMission(EEnemyMission::Sprinkler, EnemyHitBox->GetComponentLocation());
 			}
 		}
 	}

@@ -154,6 +154,17 @@ AMeleeEnemy* AEnemyHandler::GetClosestEnemyToLocation(FVector TargetLocation)
 
 		if (NavPath && NavPath->IsValid() && NavPath->PathPoints.Num() > 1)
 		{
+			// fienden måste nå nära målet
+			FVector LastPoint = NavPath->PathPoints.Last();
+			float EndDist = FVector::Dist(LastPoint, TargetLocation);
+    
+			if (EndDist > 500.f) 
+			{
+				continue;
+			}
+
+
+			
 			// Räkna ut total path längd
 			for (int32 i = 1; i < NavPath->PathPoints.Num(); i++)
 			{

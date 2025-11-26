@@ -438,6 +438,12 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 		{
 			//UE_LOG(LogTemp, Warning, TEXT("OnMoveCompleted RequestID: %s Result: %d CurrentState: %d bIsMovingToSound: %d"), *RequestID.ToString(), (int)Result.Code, (int)CurrentState, (int)bIsMovingToSound);
 			UE_LOG(LogTemp, Warning, TEXT("Move aborted (ignored patrol move)."));
+			if (bHasMission || CurrentMission != EEnemyMission::Patrol)
+			{
+				bIsDoingMissionMoveTo = false;
+				UE_LOG(LogTemp, Warning, TEXT("Move aborted, bHasMission."));
+				StartMissionMoveTo(CurrentMissionLocation);
+			}
 			return;
 		}
 		else

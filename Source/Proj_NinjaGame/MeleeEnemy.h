@@ -109,6 +109,19 @@ protected:
 
 	bool HasClearLOS(const FVector& Start, const FVector& End);
 
+
+	// Spread Agro
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Agro")
+	float AgroSpreadRadius = 800.f;   
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Agro")
+	bool bUseLineOfSightForAgroSpread = false;
+
+	UFUNCTION(BlueprintCallable, Category = "Agro")
+	void SpreadAgroToNearbyEnemies();
+
+	UFUNCTION()
+	void OnAgroSpreadTriggered();
 	
 	// För Attack 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")

@@ -117,6 +117,8 @@ void AMeleeEnemy::Tick(float DeltaTime)
 	CheckPlayerVisibility();
 
 	CheckCloseDetection();
+
+	//SpreadAgroToNearbyEnemies();
 }
 
 void AMeleeEnemy::CheckImmediateProximityDetection()
@@ -728,94 +730,91 @@ void AMeleeEnemy::HearSoundAtLocation(FVector SoundLocation)
 	}
 }
 
-
-/*void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
+//Spread agro
+void AMeleeEnemy::SpreadAgroToNearbyEnemies()
 {
-	if (!StateVFXComponent) return;
+	if (AMeleeAIController* AI = Cast<AMeleeAIController>(GetController())) return;
 	
-	// Om vi redan spelar samma vfx, gör inget
-	if (StateVFXComponent->GetAsset() != nullptr)
+	AMeleeAIController* AI = Cast<AMeleeAIController>(GetController());
+	EEnemyState CurrentState = AI->GetCurrentState();
+	
+	if (CurrentState != EEnemyState::Chasing)
+		return; // endast sprida agro om denna fiende redan jagar
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	TArray<FOverlapResult> Overlaps;
+	FCollisionShape Sphere = FCollisionShape::MakeSphere(AgroSpreadRadius);
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	bool bHit = World->OverlapMultiByChannel(
+		Overlaps,
+		GetActorLocation(),
+		FQuat::Identity,
+		ECC_Pawn,          
+		Sphere,
+		Params
+	);
+
+	if (!bHit) return;
+
+	for (const FOverlapResult& Result : Overlaps)
 	{
-		UNiagaraSystem* CurrentAsset = StateVFXComponent->GetAsset();
-		
-		UNiagaraSystem* NewAsset = nullptr;
-		switch (NewState)
+		AMeleeEnemy* OtherEnemy = Cast<AMeleeEnemy>(Result.GetActor());
+		if (!OtherEnemy || OtherEnemy == this)
+			continue;
+
+		// ignorera fiender som redan jagar
+		if (AI->GetCurrentState() == EEnemyState::Chasing)
+			continue;
+
+		// Check line of sight
+		if (bUseLineOfSightForAgroSpread)
 		{
-		case EEnemyState::Patrolling:
-			NewAsset = nullptr;
-			break;
-		case EEnemyState::Alert:
-			NewAsset = AlertVFX;
-			break;
-		case EEnemyState::Chasing:
-			NewAsset = ChaseVFX;
-			break;
-		case EEnemyState::Searching:
-			NewAsset = SearchVFX;
-			break;
-		default:
-			NewAsset = nullptr;
-			break;
+			FHitResult LineHit;
+			FVector Start = GetActorLocation() + FVector(0, 0, 50);
+			FVector End = OtherEnemy->GetActorLocation() + FVector(0, 0, 50);
+
+			FCollisionQueryParams TraceParams;
+			TraceParams.AddIgnoredActor(this);
+			TraceParams.AddIgnoredActor(OtherEnemy);
+
+			bool bBlocked = World->LineTraceSingleByChannel(
+				LineHit,
+				Start,
+				End,
+				ECC_Visibility,
+				TraceParams
+			);
+
+			if (bBlocked)
+			{
+				continue;
+			}
 		}
-		
-		if (NewAsset == CurrentAsset)
-		{
-			return;
-		}
+
+		// Sätt andra fienden i chase läge
+		OtherEnemy->OnAgroSpreadTriggered();
 	}
+}
 
-	switch (NewState)
-	{
-	case EEnemyState::Patrolling:
-		// Stäng av VFX
-		StateVFXComponent->SetAsset(nullptr);
-		StateVFXComponent->Deactivate();
-		break;
-	case EEnemyState::Alert:
-		if (AlertVFX)
-		{
-			StateVFXComponent->SetAsset(AlertVFX);
-			StateVFXComponent->Activate(true);
-		}
-		if (AlertSound)
-		{
-			PlayStateSound(AlertSound);
-		}
-		break;
-	case EEnemyState::Chasing:
-		if (ChaseVFX)
-		{
-			StateVFXComponent->SetAsset(ChaseVFX);
-			StateVFXComponent->Activate(true);
-		}
-		if (ChasingSound)
-		{
-			PlayStateSound(ChasingSound);
-		}
-		break;
+void AMeleeEnemy::OnAgroSpreadTriggered()
+{
+	/*if (AMeleeAIController* AI = Cast<AMeleeAIController>(GetController())) return;
+	
+	AMeleeAIController* AI = Cast<AMeleeAIController>(GetController());
+	EEnemyState CurrentState = AI->GetCurrentState();*/
+	
+	//if (CurrentState == EEnemyState::Chasing) return;
 
-	case EEnemyState::Searching:
-		if (SearchVFX)
-		{
-			StateVFXComponent->SetAsset(SearchVFX);
-			StateVFXComponent->Activate(true);
-		}
-		if (SearchingSound)
-		{
-			PlayStateSound(SearchingSound);
-		}
-		break;
+	bCanSeePlayer = true;
 
-	default:
-		// Stäng av VFX
-		StateVFXComponent->SetAsset(nullptr);
-		StateVFXComponent->Deactivate();
+	UE_LOG(LogTemp, Error, TEXT("%s was agro-spread and is now chasing!"), *GetName());
+}
 
-		// Stoppa ljud 
-		PlayStateSound(nullptr); 
-		break;
-	}
-}*/
 
 void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
 {
@@ -972,9 +971,6 @@ void AMeleeEnemy::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		StateVFXComponent->Deactivate();
 	}
 }
-
-
-
 
 // Time handle Funktioner:
 void AMeleeEnemy::ResetAttackCooldown()

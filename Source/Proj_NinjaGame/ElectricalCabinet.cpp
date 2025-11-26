@@ -104,7 +104,7 @@ void AElectricalCabinet::SendClosetEnemy()
 			{
 				AI->SetCurrentMission(EEnemyMission::Electrical);
 				//Enemy->OnSuspiciousLocation.Broadcast(EnemyHitBox->GetComponentLocation()); 
-				AI->AssignMission(EEnemyMission::Electrical, GetActorLocation());
+				AI->AssignMission(EEnemyMission::Electrical, EnemyHitBox->GetComponentLocation());
 			}
 		}
 	}
