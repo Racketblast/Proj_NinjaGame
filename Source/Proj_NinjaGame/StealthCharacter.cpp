@@ -511,6 +511,7 @@ void AStealthCharacter::BeginPlay()
 	// För HideSpot
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
+		UE_LOG(LogTemp, Error, TEXT("PC: %s"), *PC->PlayerCameraManager->GetName());
 		if (APlayerCameraManager* Cam = PC->PlayerCameraManager)
 		{
 			HideMinPitch = Cam->ViewPitchMin;
@@ -1142,6 +1143,7 @@ void AStealthCharacter::SetCustomCameraLocation(USceneComponent* NewCameraCompon
 
 void AStealthCharacter::ResetToNormalCamera()
 {
+	
 	FirstPersonCameraComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("ROOT"));
 	FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
 }
