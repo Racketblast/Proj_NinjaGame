@@ -33,34 +33,37 @@ void ASmokeBombObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 
 void ASmokeBombObject::HandlePickup(class AStealthCharacter* Player)
 {
-	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+	if (SmokeComponent->IsActive())
 	{
-		if (GI->CurrentOwnThrowWeaponEnum != EPlayerOwnThrowWeapon::SmokeBomb)
+		if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 		{
-			GI->SwitchOwnWeapon(EPlayerOwnThrowWeapon::SmokeBomb);
-			Destroy();
-			return;
-		}
-	}
-	
-	if (Player->AmountOfOwnWeapon < Player->MaxAmountOfOwnWeapon)
-	{
-		if (InteractSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), InteractSound, GetActorLocation());
-		}
-	
-		if (ThrowableWeapon)
-		{
-			if (Player->HeldThrowableWeapon)
+			if (GI->CurrentOwnThrowWeaponEnum != EPlayerOwnThrowWeapon::SmokeBomb)
 			{
-				Player->HeldThrowableWeapon->Destroy();
+				GI->SwitchOwnWeapon(EPlayerOwnThrowWeapon::SmokeBomb);
+				Destroy();
+				return;
 			}
-			Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
-			Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
 		}
+	
+		if (Player->AmountOfOwnWeapon < Player->MaxAmountOfOwnWeapon)
+		{
+			if (InteractSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), InteractSound, GetActorLocation());
+			}
+	
+			if (ThrowableWeapon)
+			{
+				if (Player->HeldThrowableWeapon)
+				{
+					Player->HeldThrowableWeapon->Destroy();
+				}
+				Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(ThrowableWeapon);
+				Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
+			}
 
-		Player->AmountOfOwnWeapon++;
-		Destroy();
+			Player->AmountOfOwnWeapon++;
+			Destroy();
+		}
 	}
 }
