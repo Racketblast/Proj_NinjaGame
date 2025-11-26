@@ -118,7 +118,7 @@ void AMeleeEnemy::Tick(float DeltaTime)
 
 	CheckCloseDetection();
 
-	//SpreadAgroToNearbyEnemies();
+	SpreadAgroToNearbyEnemies();
 }
 
 void AMeleeEnemy::CheckImmediateProximityDetection()
@@ -731,88 +731,125 @@ void AMeleeEnemy::HearSoundAtLocation(FVector SoundLocation)
 }
 
 //Spread agro
-void AMeleeEnemy::SpreadAgroToNearbyEnemies()
+void AMeleeEnemy::SpreadAgroToNearbyEnemies() 
 {
-	if (AMeleeAIController* AI = Cast<AMeleeAIController>(GetController())) return;
+	// Cooldown check
+	float TimeNow = GetWorld()->GetTimeSeconds();
+	if (TimeNow - LastAgroSpreadTime < AgroSpreadCooldown) return; 
+
+	// Uppdatera timestamp
+	LastAgroSpreadTime = TimeNow;
 	
-	AMeleeAIController* AI = Cast<AMeleeAIController>(GetController());
-	EEnemyState CurrentState = AI->GetCurrentState();
-	
-	if (CurrentState != EEnemyState::Chasing)
-		return; // endast sprida agro om denna fiende redan jagar
+    // Hämta denna fiendes AI controller
+    AMeleeAIController* MyAI = Cast<AMeleeAIController>(GetController());
+    if (!MyAI) return;
 
-	UWorld* World = GetWorld();
-	if (!World) return;
+    // Endast sprida agro om denna fiende faktiskt jagar
+    if (MyAI->GetCurrentState() != EEnemyState::Chasing)
+        return;
 
-	TArray<FOverlapResult> Overlaps;
-	FCollisionShape Sphere = FCollisionShape::MakeSphere(AgroSpreadRadius);
+    UWorld* World = GetWorld();
+    if (!World) return;
 
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
+    TArray<FOverlapResult> Overlaps;
+    FCollisionShape Sphere = FCollisionShape::MakeSphere(AgroSpreadRadius);
 
-	bool bHit = World->OverlapMultiByChannel(
-		Overlaps,
-		GetActorLocation(),
-		FQuat::Identity,
-		ECC_Pawn,          
-		Sphere,
-		Params
-	);
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(this);
 
-	if (!bHit) return;
+    bool bHit = World->OverlapMultiByChannel(
+        Overlaps,
+        GetActorLocation(),
+        FQuat::Identity,
+        ECC_Pawn,
+        Sphere,
+        Params
+    );
 
-	for (const FOverlapResult& Result : Overlaps)
-	{
-		AMeleeEnemy* OtherEnemy = Cast<AMeleeEnemy>(Result.GetActor());
-		if (!OtherEnemy || OtherEnemy == this)
-			continue;
+    // Debug sphere
+    if (bVisionDebug)
+    {
+        DrawDebugSphere(
+            World,
+            GetActorLocation(),
+            AgroSpreadRadius,
+            16,
+            FColor::Green,
+            false,
+            0.1f,
+            0,
+            2.f
+        );
+    }
 
-		// ignorera fiender som redan jagar
-		if (AI->GetCurrentState() == EEnemyState::Chasing)
-			continue;
+    if (!bHit) return;
 
-		// Check line of sight
-		if (bUseLineOfSightForAgroSpread)
-		{
-			FHitResult LineHit;
-			FVector Start = GetActorLocation() + FVector(0, 0, 50);
-			FVector End = OtherEnemy->GetActorLocation() + FVector(0, 0, 50);
+    for (const FOverlapResult& Result : Overlaps)
+    {
+        AMeleeEnemy* OtherEnemy = Cast<AMeleeEnemy>(Result.GetActor());
+        if (!OtherEnemy || OtherEnemy == this)
+            continue;
 
-			FCollisionQueryParams TraceParams;
-			TraceParams.AddIgnoredActor(this);
-			TraceParams.AddIgnoredActor(OtherEnemy);
+        // Hämta andra fiendens AI controller
+        AMeleeAIController* OtherAI = Cast<AMeleeAIController>(OtherEnemy->GetController());
+        if (!OtherAI) continue;
 
-			bool bBlocked = World->LineTraceSingleByChannel(
-				LineHit,
-				Start,
-				End,
-				ECC_Visibility,
-				TraceParams
-			);
+        // Skip om andra fienden redan jagar
+        if (OtherAI->GetCurrentState() == EEnemyState::Chasing)
+            continue;
 
-			if (bBlocked)
-			{
-				continue;
-			}
-		}
+        //UE_LOG(LogTemp, Warning, TEXT("Agro candidate: %s"), *OtherEnemy->GetName());
 
-		// Sätt andra fienden i chase läge
-		OtherEnemy->OnAgroSpreadTriggered();
-	}
+        // Check line of sight
+        if (bUseLineOfSightForAgroSpread)
+        {
+            FHitResult LineHit;
+            FVector Start = GetActorLocation() + FVector(0, 0, 50);
+            FVector End = OtherEnemy->GetActorLocation() + FVector(0, 0, 50);
+
+            FCollisionQueryParams TraceParams;
+            TraceParams.AddIgnoredActor(this);
+            TraceParams.AddIgnoredActor(OtherEnemy);
+
+            bool bBlocked = World->LineTraceSingleByChannel(
+                LineHit,
+                Start,
+                End,
+                ECC_Visibility,
+                TraceParams
+            );
+
+            // Debug line
+            if (bVisionDebug)
+            {
+                DrawDebugLine(
+                    World,
+                    Start,
+                    End,
+                    bBlocked ? FColor::Red : FColor::Green,
+                    false,
+                    0.15f,
+                    0,
+                    2.f
+                );
+            }
+
+            if (bBlocked)
+                continue;
+        }
+
+        // Sätt den andra fienden till chase läge
+        //UE_LOG(LogTemp, Warning, TEXT("Spreading agro to %s"), *OtherEnemy->GetName());
+        OtherEnemy->OnAgroSpreadTriggered();
+    }
 }
+
 
 void AMeleeEnemy::OnAgroSpreadTriggered()
 {
-	/*if (AMeleeAIController* AI = Cast<AMeleeAIController>(GetController())) return;
-	
-	AMeleeAIController* AI = Cast<AMeleeAIController>(GetController());
-	EEnemyState CurrentState = AI->GetCurrentState();*/
-	
-	//if (CurrentState == EEnemyState::Chasing) return;
-
 	bCanSeePlayer = true;
 
-	UE_LOG(LogTemp, Error, TEXT("%s was agro-spread and is now chasing!"), *GetName());
+	//UE_LOG(LogTemp, Warning, TEXT("%s is now agro and is chasing!"), *GetName());
 }
 
 
