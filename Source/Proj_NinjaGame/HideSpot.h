@@ -56,4 +56,6 @@ public:
 	
 	virtual void ShowInteractable_Implementation(bool bShow) override;
 	
+	UPROPERTY(EditDefaultsOnly, Category="HideSpot")
+	FString InteractText;
 };

@@ -33,7 +33,7 @@ void ASmokeBombObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 
 void ASmokeBombObject::HandlePickup(class AStealthCharacter* Player)
 {
-	if (SmokeComponent->IsActive())
+	if (!SmokeComponent->IsActive())
 	{
 		if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 		{
