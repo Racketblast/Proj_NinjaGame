@@ -52,15 +52,7 @@ void AHideSpot::BeginPlay()
 void AHideSpot::ShowInteractable_Implementation(bool bShow)
 {
 	IPlayerUseInterface::ShowInteractable_Implementation(bShow);
-
-	if (bShow)
-	{
-		HideMesh->SetRenderCustomDepth(true);
-	}
-	else
-	{
-		HideMesh->SetRenderCustomDepth(false);
-	}
+	
 	HideMesh->SetRenderCustomDepth(bShow);
 	TArray<USceneComponent*> SceneChildren;
 	HideMesh->GetChildrenComponents(true, SceneChildren);
