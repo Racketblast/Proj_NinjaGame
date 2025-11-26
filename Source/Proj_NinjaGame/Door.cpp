@@ -215,8 +215,6 @@ void ADoor::DoorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* O
 	{
 		PushDirection *= -1.f;
 	}
-
-	PushDirection.Z = 0.f;
 	
 	float PushStrength = 10.f;
 	if (CanPushCharacter(Character, PushDirection, (PushDirection * PushStrength).Length()))
