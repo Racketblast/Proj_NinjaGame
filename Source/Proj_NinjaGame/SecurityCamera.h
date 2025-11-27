@@ -117,6 +117,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Vision", meta=(AllowPrivateAccess="true"))
 	USpotLightComponent* VisionSpotlight;
 
+	FLinearColor HexToLinearColor(const FString& Hex);
+
+	void SetSpotlightColorFromHex(const FString& HexColor);
+
 
 public:	
 	virtual void Tick(float DeltaTime) override;

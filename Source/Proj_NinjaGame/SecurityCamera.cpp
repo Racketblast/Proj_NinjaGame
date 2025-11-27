@@ -54,7 +54,7 @@ ASecurityCamera::ASecurityCamera()
 	VisionSpotlight->bUseInverseSquaredFalloff = false;
 
 	// Spotlight: Färge
-	VisionSpotlight->SetLightColor(FLinearColor::White);  
+	//VisionSpotlight->SetLightColor(FLinearColor::White);  
 
 	// Spotlight: Räckvid
 	VisionSpotlight->AttenuationRadius = 2200.f;
@@ -439,6 +439,8 @@ void ASecurityCamera::SetVFXState(ECameraVFXState NewState)
 	case ECameraVFXState::None:
 		StateVFXComponent->SetAsset(nullptr);
 		StateVFXComponent->Deactivate();
+		
+		SetSpotlightColorFromHex(TEXT("788CFFFF"));
 		break;
 
 	case ECameraVFXState::Alert:
@@ -447,6 +449,8 @@ void ASecurityCamera::SetVFXState(ECameraVFXState NewState)
 			StateVFXComponent->SetAsset(AlertVFX);
 			StateVFXComponent->Activate(true);
 		}
+		
+		SetSpotlightColorFromHex(TEXT("FFF000FF"));
 		break;
 
 	case ECameraVFXState::Detected:
@@ -455,6 +459,38 @@ void ASecurityCamera::SetVFXState(ECameraVFXState NewState)
 			StateVFXComponent->SetAsset(DetectedVFX);
 			StateVFXComponent->Activate(true);
 		}
+		
+		SetSpotlightColorFromHex(TEXT("FF0000FF")); 
 		break;
+	}
+}
+
+FLinearColor ASecurityCamera::HexToLinearColor(const FString& Hex)
+{
+	if (Hex.Len() != 8)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Invalid hex length: %s"), *Hex);
+		return FLinearColor::White;
+	}
+
+	auto HexToFloat = [&](const FString& Sub)
+	{
+		return FParse::HexNumber(*Sub) / 255.0f;
+	};
+
+	float R = HexToFloat(Hex.Mid(0, 2));
+	float G = HexToFloat(Hex.Mid(2, 2));
+	float B = HexToFloat(Hex.Mid(4, 2));
+	float A = HexToFloat(Hex.Mid(6, 2));
+
+	return FLinearColor(R, G, B, A);
+}
+
+void ASecurityCamera::SetSpotlightColorFromHex(const FString& HexColor)
+{
+	if (VisionSpotlight)
+	{
+		FLinearColor Color = HexToLinearColor(HexColor);
+		VisionSpotlight->SetLightColor(Color);
 	}
 }
