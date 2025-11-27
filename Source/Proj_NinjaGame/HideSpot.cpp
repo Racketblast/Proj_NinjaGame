@@ -6,6 +6,7 @@
 #include "StealthCharacter.h"
 #include "StealthGameInstance.h"
 #include "Camera/CameraComponent.h"
+#include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -26,7 +27,11 @@ AHideSpot::AHideSpot()
 
 	// Vart spelaren hamnar efter att dem lämnar hide object
 	ExitPoint = CreateDefaultSubobject<USceneComponent>("ExitPoint"); 
-	ExitPoint->SetupAttachment(Root); 
+	ExitPoint->SetupAttachment(Root);
+
+	ExitBox = CreateDefaultSubobject<UBoxComponent>("ExitBox");
+	ExitBox->SetupAttachment(CameraPosition);
+	ExitBox->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Ignore);
 
 	// Collison
 	HideMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -97,6 +102,8 @@ void AHideSpot::EnterHideSpot(AStealthCharacter* Player)
 {
 	if (!Player) return;
 	//UE_LOG(LogTemp, Warning, TEXT("AHideSpot: EnterHideSpot"));
+	ExitBox->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Block);
+	
 	bOccupied = true;
 	PlayerPawn = Player;
 	InteractText = ExitText;
@@ -104,6 +111,7 @@ void AHideSpot::EnterHideSpot(AStealthCharacter* Player)
 	{
 		GI->CurrentInteractText = InteractText;
 	}
+	
 
 	// Stänger av collisions
 	Player->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -146,6 +154,8 @@ void AHideSpot::ExitHideSpot()
 	if (!bOccupied) return;
 	if (!PlayerPawn) return;
 	//UE_LOG(LogTemp, Warning, TEXT("AHideSpot: ExitHideSpot"));
+	
+	ExitBox->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Ignore);
 
 	AStealthCharacter* Player = PlayerPawn;
 	

@@ -7,6 +7,9 @@
 #include "GameFramework/Actor.h"
 #include "HideSpot.generated.h"
 
+#define TRACE_CHANNEL_INTERACT ECC_GameTraceChannel3
+
+
 UCLASS()
 class PROJ_NINJAGAME_API AHideSpot : public AActor, public IPlayerUseInterface
 {
@@ -45,6 +48,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="HideSpot")
 	USceneComponent* CameraPosition;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="HideSpot")
+	class UBoxComponent* ExitBox;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	bool bOccupied;
