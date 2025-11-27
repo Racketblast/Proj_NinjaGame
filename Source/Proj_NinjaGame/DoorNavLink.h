@@ -21,6 +21,6 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	void OpenDoor(AActor* MovingActor, const FVector& Destination);
 };
