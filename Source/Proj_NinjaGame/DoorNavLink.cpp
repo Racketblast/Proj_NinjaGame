@@ -4,6 +4,7 @@
 #include "DoorNavLink.h"
 
 #include "Door.h"
+#include "NavLinkCustomComponent.h"
 
 ADoorNavLink::ADoorNavLink()
 {
@@ -13,7 +14,20 @@ void ADoorNavLink::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	CopyEndPointsFromSimpleLinkToSmartLink();
+	UNavLinkCustomComponent* SmartLink = GetSmartLinkComp();
+	if (!SmartLink)
+	{
+		return;
+	}
+
+    
+	if (PointLinks.Num() > 0)
+	{
+		const FNavigationLink& Link = PointLinks[0];
+
+		SmartLink->SetLinkData(Link.Left, Link.Right, Link.Direction);
+	}
+
 	OnSmartLinkReached.AddDynamic(this, &ADoorNavLink::OpenDoor);
 }
 
