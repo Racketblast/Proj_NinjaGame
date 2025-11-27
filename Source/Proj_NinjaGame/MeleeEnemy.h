@@ -115,7 +115,12 @@ protected:
 	float AgroSpreadRadius = 800.f;   
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Agro")
-	bool bUseLineOfSightForAgroSpread = false;
+	bool bUseLineOfSightForAgroSpread = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Agro")
+	float AgroSpreadCooldown = 0.5f;
+
+	float LastAgroSpreadTime = -100.f; 
 
 	UFUNCTION(BlueprintCallable, Category = "Agro")
 	void SpreadAgroToNearbyEnemies();
