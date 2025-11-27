@@ -511,7 +511,6 @@ void AStealthCharacter::BeginPlay()
 	// För HideSpot
 	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
-		UE_LOG(LogTemp, Error, TEXT("PC: %s"), *PC->PlayerCameraManager->GetName());
 		if (APlayerCameraManager* Cam = PC->PlayerCameraManager)
 		{
 			HideMinPitch = Cam->ViewPitchMin;

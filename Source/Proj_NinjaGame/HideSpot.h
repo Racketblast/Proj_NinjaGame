@@ -58,4 +58,8 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, Category="HideSpot")
 	FString InteractText;
+	UPROPERTY(EditDefaultsOnly, Category="HideSpot")
+	FString EnterText = "Hide";
+	UPROPERTY(EditDefaultsOnly, Category="HideSpot")
+	FString ExitText = "Exit";
 };

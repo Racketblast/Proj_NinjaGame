@@ -19,6 +19,11 @@ void AKunaiObject::HandlePickup(class AStealthCharacter* Player)
 	{
 		if (GI->CurrentOwnThrowWeaponEnum != EPlayerOwnThrowWeapon::Kunai)
 		{
+			if (InteractSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), InteractSound, GetActorLocation());
+			}
+			
 			GI->SwitchOwnWeapon(EPlayerOwnThrowWeapon::Kunai);
 			Destroy();
 			return;

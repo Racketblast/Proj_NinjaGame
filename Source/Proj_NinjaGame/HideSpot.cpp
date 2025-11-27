@@ -46,6 +46,8 @@ AHideSpot::AHideSpot()
 void AHideSpot::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	InteractText = EnterText;
 }
 
 
@@ -96,7 +98,12 @@ void AHideSpot::EnterHideSpot(AStealthCharacter* Player)
 	if (!Player) return;
 	//UE_LOG(LogTemp, Warning, TEXT("AHideSpot: EnterHideSpot"));
 	bOccupied = true;
-	PlayerPawn = Player;   
+	PlayerPawn = Player;
+	InteractText = ExitText;
+	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance()))
+	{
+		GI->CurrentInteractText = InteractText;
+	}
 
 	// Stänger av collisions
 	Player->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -156,6 +163,11 @@ void AHideSpot::ExitHideSpot()
 	Player->bIsHiddenFromEnemy = false;
 	
 	Player->bIsHiding = false;
+	InteractText = EnterText;
+	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance()))
+	{
+		GI->CurrentInteractText = InteractText;
+	}
 
 	// Återställer kameran
 	Player->ResetToNormalCamera();

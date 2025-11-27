@@ -66,6 +66,11 @@ void ASmokeBombObject::HandlePickup(class AStealthCharacter* Player)
 		{
 			if (GI->CurrentOwnThrowWeaponEnum != EPlayerOwnThrowWeapon::SmokeBomb)
 			{
+				if (InteractSound)
+				{
+					UGameplayStatics::PlaySoundAtLocation(GetWorld(), InteractSound, GetActorLocation());
+				}
+				
 				GI->SwitchOwnWeapon(EPlayerOwnThrowWeapon::SmokeBomb);
 				Destroy();
 				return;
