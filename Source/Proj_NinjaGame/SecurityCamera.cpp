@@ -85,6 +85,8 @@ void ASecurityCamera::BeginPlay()
 		bIsAnimationPlaying = true;
 	}*/
 
+	SetSpotlightColorFromHex(TEXT("82FF6DFF"));
+	
 	VisionSpotlight->AttachToComponent(CameraMesh,
 	FAttachmentTransformRules::SnapToTargetIncludingScale,
 	"Vision");
@@ -440,7 +442,7 @@ void ASecurityCamera::SetVFXState(ECameraVFXState NewState)
 		StateVFXComponent->SetAsset(nullptr);
 		StateVFXComponent->Deactivate();
 		
-		SetSpotlightColorFromHex(TEXT("788CFFFF"));
+		SetSpotlightColorFromHex(TEXT("82FF6DFF"));
 		break;
 
 	case ECameraVFXState::Alert:
