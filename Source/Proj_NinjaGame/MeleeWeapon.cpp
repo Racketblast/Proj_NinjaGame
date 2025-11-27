@@ -5,6 +5,7 @@
 
 #include "BreakableObject.h"
 #include "MeleeEnemy.h"
+#include "SecurityCamera.h"
 #include "SoundUtility.h"
 #include "StealthCharacter.h"
 #include "Components/BoxComponent.h"
@@ -38,6 +39,26 @@ void AMeleeWeapon::StartMeleeAttack()
 			}
 			UGameplayStatics::ApplyDamage(
 				Enemy,
+				MeleeDamage,
+				UGameplayStatics::GetPlayerController(this,0),
+				UGameplayStatics::GetPlayerCharacter(this,0),
+				UDamageType::StaticClass()
+				);
+				
+			//Sound för fienden
+			float NoiseLevel = 4.0f;
+
+			USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel);
+		}
+		else if (ASecurityCamera* Camera = Cast<ASecurityCamera>(HitActor))
+		{
+			
+			if (HitSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), HitSound, GetActorLocation());
+			}
+			UGameplayStatics::ApplyDamage(
+				Camera,
 				MeleeDamage,
 				UGameplayStatics::GetPlayerController(this,0),
 				UGameplayStatics::GetPlayerCharacter(this,0),
