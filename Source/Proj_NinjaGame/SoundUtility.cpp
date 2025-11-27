@@ -28,7 +28,7 @@ void USoundUtility::ReportNoise(UWorld* World, FVector Location, float Loudness,
 
 		
 		// Dämpningsfaktor per vägg
-		const float WallDamping = 0.5f;
+		const float WallDamping = 0.3f;
 
 		// Line trace params
 		FCollisionQueryParams TraceParams;
