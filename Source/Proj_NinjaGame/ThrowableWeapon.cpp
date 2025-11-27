@@ -64,7 +64,8 @@ void AThrowableWeapon::ThrowObjectLogic(AStealthCharacter* Player)
 		ThrownObject->bBreaksOnImpact = bBreakOnImpact;
 		ThrownObject->DealtDamage = ThrowDamage;
 		ThrownObject->ThrowVelocity = Player->FirstPersonCameraComponent->GetForwardVector() * ThrowSpeed;
-		
+
+		ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT,ECR_Ignore);
 		ThrownObject->StaticMeshComponent->SetSimulatePhysics(true);
 		ThrownObject->StaticMeshComponent->SetNotifyRigidBodyCollision(true);
 		ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);

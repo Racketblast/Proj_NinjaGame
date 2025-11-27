@@ -8,6 +8,8 @@
 
 class AStealthCharacter;
 
+#define TRACE_CHANNEL_INTERACT ECC_GameTraceChannel3
+
 UCLASS()
 class PROJ_NINJAGAME_API AThrowableWeapon : public AActor
 {
