@@ -705,6 +705,10 @@ void AStealthCharacter::CheckForUse()
 			{
 				if (LastUseTarget != Actor)
 				{
+					if (LastUseTarget)
+					{
+						IPlayerUseInterface::Execute_ShowInteractable(LastUseTarget, false);
+					}
 					LastUseTarget = Actor;
 					IPlayerUseInterface::Execute_ShowInteractable(LastUseTarget, true);
 					bShowUseWidget = true;
