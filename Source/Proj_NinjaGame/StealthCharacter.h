@@ -229,7 +229,7 @@ public:
 	class UBoxComponent* PlayerMeleeBox;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-	TArray<class ADoor*> DoorsThatCanBeUnlocked;
+	TArray<class AKeyCard*> KeyCards;
 protected:
 	
 	// Sneak

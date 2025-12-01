@@ -4,6 +4,7 @@
 #include "Door.h"
 
 #include "DoorNavLink.h"
+#include "KeyCard.h"
 #include "NavModifierComponent.h"
 #include "StealthCharacter.h"
 #include "Components/AudioComponent.h"
@@ -42,7 +43,16 @@ void ADoor::Use_Implementation(class AStealthCharacter* Player)
 
 	if (bNeedsToBeUnlocked)
 	{
-		if (Player->DoorsThatCanBeUnlocked.Contains(this))
+		for (auto KeyCard : Player->KeyCards)
+		{
+			if (KeyCard->ContainsDoor(this))
+			{
+				PlayerCanUnlock = true;
+				break;
+			}
+		}
+		
+		if (PlayerCanUnlock)
 		{
 			if (UnlockSound && LockSoundComponent)
 			{

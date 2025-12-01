@@ -804,15 +804,6 @@ void AStealthCharacter::Climb()
 						ExitClimb();
 					}
 				}
-				//Code that should work but capsule changes size almost randomly so can't use this
-				/*else
-				{
-					if (bHitLedge)
-					{
-						UE_LOG(LogTemp, Warning, TEXT("No ledge"));
-						bHitLedge = false;
-					}
-				}*/
 			}
 			
 			//If we are holding forward and jump
