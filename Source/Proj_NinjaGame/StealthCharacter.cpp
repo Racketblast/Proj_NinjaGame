@@ -377,6 +377,18 @@ void AStealthCharacter::UpdateProjectilePrediction()
     FPredictProjectilePathResult PredictResult;
     UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult);
 
+	if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(PredictResult.HitResult.GetActor()))
+	{
+		if (PredictResult.HitResult.Component == Enemy->GetHeadComponent())
+		{
+			UE_LOG(LogTemp, Error, TEXT("Hit head"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Hit Enemy"));
+		}
+	}
+	
 	SpawnedMarker->SetActorLocation(PredictResult.HitResult.Location);
 }
 
