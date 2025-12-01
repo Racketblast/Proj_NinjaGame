@@ -32,7 +32,9 @@ public:
 	float ThrowSpeed = 1000.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bBreakOnImpact = true;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsOwnThrowWeapon = false;
 	UPROPERTY(EditDefaultsOnly)
 	UStaticMeshComponent* StaticMeshComponent;
 protected:
