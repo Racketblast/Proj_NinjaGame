@@ -213,11 +213,32 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 				}
 			}
 
-			if (bHasLookAroundTarget && !bIsRotating)
+			/*if (bHasLookAroundTarget && !bIsRotating)
 			{
 				bIsDoingMissionMoveTo = false;
 				MoveToLocation(LookAroundTarget);
+			}*/
+			if (bHasLookAroundTarget)
+			{
+				if (!bIsRotating && !bIsDoingLookAroundMove)
+				{
+					StartSmoothRotationTowards(LookAroundTarget, 4);
+					
+					bIsDoingLookAroundMove = true;
+				}
+
+				// När rotationen är klar så körs MoveTo
+				if (bIsDoingLookAroundMove && !bIsRotating)
+				{
+					bIsDoingMissionMoveTo = false;
+					MoveToLocation(LookAroundTarget);
+
+					// Reset så detta inte triggas varje tick
+					bIsDoingLookAroundMove = false;
+					bHasLookAroundTarget   = false;
+				}
 			}
+
 			
 			if (ControlledEnemy->bPlayerInAlertCone) 
 			{
@@ -408,7 +429,7 @@ void AMeleeAIController::MoveToNextPatrolPoint()
 	DesiredLookRotation.Pitch = 0.f;
 	DesiredLookRotation.Roll  = 0.f;
 
-	// Starta långsam rotation
+	// Starta rotation
 	bIsRotatingTowardPatrolPoint = true;
 	RotationProgress = 0.f;
 
@@ -495,7 +516,16 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 			{
 				if (PatrolPoint->bUseCustomRotation)
 				{
-					ControlledEnemy->SetActorRotation(PatrolPoint->CustomRotation);
+					//ControlledEnemy->SetActorRotation(PatrolPoint->CustomRotation);
+					DesiredLookRotation = PatrolPoint->CustomRotation;
+
+					// Tvinga pitch och roll till 0 
+					DesiredLookRotation.Pitch = 0.f;
+					DesiredLookRotation.Roll  = 0.f;
+
+					// Starta rotation
+					bIsRotatingTowardPatrolPoint = true;
+					RotationProgress = 0.f;
 				}
 			}
 
@@ -1238,6 +1268,10 @@ void AMeleeAIController::EndStun()
 		LastKnownPlayerLocation = ControlledEnemy->GetLastSeenPlayerLocation();
 		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetRunSpeed();
 		StartChasingFromExternalOrder(LastKnownPlayerLocation);
+	}
+	else if (StateBeforeStun != EEnemyState::Chasing && StateAfterStun == EEnemyState::Chasing)
+	{
+		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetRunSpeed();
 	}
 	else
 	{

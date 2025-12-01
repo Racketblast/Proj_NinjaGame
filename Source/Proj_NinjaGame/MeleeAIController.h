@@ -122,6 +122,7 @@ protected:
 	bool bIsInvestigatingTarget = false;
 	FVector LookAroundTarget;
 	bool bHasLookAroundTarget = false;
+	bool bIsDoingLookAroundMove = false;
 
 	
 	FRotator DesiredLookRotation;
