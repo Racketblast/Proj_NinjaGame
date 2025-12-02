@@ -266,7 +266,7 @@ void ASecurityCamera::OnPlayerSpotted()
 	{
 		if (!Enemy) continue;
 
-		AMeleeAIController* AI = Cast<AMeleeAIController>(Enemy->GetController());
+		AEnemyAIController* AI = Cast<AEnemyAIController>(Enemy->GetController());
 		if (!AI) continue;
 
 		AI->StartChasingFromExternalOrder(LastSpottedPlayerLocation);          
@@ -405,7 +405,7 @@ void ASecurityCamera::Die()
 
 	
 	// Hämta AI Controller
-	AMeleeAIController* AI = Cast<AMeleeAIController>(ClosestEnemy->GetController());
+	AEnemyAIController* AI = Cast<AEnemyAIController>(ClosestEnemy->GetController());
 
 	if (AI)
 	{

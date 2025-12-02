@@ -94,7 +94,7 @@ void ASprinklerSwitch::SendClosetEnemy()
 	{
 		if (AMeleeEnemy* Enemy = EnemyHandler->GetClosestEnemyToLocation(GetActorLocation()))
 		{
-			if (AMeleeAIController* AI = Cast<AMeleeAIController>(Enemy->GetController()))
+			if (AEnemyAIController* AI = Cast<AEnemyAIController>(Enemy->GetController()))
 			{
 				AI->SetCurrentMission(EEnemyMission::Sprinkler);
 				//Enemy->OnSuspiciousLocation.Broadcast(EnemyHitBox->GetComponentLocation()); 
@@ -109,7 +109,7 @@ void ASprinklerSwitch::EnemyBeginOverlap(UPrimitiveComponent* OverlappedComponen
 {
 	if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(OtherActor))
 	{
-		if (AMeleeAIController* AI = Cast<AMeleeAIController>(Enemy->GetController()))
+		if (AEnemyAIController* AI = Cast<AEnemyAIController>(Enemy->GetController()))
 		{
 			if (AI->GetCurrentMission() == EEnemyMission::Sprinkler)
 			{

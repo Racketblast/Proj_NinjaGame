@@ -75,7 +75,7 @@ void AEnemyHandler::UpdateEnemyStates()
 		AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(EnemyActor);
 		if (!Enemy) continue;
 
-		AMeleeAIController* AICon = Cast<AMeleeAIController>(Enemy->GetController());
+		AEnemyAIController* AICon = Cast<AEnemyAIController>(Enemy->GetController());
 		if (!AICon) continue;
 
 		if (AICon->GetCurrentState() == EEnemyState::Chasing)
@@ -137,7 +137,7 @@ AMeleeEnemy* AEnemyHandler::GetClosestEnemyToLocation(FVector TargetLocation)
 		AAIController* AICon = Cast<AAIController>(Enemy->GetController());
 		if (AICon)
 		{
-			AMeleeAIController* AI = Cast<AMeleeAIController>(AICon);
+			AEnemyAIController* AI = Cast<AEnemyAIController>(AICon);
 			if (AI && AI->GetHasMission())
 			{
 				continue; 

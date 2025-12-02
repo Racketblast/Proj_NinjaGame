@@ -47,7 +47,7 @@ void ASmokeBombObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 		AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(Actor);
 		if (Enemy)
 		{
-			AMeleeAIController* EnemyController = Cast<AMeleeAIController>(Enemy->GetController());
+			AEnemyAIController* EnemyController = Cast<AEnemyAIController>(Enemy->GetController());
 			if (EnemyController)
 			{
 				EnemyController->StunEnemy(3.0f, EEnemyState::Searching);

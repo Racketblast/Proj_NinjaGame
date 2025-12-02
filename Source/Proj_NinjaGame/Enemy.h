@@ -3,25 +3,24 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MeleeAIController.h" // Byt ut till riktiga controller senare 
 #include "GameFramework/Character.h"
 #include "NiagaraComponent.h"
-#include "MeleeAIController.h"
-#include "MeleeEnemy.generated.h"
+#include "Enemy.generated.h"
 
 class UBoxComponent;
-class UAnimMontage;
 
 UCLASS()
-class PROJ_NINJAGAME_API AMeleeEnemy : public ACharacter
+class PROJ_NINJAGAME_API AEnemy : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
-	AMeleeEnemy();
+	AEnemy();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	bool bCanBeAssassinated = false;
-	
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -61,8 +60,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
 	bool bIsDead = false;
-	
-	float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
+
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
 	void Die();
 
@@ -103,10 +102,7 @@ protected:
 
 
 	void OnSuspiciousLocationDetected();
-
-	//bool HasClearLOS(const FVector& Start, const FVector& End);
-
-
+	
 	// Spread Agro
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Agro")
 	float AgroSpreadRadius = 800.f;   
@@ -132,15 +128,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
 	float AttackDamage = 1.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
-	float AttackCooldown = 1.2f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
-	UAnimMontage* AttackMontage;
-	
-	UPROPERTY(VisibleAnywhere, Category="Combat")
-	UBoxComponent* MeleeHitBox;
-
 	UPROPERTY(EditDefaultsOnly, Category="Combat")
 	UCapsuleComponent* AssassinationCapsule;
 
@@ -158,22 +145,8 @@ protected:
 	UFUNCTION()
 	void OnAssasinationOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 								UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-	
-	bool bCanAttack = true;
-	bool bHitRegisteredThisSwing = false;
-
-	FTimerHandle AttackCooldownHandle;
-	FTimerHandle HitboxWindowHandle;
-	
-	UFUNCTION()
-	void OnMeleeOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-							 UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
-							 bool bFromSweep, const FHitResult& SweepResult);
-
-
 
 	// Time handle Funktioner:
-	void ResetAttackCooldown();
 	void ForgetHeardSound();
 
 	// Audio:
@@ -218,6 +191,7 @@ public:
 	FORCEINLINE UCapsuleComponent* GetHeadComponent() const { return HeadCapsule; }
 	FORCEINLINE AEnemyHandler* GetEnemyHandler() const { return EnemyHandler; }
 	FORCEINLINE void SetEnemyHandler(AEnemyHandler* NewEnemyHandler) { EnemyHandler = NewEnemyHandler; }
+	FORCEINLINE float GetAttackRange() const { return AttackRange; }
 	float GetHealth() const { return Health; }
 
 	void UpdateLastSeenPlayerLocation();
@@ -228,14 +202,6 @@ public:
 
 	UPROPERTY(BlueprintReadWrite)
 	bool bPlayerInAlertCone = false;
-	
-	UFUNCTION(BlueprintCallable)
-	void StartAttack();
-	
-	FORCEINLINE float GetAttackRange() const { return AttackRange; }
-	
-	void EnableHitbox(float WindowSeconds = 0.15f);
-	void DisableHitbox();
 	
 	virtual void ApplyDamageTo(AActor* Target);
 
