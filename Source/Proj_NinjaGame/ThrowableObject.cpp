@@ -30,6 +30,8 @@ void AThrowableObject::Use_Implementation(class AStealthCharacter* Player)
 	if (Thrown) return;
 	
 	HandlePickup(Player);
+
+	Player->UpdateSpawnMarkerMesh();
 }
 
 void AThrowableObject::ShowInteractable_Implementation(bool bShow)

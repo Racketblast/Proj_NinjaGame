@@ -32,6 +32,8 @@ void AInteractableObject::Use_Implementation(class AStealthCharacter* Player)
 void AInteractableObject::ShowInteractable_Implementation(bool bShow)
 {
 	IPlayerUseInterface::ShowInteractable_Implementation(bShow);
+
+	bIsShowingItself = bShow;
 	
 	StaticMeshComponent->SetRenderCustomDepth(bShow);
 	TArray<USceneComponent*> SceneChildren;
@@ -47,6 +49,39 @@ void AInteractableObject::ShowInteractable_Implementation(bool bShow)
 	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance()))
 	{
 		if (bShow)
+		{
+			if (HoverSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), HoverSound, GetActorLocation());
+			}
+	
+			GI->CurrentInteractText = InteractText;
+		}
+		else
+		{
+			GI->CurrentInteractText = "";
+		}
+	}
+}
+
+void AInteractableObject::UpdateShowInteractable_Implementation()
+{
+	IPlayerUseInterface::UpdateShowInteractable_Implementation();
+
+	StaticMeshComponent->SetRenderCustomDepth(bIsShowingItself);
+	TArray<USceneComponent*> SceneChildren;
+	StaticMeshComponent->GetChildrenComponents(true, SceneChildren);
+	for (USceneComponent* Child : SceneChildren)
+	{
+		if (UStaticMeshComponent* ChildMesh = Cast<UStaticMeshComponent>(Child))
+		{
+			ChildMesh->SetRenderCustomDepth(bIsShowingItself);
+		}
+	}
+	
+	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance()))
+	{
+		if (bIsShowingItself)
 		{
 			if (HoverSound)
 			{

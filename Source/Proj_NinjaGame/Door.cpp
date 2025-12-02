@@ -7,9 +7,11 @@
 #include "KeyCard.h"
 #include "NavModifierComponent.h"
 #include "StealthCharacter.h"
+#include "StealthGameInstance.h"
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 ADoor::ADoor()
 {
@@ -43,17 +45,12 @@ void ADoor::Use_Implementation(class AStealthCharacter* Player)
 
 	if (bNeedsToBeUnlocked)
 	{
-		for (auto KeyCard : Player->KeyCards)
-		{
-			if (KeyCard->ContainsDoor(this))
-			{
-				PlayerCanUnlock = true;
-				break;
-			}
-		}
-		
 		if (PlayerCanUnlock)
 		{
+			bOverrideInteractText = false;
+			InteractText = DoorOpenText;
+			Execute_UpdateShowInteractable(this);
+			
 			if (UnlockSound && LockSoundComponent)
 			{
 				LockSoundComponent->SetSound(UnlockSound);
@@ -105,8 +102,16 @@ void ADoor::BeginPlay()
 
 	if (GetWorld())
 	{
-		if (!bNeedsToBeUnlocked)
+		if (bNeedsToBeUnlocked)
 		{
+			bOverrideInteractText = true;
+			InteractText = DoorLockedText;
+		}
+		else
+		{
+			bOverrideInteractText = false;
+			InteractText = DoorOpenText;
+			
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.Owner = this;
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -175,6 +180,13 @@ void ADoor::OpenCloseDoor()
 	bOpen = !bOpen;
 	bIsMoving = true;
 	DoorMesh->SetCanEverAffectNavigation(false);
+}
+
+void ADoor::UnlockDoor()
+{
+	InteractText = DoorUnlockText;
+	PlayerCanUnlock = true;
+	
 }
 
 bool ADoor::CanPushCharacter(ACharacter* Character, FVector PushDir, float PushDistance)

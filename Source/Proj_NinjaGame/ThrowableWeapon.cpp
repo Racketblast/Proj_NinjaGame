@@ -30,11 +30,12 @@ void AThrowableWeapon::Throw(AStealthCharacter* Player)
 	{
 		Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(Player->CurrentOwnThrowWeapon);
 		Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
+		Player->UpdateSpawnMarkerMesh();
 	}
 	else
 	{
 		Player->HeldThrowableWeapon = nullptr;
-		Player->AimEnd();
+		Player->AimEndFunction();
 	}
 	Player->LastHeldWeapon = nullptr;
 	Destroy();

@@ -27,4 +27,7 @@ public:
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "PlayerInteraction")
 	void ShowInteractable(bool bShow);
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "PlayerInteraction")
+	void UpdateShowInteractable();
 };
