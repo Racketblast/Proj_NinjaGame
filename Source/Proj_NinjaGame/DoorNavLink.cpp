@@ -28,7 +28,7 @@ void ADoorNavLink::BeginPlay()
 		SmartLink->SetLinkData(Link.Left, Link.Right, Link.Direction);
 	}
 
-	OnSmartLinkReached.AddDynamic(this, &ADoorNavLink::OpenDoor);
+	OnSmartLinkReached.AddUniqueDynamic(this, &ADoorNavLink::OpenDoor);
 }
 
 void ADoorNavLink::OpenDoor(AActor* MovingActor, const FVector& Destination)

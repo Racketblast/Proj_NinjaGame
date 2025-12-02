@@ -3,6 +3,7 @@
 
 #include "InteractableObject.h"
 
+#include "NiagaraComponent.h"
 #include "StealthGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -14,7 +15,9 @@ AInteractableObject::AInteractableObject()
 	
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	RootComponent = StaticMeshComponent;
-
+	SparkleComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("SparkleComponent"));
+	SparkleComponent->SetupAttachment(StaticMeshComponent);
+	SparkleComponent->SetAutoActivate(false);
 }
 
 void AInteractableObject::Use_Implementation(class AStealthCharacter* Player)
@@ -97,10 +100,45 @@ void AInteractableObject::UpdateShowInteractable_Implementation()
 	}
 }
 
+void AInteractableObject::TurnOnVFX(bool bCond)
+{
+	if (bShouldShowVFX)
+	{
+		SparkleComponent->SetActive(bCond);
+	}
+	else
+	{
+		SparkleComponent->SetActive(false);
+	}
+}
+
 // Called when the game starts or when spawned
 void AInteractableObject::BeginPlay()
 {
 	Super::BeginPlay();
+
 	
+	ChangeSparkleBasedOnSize();
+}
+
+void AInteractableObject::ChangeSparkleBasedOnSize()
+{
+	if (StaticMeshComponent && StaticMeshComponent->GetStaticMesh())
+	{
+		FVector LocalOrigin;
+		FVector BoxExtent;
+
+		StaticMeshComponent->GetStaticMesh()->GetBounds().GetBox().GetCenterAndExtents(LocalOrigin, BoxExtent);
+		BoxExtent = BoxExtent * StaticMeshComponent->GetComponentScale();
+
+		float SpriteSize = FMath::Clamp(BoxExtent.Size() / 4.0f, 10.0f, 40.0f);
+		//float SpawnRate = FMath::Clamp(BoxExtent.Size() / 12.0f, 2.0f, 10.0f);
+		
+		if (SparkleComponent)
+		{
+			SparkleComponent->SetVariableFloat(TEXT("SpriteSize"), SpriteSize);
+			//SparkleComponent->SetVariableFloat(TEXT("SpawnRate"), SpawnRate);
+		}
+	}
 }
 

@@ -62,6 +62,7 @@ void AThrowableWeapon::ThrowObjectLogic(AStealthCharacter* Player)
 	{
 		AThrowableObject* ThrownObject = GetWorld()->SpawnActor<AThrowableObject>(ThrownWeaponObject, SpawnLocation, SpawnRotation);
 		ThrownObject->Thrown = true;
+		ThrownObject->SetShowVFX(false);
 		ThrownObject->bBreaksOnImpact = bBreakOnImpact;
 		ThrownObject->DealtDamage = ThrowDamage;
 		ThrownObject->ThrowVelocity = Player->FirstPersonCameraComponent->GetForwardVector() * ThrowSpeed;

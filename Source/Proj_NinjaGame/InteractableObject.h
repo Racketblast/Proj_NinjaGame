@@ -21,7 +21,9 @@ public:
 	virtual void Use_Implementation(class AStealthCharacter* Player) override;
 	virtual void ShowInteractable_Implementation(bool bShow) override;
 	virtual void UpdateShowInteractable_Implementation() override;
+	virtual void TurnOnVFX(bool bCond);
 
+	FORCEINLINE void SetShowVFX(bool bShow){bShouldShowVFX = bShow;}
 	UPROPERTY(EditDefaultsOnly)
 	UStaticMeshComponent* StaticMeshComponent;
 protected:
@@ -41,4 +43,11 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category="Interact")
 	bool bIsShowingItself = false;
+
+	UPROPERTY(EditDefaultsOnly)
+	class UNiagaraComponent* SparkleComponent;
+	
+	bool bShouldShowVFX = true;
+
+	virtual void ChangeSparkleBasedOnSize();
 };

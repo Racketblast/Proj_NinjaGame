@@ -6,6 +6,7 @@
 #include "DoorNavLink.h"
 #include "KeyCard.h"
 #include "NavModifierComponent.h"
+#include "NiagaraComponent.h"
 #include "StealthCharacter.h"
 #include "StealthGameInstance.h"
 #include "Components/AudioComponent.h"
@@ -28,6 +29,7 @@ ADoor::ADoor()
 	LockSoundComponent->SetupAttachment(DoorMesh);
 	DoorHitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("DoorHitBox"));
 	DoorHitBox->SetupAttachment(DoorMesh);
+	SparkleComponent->SetupAttachment(DoorMesh);
 
 	//See how this could work.
 	//DoorNavModifierComponent = CreateDefaultSubobject<UNavModifierComponent>(TEXT("DoorMovementComponent"));

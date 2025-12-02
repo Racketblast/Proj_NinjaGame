@@ -18,7 +18,7 @@
 AThrowableObject::AThrowableObject()
 {
 	StaticMeshComponent->OnComponentHit.AddDynamic(this, &AThrowableObject::ThrowableOnComponentHit);
-	StaticMeshComponent->SetGenerateOverlapEvents(false);
+	StaticMeshComponent->SetGenerateOverlapEvents(true);
 }
 
 void AThrowableObject::Use_Implementation(class AStealthCharacter* Player)
@@ -76,6 +76,8 @@ void AThrowableObject::ThrowableOnComponentHit(UPrimitiveComponent* HitComp, AAc
 {
 	if (!Thrown)
 		return;
+
+	SetShowVFX(true);
 	
 	Thrown = false;
 	StaticMeshComponent->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Block);

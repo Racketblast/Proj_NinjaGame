@@ -161,6 +161,15 @@ protected:
 	void StopUse();
 	
 	void CheckForUse();
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Components", meta = (AllowPrivateAccess = "true"))
+	class USphereComponent* PlayerInteractSphere;
+	UFUNCTION()
+	void OnInteractSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION(BlueprintCallable)
+	void OnInteractSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	//Used to stop showing weapons for different cases
 	UFUNCTION(BlueprintCallable)
