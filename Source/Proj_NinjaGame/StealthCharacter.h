@@ -225,10 +225,15 @@ public:
 protected:
 	//Projectile marker
 	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
-	AActor* SpawnedMarker;
+	class AThrowingMarker* SpawnedMarker;
+	
+public:
+	void UpdateSpawnMarkerMesh();
+	
+protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	TSubclassOf<AActor> MarkerClass;
+	TSubclassOf<AThrowingMarker> MarkerClass;
 	
     void UpdateProjectilePrediction();
 	

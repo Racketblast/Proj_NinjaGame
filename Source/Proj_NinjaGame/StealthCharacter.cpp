@@ -23,6 +23,8 @@
 #include "Components/BoxComponent.h"
 #include "MeleeEnemy.h"
 #include "SmokeBombWeapon.h"
+#include "ThrowableObject.h"
+#include "ThrowingMarker.h"
 #include "Navigation/PathFollowingComponent.h"
 
 
@@ -292,6 +294,7 @@ void AStealthCharacter::EquipThrowWeapon(TSubclassOf<AThrowableWeapon> EquipWeap
 	}
 	
 	HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(EquipWeapon);
+
 	HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
 }
 
@@ -320,7 +323,10 @@ void AStealthCharacter::AimStart()
 		{
 			FVector SpawnLoc = GetActorLocation();
 			FRotator SpawnRot = FRotator::ZeroRotator;
-			SpawnedMarker = GetWorld()->SpawnActor<AActor>(MarkerClass, SpawnLoc, SpawnRot);
+			SpawnedMarker = GetWorld()->SpawnActor<AThrowingMarker>(MarkerClass, SpawnLoc, SpawnRot);
+			UpdateSpawnMarkerMesh();
+			
+			HeldThrowableWeapon->ThrownWeaponObject;
 		}
 	}
 }
@@ -334,6 +340,20 @@ void AStealthCharacter::AimEnd()
 	{
 		SpawnedMarker->Destroy();
 		SpawnedMarker = nullptr;
+	}
+}
+
+void AStealthCharacter::UpdateSpawnMarkerMesh()
+{
+	if (HeldThrowableWeapon->ThrownWeaponObject && HeldThrowableWeapon && SpawnedMarker)
+	{
+		AThrowableObject* DefaultActor = HeldThrowableWeapon->ThrownWeaponObject->GetDefaultObject<AThrowableObject>();
+				
+		if (DefaultActor->StaticMeshComponent->GetStaticMesh())
+		{
+			SpawnedMarker->SetMarkerScale(DefaultActor->StaticMeshComponent->GetRelativeScale3D());
+			SpawnedMarker->SetMarkerMesh(DefaultActor->StaticMeshComponent->GetStaticMesh());
+		}
 	}
 }
 
@@ -381,14 +401,19 @@ void AStealthCharacter::UpdateProjectilePrediction()
 	{
 		if (PredictResult.HitResult.Component == Enemy->GetHeadComponent())
 		{
-			UE_LOG(LogTemp, Error, TEXT("Hit head"));
+			SpawnedMarker->SetHeadMaterial();
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("Hit Enemy"));
+			SpawnedMarker->SetEnemyMaterial();
 		}
 	}
-	
+	else
+	{
+		SpawnedMarker->SetGroundMaterial();
+	}
+
+	SpawnedMarker->SetActorRotation(FirstPersonCameraComponent->GetComponentRotation());
 	SpawnedMarker->SetActorLocation(PredictResult.HitResult.Location);
 }
 
