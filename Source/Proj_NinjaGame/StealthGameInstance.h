@@ -48,6 +48,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FString CurrentInteractText;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	bool InteractTextOverride;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FName StartLocation;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	EMission CurrentMission;

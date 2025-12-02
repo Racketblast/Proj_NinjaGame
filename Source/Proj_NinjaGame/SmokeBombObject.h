@@ -29,4 +29,6 @@ protected:
 
 
 	virtual bool ShouldApplyDefaultStun() const override { return false; }
+
+	void ChangeSmokeBasedOnSize();
 };

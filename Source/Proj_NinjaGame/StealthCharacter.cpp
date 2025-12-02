@@ -25,6 +25,7 @@
 #include "SmokeBombWeapon.h"
 #include "ThrowableObject.h"
 #include "ThrowingMarker.h"
+#include "Components/SphereComponent.h"
 #include "Navigation/PathFollowingComponent.h"
 
 
@@ -56,6 +57,9 @@ AStealthCharacter::AStealthCharacter()
 	
 	PlayerMeleeBox = CreateDefaultSubobject<UBoxComponent>(TEXT("PlayerMeleeBox"));
 	PlayerMeleeBox->SetupAttachment(FirstPersonCameraComponent);
+
+	PlayerInteractSphere = CreateDefaultSubobject<USphereComponent>(TEXT("PlayerInteractSphere"));
+	PlayerInteractSphere->SetupAttachment(RootComponent);
 	
 	// configure the character comps
 	GetMesh()->SetOwnerNoSee(true);
@@ -539,6 +543,20 @@ void AStealthCharacter::BeginPlay()
 	
 	PlayerMeleeBox->OnComponentBeginOverlap.AddDynamic(this, &AStealthCharacter::OnMeleeBoxBeginOverlap);
 	PlayerMeleeBox->OnComponentEndOverlap.AddDynamic(this, &AStealthCharacter::OnMeleeBoxEndOverlap);
+	
+	PlayerInteractSphere->OnComponentBeginOverlap.AddDynamic(this, &AStealthCharacter::OnInteractSphereBeginOverlap);
+	PlayerInteractSphere->OnComponentEndOverlap.AddDynamic(this, &AStealthCharacter::OnInteractSphereEndOverlap);
+
+	//Turns on everything that is close to player if they spawn near them
+	TArray<AActor*> OverlappingActors;
+	PlayerInteractSphere->GetOverlappingActors(OverlappingActors, TSubclassOf<AInteractableObject>());
+	for (auto OverlappingActor : OverlappingActors)
+	{
+		if (AInteractableObject* Object = Cast<AInteractableObject>(OverlappingActor))
+		{
+			Object->TurnOnVFX(true);
+		}
+	}
 }
 
 void AStealthCharacter::Landed(const FHitResult& Hit)
@@ -1229,4 +1247,26 @@ void AStealthCharacter::CheckForCanAssassinate()
 			}
 		}
 	}*/
+}
+
+
+
+void AStealthCharacter::OnInteractSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent,
+	AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+	const FHitResult& SweepResult)
+{
+	if (AInteractableObject* Object = Cast<AInteractableObject>(OtherActor))
+	{
+		Object->TurnOnVFX(true);
+	}
+}
+
+void AStealthCharacter::OnInteractSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (AInteractableObject* Object = Cast<AInteractableObject>(OtherActor))
+	{
+		UE_LOG(LogTemp, Display, TEXT("OnInteractSphereEndOverlap: %s"), *Object->GetName());
+		Object->TurnOnVFX(false);
+	}
 }

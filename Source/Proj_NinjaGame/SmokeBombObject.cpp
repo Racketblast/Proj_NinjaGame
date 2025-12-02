@@ -31,6 +31,7 @@ void ASmokeBombObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 
 	SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	SmokeComponent->SetAsset(SmokeEffect);
+	ChangeSmokeBasedOnSize();
 	SmokeComponent->Activate();
 
 	SphereComp->SetGenerateOverlapEvents(true);
@@ -95,6 +96,21 @@ void ASmokeBombObject::HandlePickup(class AStealthCharacter* Player)
 
 			Player->AmountOfOwnWeapon++;
 			Destroy();
+		}
+	}
+}
+
+void ASmokeBombObject::ChangeSmokeBasedOnSize()
+{
+	if (SphereComp)
+	{
+		if (SmokeComponent)
+		{
+			float NormalSpawnCount = 600.f;
+			float NormalRadius = 250.f;
+			int NewSpawnCount = NormalSpawnCount * (SphereComp->GetScaledSphereRadius()/NormalRadius);
+			SmokeComponent->SetVariableFloat(TEXT("SphereRadius"), SphereComp->GetScaledSphereRadius());
+			SmokeComponent->SetVariableInt(TEXT("SpawnCount"), NewSpawnCount);
 		}
 	}
 }
