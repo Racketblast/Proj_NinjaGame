@@ -85,7 +85,6 @@ protected:
 
 	void BeginSearch();
 	void LookAround();
-	void CancelLookAround();
 	void EndSearch();
 	void OnTargetLost();
 

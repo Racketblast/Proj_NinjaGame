@@ -136,7 +136,7 @@ void AEnemy::CheckChaseProximityDetection()
 		bCanSeePlayer = true;
 		UpdateLastSeenPlayerLocation();
 		
-		if (AMeleeAIController* AI = Cast<AMeleeAIController>(GetController()))
+		if (AEnemyAIController* AI = Cast<AEnemyAIController>(GetController()))
 		{
 			AI->RefreshChaseTarget();
 		}
@@ -611,7 +611,7 @@ void AEnemy::SpreadAgroToNearbyEnemies()
 	LastAgroSpreadTime = TimeNow;
 	
     // Hämta denna fiendes AI controller
-    AMeleeAIController* MyAI = Cast<AMeleeAIController>(GetController());
+    AEnemyAIController* MyAI = Cast<AEnemyAIController>(GetController());
     if (!MyAI) return;
 
     // Endast sprida agro om denna fiende faktiskt jagar
@@ -661,7 +661,7 @@ void AEnemy::SpreadAgroToNearbyEnemies()
             continue;
 
         // Hämta andra fiendens AI controller
-        AMeleeAIController* OtherAI = Cast<AMeleeAIController>(OtherEnemy->GetController());
+        AEnemyAIController* OtherAI = Cast<AEnemyAIController>(OtherEnemy->GetController());
         if (!OtherAI) continue;
 
         // Skip om andra fienden redan jagar
@@ -729,7 +729,7 @@ void AEnemy::UpdateStateVFX(EEnemyState NewState)
 
 	if (NewState == EEnemyState::Patrolling)
 	{
-		if (AMeleeAIController* AI = Cast<AMeleeAIController>(GetController()))
+		if (AEnemyAIController* AI = Cast<AEnemyAIController>(GetController()))
 		{
 			StateVFXComponent->SetAsset(nullptr);
 			StateVFXComponent->Deactivate();

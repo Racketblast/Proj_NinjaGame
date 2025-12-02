@@ -242,17 +242,24 @@ void AEnemyAIController::HandleSearching(float DeltaSeconds)
 	{
 		GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
 		GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
-		//bIsLookingAround = false;
-		CancelLookAround();
+		bIsLookingAround = false;
 		StartChasing();
 		return;  // Va tidigare break, när detta var i tick, vet inte om return fungerar på samma sätt 
 	}
 	
 	if (ControlledEnemy->bPlayerInAlertCone) 
 	{
-		CancelLookAround();
+		bHasLookAroundTarget = false;
+		bIsDoingLookAroundMove = false;
+
+		// Stoppa rotation 
+		bIsRotating = false;
+		
+		StopMovement();
+		
 		StartAlert();
 		//UE_LOG(LogTemp, Error, TEXT("StartAlert"));
+		return;
 	}
 	
 	if (bIsMovingToSound && bIsInvestigatingTarget)
@@ -812,14 +819,6 @@ void AEnemyAIController::LookAround()
 	//MoveToLocation(ControlledPawn->GetActorLocation() + ControlledPawn->GetActorForwardVector() * FMath::RandRange(100.f, 250.f));
 }
 
-void AEnemyAIController::CancelLookAround()
-{
-	bIsLookingAround = false;
-	
-	bHasLookAroundTarget   = false;
-	bIsDoingLookAroundMove = false;
-	bIsRotating = false;
-}
 
 
 void AEnemyAIController::EndSearch()
