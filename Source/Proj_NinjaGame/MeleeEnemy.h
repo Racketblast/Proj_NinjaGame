@@ -27,16 +27,9 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void Tick(float DeltaTime) override;
 
-	bool bCanSeePlayer = false;
-
 	virtual void CheckPlayerVisibility() override;
 	virtual void CheckChaseProximityDetection() override;
 	virtual void CheckCloseDetection() override;
-
-	float SuspiciousTimer = 0.f;
-	bool bIsSuspicious = false;
-	bool bPlayerInSuspiciousZone = false;
-	bool bPlayerWithinChaseProximity = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
 	float AttackCooldown = 1.2f;
@@ -61,8 +54,5 @@ protected:
 
 	// Time handle Funktioner:
 	void ResetAttackCooldown();
-
-private:
-	FVector LastSeenPlayerLocation;
 
 };
