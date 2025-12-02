@@ -29,9 +29,9 @@ public:
 	UFUNCTION(BlueprintPure)
 	TArray<AActor*> GetAllCameras() const { return AllSecurityCameras; }
 
-	TArray<AMeleeEnemy*> GetTwoClosestEnemies(FVector TargetLocation);
+	TArray<AEnemy*> GetTwoClosestEnemies(FVector TargetLocation);
 	
-	AMeleeEnemy* GetClosestEnemyToLocation(FVector TargetLocation);
+	AEnemy* GetClosestEnemyToLocation(FVector TargetLocation);
 	
 protected:
 	bool bEnemySeesPlayer = false; 	// True om minst en fiende jagar spelaren

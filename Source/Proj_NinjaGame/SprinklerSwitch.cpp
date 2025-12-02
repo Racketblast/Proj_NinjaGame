@@ -79,7 +79,7 @@ void ASprinklerSwitch::ReduceEnemyHearingRange(bool bOnOff)
 	
 	for (auto EnemyActor : EnemyHandler->GetAllEnemies())
 	{
-		if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(EnemyActor))
+		if (AEnemy* Enemy = Cast<AEnemy>(EnemyActor))
 		{
 			Enemy->ReduceEnemyHearingRange(bOnOff);
 		}
@@ -92,9 +92,9 @@ void ASprinklerSwitch::SendClosetEnemy()
 		return;
 	if (bPowerOn)
 	{
-		if (AMeleeEnemy* Enemy = EnemyHandler->GetClosestEnemyToLocation(GetActorLocation()))
+		if (AEnemy* Enemy = EnemyHandler->GetClosestEnemyToLocation(GetActorLocation()))
 		{
-			if (AMeleeAIController* AI = Cast<AMeleeAIController>(Enemy->GetController()))
+			if (AEnemyAIController* AI = Cast<AEnemyAIController>(Enemy->GetController()))
 			{
 				AI->SetCurrentMission(EEnemyMission::Sprinkler);
 				//Enemy->OnSuspiciousLocation.Broadcast(EnemyHitBox->GetComponentLocation()); 
@@ -107,9 +107,9 @@ void ASprinklerSwitch::SendClosetEnemy()
 void ASprinklerSwitch::EnemyBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(OtherActor))
+	if (AEnemy* Enemy = Cast<AEnemy>(OtherActor))
 	{
-		if (AMeleeAIController* AI = Cast<AMeleeAIController>(Enemy->GetController()))
+		if (AEnemyAIController* AI = Cast<AEnemyAIController>(Enemy->GetController()))
 		{
 			if (AI->GetCurrentMission() == EEnemyMission::Sprinkler)
 			{

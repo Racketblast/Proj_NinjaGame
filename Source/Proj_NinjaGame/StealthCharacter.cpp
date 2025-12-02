@@ -227,7 +227,7 @@ void AStealthCharacter::Attack()
 					PlayerMeleeBox->GetOverlappingActors(HitActors);
 					for (auto HitActor : HitActors)
 					{
-						if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(HitActor))
+						if (AEnemy* Enemy = Cast<AEnemy>(HitActor))
 						{
 							if (Enemy->bCanBeAssassinated && !Enemy->CanSeePlayer())
 							{
@@ -414,7 +414,7 @@ void AStealthCharacter::UpdateProjectilePrediction()
     FPredictProjectilePathResult PredictResult;
     UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult);
 
-	if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(PredictResult.HitResult.GetActor()))
+	if (AEnemy* Enemy = Cast<AEnemy>(PredictResult.HitResult.GetActor()))
 	{
 		if (PredictResult.HitResult.Component == Enemy->GetHeadComponent())
 		{
@@ -1177,7 +1177,7 @@ void AStealthCharacter::ResetToNormalCamera()
 void AStealthCharacter::OnMeleeBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(OtherActor))
+	if (AEnemy* Enemy = Cast<AEnemy>(OtherActor))
 	{
 		EnemiesInAssassinationRange.AddUnique(Enemy);
 		CheckForCanAssassinate();
@@ -1187,7 +1187,7 @@ void AStealthCharacter::OnMeleeBoxBeginOverlap(UPrimitiveComponent* OverlappedCo
 void AStealthCharacter::OnMeleeBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(OtherActor))
+	if (AEnemy* Enemy = Cast<AEnemy>(OtherActor))
 	{
 		EnemiesInAssassinationRange.Remove(Enemy);
 		CheckForCanAssassinate();
@@ -1204,7 +1204,7 @@ void AStealthCharacter::CheckForCanAssassinate()
 	if (EnemiesInAssassinationRange.Num() == 0)
 		return;
 
-	for (AMeleeEnemy* Enemy  : EnemiesInAssassinationRange)
+	for (AEnemy* Enemy  : EnemiesInAssassinationRange)
 	{
 		if (!Enemy) continue;
 
@@ -1222,13 +1222,13 @@ void AStealthCharacter::CheckForCanAssassinate()
 	bCanAssassinate = false;
 
 	TArray<AActor*> Overlaps;
-	PlayerMeleeBox->GetOverlappingActors(Overlaps, AMeleeEnemy::StaticClass());
+	PlayerMeleeBox->GetOverlappingActors(Overlaps, AEnemy::StaticClass());
 	if (Overlaps.Num() == 0)
 		return;
 
 	for (AActor* OverlapActor : Overlaps)
 	{
-		if (AMeleeEnemy* MeleeEnemy = Cast<AMeleeEnemy>(OverlapActor))
+		if (AEnemy* MeleeEnemy = Cast<AEnemy>(OverlapActor))
 		{
 			if (!MeleeEnemy->CanSeePlayer() && MeleeEnemy->bCanBeAssassinated)
 			{

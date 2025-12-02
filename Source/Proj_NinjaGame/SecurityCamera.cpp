@@ -260,13 +260,13 @@ void ASecurityCamera::OnPlayerSpotted()
 	SetVFXState(ECameraVFXState::Detected);
 
 	// Hämta två närmaste fiender
-	TArray<AMeleeEnemy*> Squad = Handler->GetTwoClosestEnemies(LastSpottedPlayerLocation);
+	TArray<AEnemy*> Squad = Handler->GetTwoClosestEnemies(LastSpottedPlayerLocation);
 
-	for (AMeleeEnemy* Enemy : Squad)
+	for (AEnemy* Enemy : Squad)
 	{
 		if (!Enemy) continue;
 
-		AMeleeAIController* AI = Cast<AMeleeAIController>(Enemy->GetController());
+		AEnemyAIController* AI = Cast<AEnemyAIController>(Enemy->GetController());
 		if (!AI) continue;
 
 		AI->StartChasingFromExternalOrder(LastSpottedPlayerLocation);          
@@ -393,7 +393,7 @@ void ASecurityCamera::Die()
 	}
 
 	// Hämta närmaste fienden till kameran
-	AMeleeEnemy* ClosestEnemy = Handler->GetClosestEnemyToLocation(GetActorLocation()); 
+	AEnemy* ClosestEnemy = Handler->GetClosestEnemyToLocation(GetActorLocation()); 
 
 	if (!ClosestEnemy)
 	{
@@ -405,7 +405,7 @@ void ASecurityCamera::Die()
 
 	
 	// Hämta AI Controller
-	AMeleeAIController* AI = Cast<AMeleeAIController>(ClosestEnemy->GetController());
+	AEnemyAIController* AI = Cast<AEnemyAIController>(ClosestEnemy->GetController());
 
 	if (AI)
 	{
