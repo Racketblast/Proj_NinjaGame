@@ -11,11 +11,11 @@ void USoundUtility::ReportNoise(UWorld* World, FVector Location, float Loudness,
 	if (!World) return;
 
 	TArray<AActor*> FoundEnemies;
-	UGameplayStatics::GetAllActorsOfClass(World, AMeleeEnemy::StaticClass(), FoundEnemies);
+	UGameplayStatics::GetAllActorsOfClass(World, AEnemy::StaticClass(), FoundEnemies);
 
 	for (AActor* EnemyActor : FoundEnemies)
 	{
-		AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(EnemyActor);
+		AEnemy* Enemy = Cast<AEnemy>(EnemyActor);
 		if (!Enemy) continue;
 
 		const float Distance = FVector::Dist(Enemy->GetActorLocation(), Location);

@@ -44,10 +44,10 @@ void ASmokeBombObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 
 	for (AActor* Actor : OverlappingActors)
 	{
-		AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(Actor);
+		AEnemy* Enemy = Cast<AEnemy>(Actor);
 		if (Enemy)
 		{
-			AMeleeAIController* EnemyController = Cast<AMeleeAIController>(Enemy->GetController());
+			AEnemyAIController* EnemyController = Cast<AEnemyAIController>(Enemy->GetController());
 			if (EnemyController)
 			{
 				EnemyController->StunEnemy(3.0f, EEnemyState::Searching);

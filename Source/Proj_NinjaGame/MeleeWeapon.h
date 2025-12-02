@@ -6,7 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "MeleeWeapon.generated.h"
 
-class AMeleeEnemy;
+class AEnemy;
 
 UCLASS()
 class PROJ_NINJAGAME_API AMeleeWeapon : public AActor
@@ -63,7 +63,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void SpawnFieldActor();
 	
-	AMeleeEnemy* GetEnemyClosestToCrosshair(const TArray<AActor*>& HitActors);
+	AEnemy* GetEnemyClosestToCrosshair(const TArray<AActor*>& HitActors);
 	
 	FTimerHandle MeleeAttackingTimer;
 	UPROPERTY()

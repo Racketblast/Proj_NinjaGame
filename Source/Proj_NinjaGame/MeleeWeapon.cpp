@@ -31,7 +31,7 @@ void AMeleeWeapon::StartMeleeAttack()
 	Player->PlayerMeleeBox->GetOverlappingActors(HitActors);
 	for (auto HitActor : HitActors)
 	{
-		if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(HitActor))
+		if (AEnemy* Enemy = Cast<AEnemy>(HitActor))
 		{
 			if (HitSound)
 			{
@@ -82,11 +82,11 @@ void AMeleeWeapon::AssassinateEnemy()
 	TArray<AActor*> HitActors;
 	Player->PlayerMeleeBox->GetOverlappingActors(HitActors);
 	TArray<AActor*> ThatCanBeStabbed;
-	TArray<AMeleeEnemy*> ThatCannotBeStabbed;
+	TArray<AEnemy*> ThatCannotBeStabbed;
 	
 	for (auto HitActor : HitActors)
 	{
-		if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(HitActor))
+		if (AEnemy* Enemy = Cast<AEnemy>(HitActor))
 		{
 			if (Enemy->bCanBeAssassinated && !Enemy->CanSeePlayer())
 			{
@@ -103,7 +103,7 @@ void AMeleeWeapon::AssassinateEnemy()
 		}
 	}
 
-	AMeleeEnemy* AssassinatedEnemy = GetEnemyClosestToCrosshair(ThatCanBeStabbed);
+	AEnemy* AssassinatedEnemy = GetEnemyClosestToCrosshair(ThatCanBeStabbed);
 	//Hit an Assassination
 	if (AssassinatedEnemy)
 	{
@@ -159,9 +159,9 @@ void AMeleeWeapon::SpawnFieldActor()
 	FieldActor->AttachToComponent(Player->PlayerMeleeBox, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 }
 
-AMeleeEnemy* AMeleeWeapon::GetEnemyClosestToCrosshair(const TArray<AActor*>& HitActors)
+AEnemy* AMeleeWeapon::GetEnemyClosestToCrosshair(const TArray<AActor*>& HitActors)
 {
-	AMeleeEnemy* BestEnemy = nullptr;
+	AEnemy* BestEnemy = nullptr;
 	float BestDot = -1.f;
 
 	FVector CamLoc;
@@ -171,7 +171,7 @@ AMeleeEnemy* AMeleeWeapon::GetEnemyClosestToCrosshair(const TArray<AActor*>& Hit
 
 	for (AActor* HitActor : HitActors)
 	{
-		AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(HitActor);
+		AEnemy* Enemy = Cast<AEnemy>(HitActor);
 		if (!Enemy) continue;
 
 		FVector DirToEnemy = (Enemy->GetActorLocation() - CamLoc).GetSafeNormal();

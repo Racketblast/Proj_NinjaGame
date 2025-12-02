@@ -88,7 +88,7 @@ void AThrowableObject::ThrowableOnComponentHit(UPrimitiveComponent* HitComp, AAc
 void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(OtherActor))
+	if (AEnemy* Enemy = Cast<AEnemy>(OtherActor))
 	{
 		if (!Enemy->GetIsDead())
 		{
