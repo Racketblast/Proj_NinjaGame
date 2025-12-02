@@ -37,15 +37,15 @@ public:
 	bool bIsOwnThrowWeapon = false;
 	UPROPERTY(EditDefaultsOnly)
 	UStaticMeshComponent* StaticMeshComponent;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<class AThrowableObject> ThrownWeaponObject;
 protected:
 	
 	UPROPERTY(EditDefaultsOnly)
 	USceneComponent* SceneRootComponent;
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<class AThrowableObject> ThrownWeaponObject;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

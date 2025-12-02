@@ -135,7 +135,9 @@ protected:
 	void AimStart();
 public:
 	UFUNCTION(BlueprintCallable, Category="Input")
-	void AimEnd();
+	void AimEndAction();
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void AimEndFunction();
 	
 	UFUNCTION(BlueprintCallable)
 	void EquipThrowWeapon(TSubclassOf<AThrowableWeapon> EquipWeapon);
@@ -183,6 +185,9 @@ protected:
 	//Weapon variables
 	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
 	bool bIsAiming;
+	FTimerHandle AimEndTimer;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	float AimEndTimerSeconds = 0.1f;
 	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
 	bool bCanAssassinate;
 	UPROPERTY()
@@ -225,10 +230,15 @@ public:
 protected:
 	//Projectile marker
 	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
-	AActor* SpawnedMarker;
+	class AThrowingMarker* SpawnedMarker;
+	
+public:
+	void UpdateSpawnMarkerMesh();
+	
+protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	TSubclassOf<AActor> MarkerClass;
+	TSubclassOf<AThrowingMarker> MarkerClass;
 	
     void UpdateProjectilePrediction();
 	
@@ -270,12 +280,15 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
 	UInputAction* SprintAction;
 
-	// Sprint FOV
+	// FOV
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
-	float SprintFOV = 80.0f; 
+	float SprintFOV = 80.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float AimFOV = 80.0f; 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
-	float NormalFOV = 70.0f; 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float NormalFOV = 90.0f; 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
 	float FOVInterpSpeed = 5.0f; // hur snabbt kameran övergår mellan FOV-värden

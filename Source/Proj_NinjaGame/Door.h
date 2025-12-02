@@ -21,7 +21,12 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Interact")
 	bool bOpen = false;
+	UFUNCTION(BlueprintCallable, Category="Interact")
 	void OpenCloseDoor();
+
+	void UnlockDoor();
+	bool GetUnlockedDoor() const
+	{return PlayerCanUnlock;}
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -39,6 +44,12 @@ protected:
 	FRotator ClosedDoorRotation;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
 	float DoorSpeed = 90.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
+	FString DoorOpenText = "Open";
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
+	FString DoorLockedText = "Locked";
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
+	FString DoorUnlockText = "Unlock";
 	
 	FRotator DoorTargetRotation;
 	
@@ -53,7 +64,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Sound")
 	UAudioComponent* DoorSoundComponent;
 
-	void UpdateNavMeshOnce();
 	bool CanPushCharacter(ACharacter* Character, FVector PushDir, float PushDistance);
 	
 	UPROPERTY(EditDefaultsOnly)

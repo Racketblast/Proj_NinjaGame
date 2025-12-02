@@ -23,7 +23,7 @@ void AKunaiWeapon::Throw(AStealthCharacter* Player)
 		else
 		{
 			Player->HeldThrowableWeapon = nullptr;
-			Player->AimEnd();
+			Player->AimEndFunction();
 		}
 		Destroy();
 	}

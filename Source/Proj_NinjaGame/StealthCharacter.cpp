@@ -23,6 +23,8 @@
 #include "Components/BoxComponent.h"
 #include "MeleeEnemy.h"
 #include "SmokeBombWeapon.h"
+#include "ThrowableObject.h"
+#include "ThrowingMarker.h"
 #include "Navigation/PathFollowingComponent.h"
 
 
@@ -292,6 +294,7 @@ void AStealthCharacter::EquipThrowWeapon(TSubclassOf<AThrowableWeapon> EquipWeap
 	}
 	
 	HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(EquipWeapon);
+
 	HeldThrowableWeapon->AttachToComponent(FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
 }
 
@@ -307,25 +310,41 @@ void AStealthCharacter::AimStart()
 {
 	if(bIsHiding == true) return;
 	
-	if (CurrentMovementState == EPlayerMovementState::Run ) 
-	{
-		StopSprint();
-	}
-	
 	if (HeldThrowableWeapon)
 	{
+		GetWorld()->GetTimerManager().ClearTimer(AimEndTimer);
 		bIsAiming = true;
-	
+		
+		if (CurrentMovementState == EPlayerMovementState::Run ) 
+		{
+			StopSprint();
+		}
+		
 		if (MarkerClass && !SpawnedMarker)
 		{
 			FVector SpawnLoc = GetActorLocation();
 			FRotator SpawnRot = FRotator::ZeroRotator;
-			SpawnedMarker = GetWorld()->SpawnActor<AActor>(MarkerClass, SpawnLoc, SpawnRot);
+			SpawnedMarker = GetWorld()->SpawnActor<AThrowingMarker>(MarkerClass, SpawnLoc, SpawnRot);
+			UpdateSpawnMarkerMesh();
+			
+			HeldThrowableWeapon->ThrownWeaponObject;
 		}
 	}
 }
 
-void AStealthCharacter::AimEnd()
+void AStealthCharacter::AimEndAction()
+{
+	if (CurrentMovementState == EPlayerMovementState::Run)
+	{
+		AimEndFunction();
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().SetTimer(AimEndTimer, this, &AStealthCharacter::AimEndFunction, AimEndTimerSeconds, false);
+	}
+}
+
+void AStealthCharacter::AimEndFunction()
 {
 	bIsAiming = false;
 	
@@ -334,6 +353,20 @@ void AStealthCharacter::AimEnd()
 	{
 		SpawnedMarker->Destroy();
 		SpawnedMarker = nullptr;
+	}
+}
+
+void AStealthCharacter::UpdateSpawnMarkerMesh()
+{
+	if (HeldThrowableWeapon->ThrownWeaponObject && HeldThrowableWeapon && SpawnedMarker)
+	{
+		AThrowableObject* DefaultActor = HeldThrowableWeapon->ThrownWeaponObject->GetDefaultObject<AThrowableObject>();
+				
+		if (DefaultActor->StaticMeshComponent->GetStaticMesh())
+		{
+			SpawnedMarker->SetMarkerScale(DefaultActor->StaticMeshComponent->GetRelativeScale3D());
+			SpawnedMarker->SetMarkerMesh(DefaultActor->StaticMeshComponent->GetStaticMesh());
+		}
 	}
 }
 
@@ -381,14 +414,19 @@ void AStealthCharacter::UpdateProjectilePrediction()
 	{
 		if (PredictResult.HitResult.Component == Enemy->GetHeadComponent())
 		{
-			UE_LOG(LogTemp, Error, TEXT("Hit head"));
+			SpawnedMarker->SetHeadMaterial();
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("Hit Enemy"));
+			SpawnedMarker->SetEnemyMaterial();
 		}
 	}
-	
+	else
+	{
+		SpawnedMarker->SetGroundMaterial();
+	}
+
+	SpawnedMarker->SetActorRotation(FirstPersonCameraComponent->GetComponentRotation());
 	SpawnedMarker->SetActorLocation(PredictResult.HitResult.Location);
 }
 
@@ -579,6 +617,10 @@ void AStealthCharacter::Tick(float DeltaTime)
 	{
 		// Ändrar FOV när spelaren springer 
 		float TargetFOV = (CurrentMovementState == EPlayerMovementState::Run) ? SprintFOV : NormalFOV;
+		if (bIsAiming)
+		{
+			TargetFOV = (bIsAiming) ? AimFOV : NormalFOV;
+		}
 		
 		float NewFOV = FMath::FInterpTo(
 			FirstPersonCameraComponent->FieldOfView,
@@ -616,7 +658,7 @@ void AStealthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		//Attacks
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AStealthCharacter::Attack);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &AStealthCharacter::AimStart);
-		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AStealthCharacter::AimEnd);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AStealthCharacter::AimEndAction);
 		
 		EnhancedInputComponent->BindAction(ChangeWeaponAction, ETriggerEvent::Triggered, this, &AStealthCharacter::ChangeWeapon);
 		
@@ -1007,7 +1049,6 @@ void AStealthCharacter::StartSprint()
 		{
 			if (CurrentStamina > 0)
 			{
-				AimEnd();
 				// Om spelaren är i crouch så lämna det läget först
 				if (CurrentMovementState == EPlayerMovementState::Crouch)
 				{
@@ -1018,6 +1059,7 @@ void AStealthCharacter::StartSprint()
 				
 						GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 						CurrentMovementState = EPlayerMovementState::Run;
+						AimEndAction();
 					}
 				}
 				else
@@ -1026,6 +1068,7 @@ void AStealthCharacter::StartSprint()
 	
 					GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 					CurrentMovementState = EPlayerMovementState::Run;
+					AimEndAction();
 				}
 	
 				//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
