@@ -604,6 +604,10 @@ void AStealthCharacter::Tick(float DeltaTime)
 	{
 		// Ändrar FOV när spelaren springer 
 		float TargetFOV = (CurrentMovementState == EPlayerMovementState::Run) ? SprintFOV : NormalFOV;
+		if (bIsAiming)
+		{
+			TargetFOV = (bIsAiming) ? AimFOV : NormalFOV;
+		}
 		
 		float NewFOV = FMath::FInterpTo(
 			FirstPersonCameraComponent->FieldOfView,

@@ -275,12 +275,15 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
 	UInputAction* SprintAction;
 
-	// Sprint FOV
+	// FOV
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
-	float SprintFOV = 80.0f; 
+	float SprintFOV = 80.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float AimFOV = 80.0f; 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
-	float NormalFOV = 70.0f; 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float NormalFOV = 90.0f; 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
 	float FOVInterpSpeed = 5.0f; // hur snabbt kameran övergår mellan FOV-värden
