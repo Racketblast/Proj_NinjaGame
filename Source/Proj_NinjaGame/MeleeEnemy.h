@@ -25,9 +25,9 @@ public:
 	FORCEINLINE virtual float GetAttackRange() const override { return AttackRange; }
 	FORCEINLINE float GetCanAttack() const { return bCanAttack; }
 
-	bool bCanAttack = true;
+	/*bool bCanAttack = true;
 
-	bool bIsAttacking = false;
+	bool bIsAttacking = false;*/
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;

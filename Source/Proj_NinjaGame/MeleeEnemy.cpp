@@ -66,7 +66,7 @@ void AMeleeEnemy::StartAttack()
 	UE_LOG(LogTemp, Error, TEXT("StartAttack"))
 
 	bCanAttack = false;
-	bIsAttacking = true;
+	//bIsAttacking = true;
 	bHitRegisteredThisSwing = false;
 
 	// aktiverar hitbox en kort stund 
