@@ -186,6 +186,7 @@ void ADoor::OpenCloseDoor()
 
 void ADoor::UnlockDoor()
 {
+	bOverrideInteractText = false;
 	InteractText = DoorUnlockText;
 	PlayerCanUnlock = true;
 	

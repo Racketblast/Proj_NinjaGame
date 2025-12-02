@@ -59,10 +59,14 @@ void AInteractableObject::ShowInteractable_Implementation(bool bShow)
 			}
 	
 			GI->CurrentInteractText = InteractText;
+
+			GI->InteractTextOverride = bOverrideInteractText;
 		}
 		else
 		{
 			GI->CurrentInteractText = "";
+			
+			GI->InteractTextOverride = false;
 		}
 	}
 }
@@ -92,10 +96,14 @@ void AInteractableObject::UpdateShowInteractable_Implementation()
 			}
 	
 			GI->CurrentInteractText = InteractText;
+			
+			GI->InteractTextOverride = bOverrideInteractText;
 		}
 		else
 		{
 			GI->CurrentInteractText = "";
+
+			GI->InteractTextOverride = bOverrideInteractText;
 		}
 	}
 }
