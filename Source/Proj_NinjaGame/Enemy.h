@@ -218,6 +218,12 @@ public:
 	FOnSuspiciousLocationDelegate OnSuspiciousLocation;
 
 
+	UPROPERTY(BlueprintReadWrite, Category="Combat")
+	bool bCanAttack = true;
+	UPROPERTY(BlueprintReadWrite, Category="Combat")
+	bool bIsAttacking = false;
+
+
 	/* Hearing system */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI|Perception")
 	float HearingRange = 800.f;

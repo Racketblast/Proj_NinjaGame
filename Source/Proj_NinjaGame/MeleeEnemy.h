@@ -22,7 +22,12 @@ public:
 	void EnableHitbox(float WindowSeconds = 0.15f);
 	void DisableHitbox();
 
-	FORCEINLINE virtual float GetAttackRange() const override { return AttackRange; } 
+	FORCEINLINE virtual float GetAttackRange() const override { return AttackRange; }
+	FORCEINLINE float GetCanAttack() const { return bCanAttack; }
+
+	bool bCanAttack = true;
+
+	bool bIsAttacking = false;
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -43,7 +48,6 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category="Combat")
 	UBoxComponent* MeleeHitBox;
 	
-	bool bCanAttack = true;
 	bool bHitRegisteredThisSwing = false;
 
 	FTimerHandle AttackCooldownHandle;
