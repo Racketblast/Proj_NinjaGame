@@ -20,6 +20,7 @@ public:
 
 	virtual void Use_Implementation(class AStealthCharacter* Player) override;
 	virtual void ShowInteractable_Implementation(bool bShow) override;
+	virtual void UpdateShowInteractable_Implementation() override;
 
 	UPROPERTY(EditDefaultsOnly)
 	UStaticMeshComponent* StaticMeshComponent;
@@ -37,4 +38,7 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category="Interact")
 	bool bOverrideInteractText = false;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Interact")
+	bool bIsShowingItself = false;
 };
