@@ -44,7 +44,7 @@ void ASmokeBombObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 
 	for (AActor* Actor : OverlappingActors)
 	{
-		AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(Actor);
+		AEnemy* Enemy = Cast<AEnemy>(Actor);
 		if (Enemy)
 		{
 			AEnemyAIController* EnemyController = Cast<AEnemyAIController>(Enemy->GetController());

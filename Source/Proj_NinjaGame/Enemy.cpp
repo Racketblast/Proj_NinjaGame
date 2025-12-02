@@ -50,7 +50,6 @@ AEnemy::AEnemy()
 	// För bättre rotation
 	GetCharacterMovement()->bUseControllerDesiredRotation = false;
 	GetCharacterMovement()->bOrientRotationToMovement = false;
-
 }
 
 
@@ -526,8 +525,13 @@ void AEnemy::Die()
 	SetLifeSpan(15.0f);
 }
 
+void AEnemy::StartAttack()
+{
+	// Gör detta i en sub klass
+}
+
 void AEnemy::OnAssasinationOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+                                        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (AStealthCharacter* Player = Cast<AStealthCharacter>(OtherActor))
 	{

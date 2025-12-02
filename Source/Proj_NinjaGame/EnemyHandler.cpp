@@ -19,13 +19,13 @@ void AEnemyHandler::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Hitta alla AMeleeEnemy i leveln
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AMeleeEnemy::StaticClass(), AllEnemies);
+	// Hitta alla AEnemy i leveln
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemy::StaticClass(), AllEnemies);
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASecurityCamera::StaticClass(), AllSecurityCameras);
 
 	for (auto Enemy : AllEnemies)
 	{
-		if (AMeleeEnemy* MeleeEnemy = Cast<AMeleeEnemy>(Enemy))
+		if (AEnemy* MeleeEnemy = Cast<AEnemy>(Enemy))
 		{
 			MeleeEnemy->SetEnemyHandler(this);
 		}
@@ -72,7 +72,7 @@ void AEnemyHandler::UpdateEnemyStates()
 	// Går igenom alla fiender för att se om någon ut av dem är i Chasing State
 	for (AActor* EnemyActor : AllEnemies)
 	{
-		AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(EnemyActor);
+		AEnemy* Enemy = Cast<AEnemy>(EnemyActor);
 		if (!Enemy) continue;
 
 		AEnemyAIController* AICon = Cast<AEnemyAIController>(Enemy->GetController());
@@ -104,7 +104,7 @@ void AEnemyHandler::UpdateEnemyStates()
 }
 
 
-AMeleeEnemy* AEnemyHandler::GetClosestEnemyToLocation(FVector TargetLocation)
+AEnemy* AEnemyHandler::GetClosestEnemyToLocation(FVector TargetLocation)
 {
 	UWorld* World = GetWorld();
 	if (!World) return nullptr;
@@ -125,12 +125,12 @@ AMeleeEnemy* AEnemyHandler::GetClosestEnemyToLocation(FVector TargetLocation)
 
 	TargetLocation = ProjectedLocation.Location;
 
-	AMeleeEnemy* BestEnemy = nullptr;
+	AEnemy* BestEnemy = nullptr;
 	float BestDistance = TNumericLimits<float>::Max();
 
 	for (AActor* EnemyActor : AllEnemies)
 	{
-		AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(EnemyActor);
+		AEnemy* Enemy = Cast<AEnemy>(EnemyActor);
 		if (!Enemy) continue;
 		
 		// Skippa fiender som redan har ett mission
@@ -182,11 +182,11 @@ AMeleeEnemy* AEnemyHandler::GetClosestEnemyToLocation(FVector TargetLocation)
 	return BestEnemy;
 }
 
-TArray<AMeleeEnemy*> AEnemyHandler::GetTwoClosestEnemies(FVector TargetLocation)
+TArray<AEnemy*> AEnemyHandler::GetTwoClosestEnemies(FVector TargetLocation)
 {
 	struct FEnemyPathData
 	{
-		AMeleeEnemy* Enemy;
+		AEnemy* Enemy;
 		float PathDistance;
 	};
 
@@ -213,7 +213,7 @@ TArray<AMeleeEnemy*> AEnemyHandler::GetTwoClosestEnemies(FVector TargetLocation)
 
 	for (AActor* Actor : AllEnemies)
 	{
-		AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(Actor);
+		AEnemy* Enemy = Cast<AEnemy>(Actor);
 		if (!Enemy) continue;
 
 		UNavigationPath* NavPath = NavSys->FindPathToLocationSynchronously(
@@ -240,7 +240,7 @@ TArray<AMeleeEnemy*> AEnemyHandler::GetTwoClosestEnemies(FVector TargetLocation)
 		return A.PathDistance < B.PathDistance;
 	});
 
-	TArray<AMeleeEnemy*> Result;
+	TArray<AEnemy*> Result;
 
 	if (Distances.Num() > 0) Result.Add(Distances[0].Enemy);
 	if (Distances.Num() > 1) Result.Add(Distances[1].Enemy);

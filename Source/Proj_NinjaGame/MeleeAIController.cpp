@@ -15,6 +15,8 @@ AMeleeAIController::AMeleeAIController()
 void AMeleeAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+
+	ControlledEnemy = Cast<AMeleeEnemy>(InPawn);
 }
 
 void AMeleeAIController::Tick(float DeltaSeconds)

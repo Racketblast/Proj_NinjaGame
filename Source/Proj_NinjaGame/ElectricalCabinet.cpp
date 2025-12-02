@@ -84,7 +84,7 @@ void AElectricalCabinet::ReduceEnemySight(bool bOnOff)
 	
 	for (auto EnemyActor : EnemyHandler->GetAllEnemies())
 	{
-		if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(EnemyActor))
+		if (AEnemy* Enemy = Cast<AEnemy>(EnemyActor))
 		{
 			Enemy->ReduceEnemyRange(bOnOff);
 		}
@@ -98,7 +98,7 @@ void AElectricalCabinet::SendClosetEnemy()
 
 	if (bPowerOn)
 	{
-		if (AMeleeEnemy* Enemy = EnemyHandler->GetClosestEnemyToLocation(GetActorLocation()))
+		if (AEnemy* Enemy = EnemyHandler->GetClosestEnemyToLocation(GetActorLocation()))
 		{
 			if (AEnemyAIController* AI = Cast<AEnemyAIController>(Enemy->GetController()))
 			{
@@ -113,7 +113,7 @@ void AElectricalCabinet::SendClosetEnemy()
 void AElectricalCabinet::EnemyBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(OtherActor))
+	if (AEnemy* Enemy = Cast<AEnemy>(OtherActor))
 	{
 		if (AEnemyAIController* AI = Cast<AEnemyAIController>(Enemy->GetController()))
 		{

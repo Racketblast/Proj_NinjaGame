@@ -6,10 +6,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
-#include "EnemyHandler.h"
 #include "MeleeAIController.h"
 #include "StealthCharacter.h"
-#include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/OverlapResult.h"
@@ -19,18 +17,7 @@
 AMeleeEnemy::AMeleeEnemy()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
-	//Audio
-	FootstepsAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("FootstepsAudioComponent"));
-	FootstepsAudioComponent->SetupAttachment(RootComponent);
-	StateAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("StateAudioComponent"));
-	StateAudioComponent->SetupAttachment(RootComponent);
-	VoiceAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("VoiceAudioComponent"));
-	VoiceAudioComponent->SetupAttachment(RootComponent);
 	
-	StateAudioComponent->bAutoActivate = false; 	// styr ljuden i koden, så detta ska vara false
-	VoiceAudioComponent->bAutoActivate = false;
-
 	// Skapa hitbox och fäst vid mesh 
 	MeleeHitBox = CreateDefaultSubobject<UBoxComponent>(TEXT("MeleeHitBox"));
 	MeleeHitBox->SetupAttachment(GetMesh()); 
@@ -39,32 +26,6 @@ AMeleeEnemy::AMeleeEnemy()
 	MeleeHitBox->SetCollisionObjectType(ECC_WorldDynamic);
 	MeleeHitBox->SetCollisionResponseToAllChannels(ECR_Ignore);
 	MeleeHitBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-
-	SkeletalMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComp"));
-	SkeletalMeshComp->SetupAttachment(GetCapsuleComponent());
-	
-	AssassinationCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("AssassinationCapsule"));
-	AssassinationCapsule->SetupAttachment(GetMesh());
-
-	HeadCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("HeadCapsule"));
-	HeadCapsule->SetupAttachment(GetMesh());
-
-
-	StateVFXComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("StateVFX"));
-	StateVFXComponent->SetupAttachment(GetMesh());
-	StateVFXComponent->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
-
-	// För att undvika att gå in i andra fiender
-	GetCharacterMovement()->bUseRVOAvoidance = true;
-	GetCharacterMovement()->AvoidanceWeight = 0.5f;
-	GetCharacterMovement()->AvoidanceConsiderationRadius = 300.f;
-
-	// För bättre rotation
-	/*GetCharacterMovement()->bUseControllerDesiredRotation = true;
-	GetCharacterMovement()->RotationRate = FRotator(0.f, 1.f, 0.f);*/
-	GetCharacterMovement()->bUseControllerDesiredRotation = false;
-	GetCharacterMovement()->bOrientRotationToMovement = false;
-
 }
 
 
@@ -92,19 +53,6 @@ void AMeleeEnemy::BeginPlay()
 	OriginalHearingRange = HearingRange;
 }
 
-void AMeleeEnemy::FaceRotation(FRotator NewRotation, float DeltaTime)
-{
-	FVector Vel = GetVelocity();
-	Vel.Z = 0;
-
-	if (Vel.Size() > 10.f)
-	{
-		NewRotation = Vel.Rotation();
-	}
-
-	Super::FaceRotation(NewRotation, DeltaTime);
-}
-
 void AMeleeEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -114,12 +62,11 @@ void AMeleeEnemy::Tick(float DeltaTime)
 	CheckPlayerVisibility();
 
 	CheckCloseDetection();
-
-	SpreadAgroToNearbyEnemies();
 }
 
 void AMeleeEnemy::CheckChaseProximityDetection()
 {
+	Super::CheckChaseProximityDetection();
 	if (!bIsChasing) return; 
 	if (!PlayerPawn) return;
 
@@ -164,6 +111,7 @@ void AMeleeEnemy::CheckChaseProximityDetection()
 
 void AMeleeEnemy::CheckCloseDetection()
 {
+	Super::CheckCloseDetection();
 	if (!PlayerPawn) return;
 	if (bIsChasing) return;
 	AStealthCharacter* StealthPlayer = Cast<AStealthCharacter>(PlayerPawn);
@@ -246,6 +194,8 @@ void AMeleeEnemy::CheckCloseDetection()
 
 void AMeleeEnemy::CheckPlayerVisibility()
 {
+	Super::CheckPlayerVisibility();
+	
 	if (!PlayerPawn) return;
 	AStealthCharacter* StealthPlayer = Cast<AStealthCharacter>(PlayerPawn);
 	if (!StealthPlayer) return;
@@ -428,130 +378,6 @@ void AMeleeEnemy::CheckPlayerVisibility()
 	bPlayerInAlertCone = false;
 }
 
-
-void AMeleeEnemy::OnSuspiciousLocationDetected()
-{
-	UE_LOG(LogTemp, Warning, TEXT("OnSuspiciousLocationDetected()"));
-	OnSuspiciousLocation.Broadcast(LastSeenPlayerLocation);
-}
-
-
-void AMeleeEnemy::UpdateLastSeenPlayerLocation()
-{
-	//UE_LOG(LogTemp, Warning, TEXT("UpdateLastSeenPlayerLocation"));
-	if (PlayerPawn)
-	{
-		LastSeenPlayerLocation = PlayerPawn->GetActorLocation();
-	}
-}
-
-
-float AMeleeEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
-{
-	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-
-	if (!bIsDead)
-	{
-		//Health -= ActualDamage;
-		float NewHealth = Health - ActualDamage;
-
-		// Kolla om fienden kan överleva attacken 
-		bool bWillSurvive = NewHealth > 0.0f;
-
-		// Om fienden kommer överleva och DamageCauser är spelaren så upptäcker fienden spelaren
-		if (bWillSurvive)
-		{
-			if (DamageCauser && DamageCauser->IsA(AStealthCharacter::StaticClass()))
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Enemy hit by player and survived, Enemy spotted player!"));
-				bCanSeePlayer = true;     
-			}
-		}
-
-		// Uppdatera HP 
-		Health = NewHealth;
-		
-
-		PlayHurtSound();
-
-		if (Health <= 0.0f)
-		{
-			Die();
-			
-			if (DamageCauser)
-			{
-				FVector Direction = GetCapsuleComponent()->GetComponentLocation() - DamageCauser->GetActorLocation();
-				Direction.Normalize();
-				UE_LOG(LogTemp, Warning, TEXT("Direction: %s"), *Direction.ToString());
-				float ImpulseStrength = 1000.0f;
-				SkeletalMeshComp->AddImpulse(Direction * ImpulseStrength, NAME_None, true);
-			}
-		}
-	}
-
-	return ActualDamage;
-}
-
-void AMeleeEnemy::Die()
-{
-	UE_LOG(LogTemp, Warning, TEXT("Enemy died!"));
-	bIsDead = true;
-	
-	SetActorTickEnabled(false);
-
-	// Rensa alla timers 
-	GetWorldTimerManager().ClearAllTimersForObject(this);
-
-	// ta bort hitbox-komponenten 
-	if (MeleeHitBox)
-	{
-		MeleeHitBox->OnComponentBeginOverlap.Clear(); 
-		MeleeHitBox->DestroyComponent();
-		MeleeHitBox = nullptr;
-	}
-
-	if (AssassinationCapsule)
-	{
-		AssassinationCapsule->OnComponentBeginOverlap.Clear(); 
-		AssassinationCapsule->DestroyComponent();
-		AssassinationCapsule = nullptr;
-	}
-
-	// ta bort VFX-komponent
-	if (StateVFXComponent)
-	{
-		StateVFXComponent->Deactivate();
-		StateVFXComponent->DestroyComponent();
-		StateVFXComponent = nullptr;
-	}
-
-	// Ser till att AIControllern inte försöker använda fienden längre
-	AController* MyController = GetController();
-	if (MyController)
-	{
-		MyController->UnPossess();
-		MyController->Destroy();
-	}
-	
-	if (EnemyHandler)
-	{
-		if (EnemyHandler->GetAllEnemies().Contains(this))
-		{
-			EnemyHandler->RemoveEnemy(this);
-		}
-	}
-	
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	HeadCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-	SkeletalMeshComp->SetCollisionObjectType(ECC_PhysicsBody);
-	SkeletalMeshComp->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
-
-	SkeletalMeshComp->SetSimulatePhysics(true);
-	
-	SetLifeSpan(15.0f);
-}
-
 void AMeleeEnemy::StartAttack()
 {
 	if (!bCanAttack) return;
@@ -594,24 +420,6 @@ void AMeleeEnemy::DisableHitbox()
 	GetWorldTimerManager().ClearTimer(HitboxWindowHandle);
 }
 
-void AMeleeEnemy::OnAssasinationOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (AStealthCharacter* Player = Cast<AStealthCharacter>(OtherActor))
-	{
-		bCanBeAssassinated = true;
-	}
-}
-
-void AMeleeEnemy::OnAssasinationOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if (AStealthCharacter* Player = Cast<AStealthCharacter>(OtherActor))
-	{
-		bCanBeAssassinated = false;
-	}
-}
-
 void AMeleeEnemy::OnMeleeOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
                                       UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
                                       bool bFromSweep, const FHitResult& SweepResult)
@@ -631,320 +439,6 @@ void AMeleeEnemy::OnMeleeOverlapBegin(UPrimitiveComponent* OverlappedComp, AActo
 	}
 }
 
-
-void AMeleeEnemy::ApplyDamageTo(AActor* Target)
-{
-	if (!Target) return;
-
-	UGameplayStatics::ApplyDamage(Target, AttackDamage, GetController(), this, nullptr);
-}
-
-void AMeleeEnemy::ReduceEnemyRange(bool bShouldReduce)
-{
-	if (bShouldReduce)
-	{
-		VisionRange = OriginalVisionRange / 2;
-		SuspiciousVisionRange = OriginalSuspiciousVisionRange / 2;
-	}
-	else
-	{
-		VisionRange = OriginalVisionRange;
-		SuspiciousVisionRange = OriginalSuspiciousVisionRange;
-	}
-}
-
-void AMeleeEnemy::ReduceEnemyHearingRange(bool bShouldReduce)
-{
-	if (bShouldReduce)
-	{
-		HearingRange = OriginalHearingRange / 4;
-	}
-	else
-	{
-		HearingRange = OriginalHearingRange;
-	}
-}
-
-
-void AMeleeEnemy::HearSoundAtLocation(FVector SoundLocation)
-{
-	// Kontrollera avstånd
-	const float Distance = FVector::Dist(GetActorLocation(), SoundLocation);
-	if (Distance <= HearingRange)
-	{
-		bHeardSoundRecently = true;
-		LastHeardSoundLocation = SoundLocation;
-
-		//UE_LOG(LogTemp, Warning, TEXT("Enemy heard sound at %s"), *SoundLocation.ToString());
-
-		// Starta timer för att glömma ljudet efter ett tag
-		FTimerHandle ForgetSoundHandle;
-		GetWorldTimerManager().SetTimer(ForgetSoundHandle, this, &AMeleeEnemy::ForgetHeardSound, HearingMemoryTime, false);
-	}
-}
-
-//Spread agro
-void AMeleeEnemy::SpreadAgroToNearbyEnemies() 
-{
-	// Cooldown check
-	float TimeNow = GetWorld()->GetTimeSeconds();
-	if (TimeNow - LastAgroSpreadTime < AgroSpreadCooldown) return; 
-
-	// Uppdatera timestamp
-	LastAgroSpreadTime = TimeNow;
-	
-    // Hämta denna fiendes AI controller
-    AMeleeAIController* MyAI = Cast<AMeleeAIController>(GetController());
-    if (!MyAI) return;
-
-    // Endast sprida agro om denna fiende faktiskt jagar
-    if (MyAI->GetCurrentState() != EEnemyState::Chasing)
-        return;
-
-    UWorld* World = GetWorld();
-    if (!World) return;
-
-    TArray<FOverlapResult> Overlaps;
-    FCollisionShape Sphere = FCollisionShape::MakeSphere(AgroSpreadRadius);
-
-    FCollisionQueryParams Params;
-    Params.AddIgnoredActor(this);
-
-    bool bHit = World->OverlapMultiByChannel(
-        Overlaps,
-        GetActorLocation(),
-        FQuat::Identity,
-        ECC_Pawn,
-        Sphere,
-        Params
-    );
-
-    // Debug sphere
-    if (bVisionDebug)
-    {
-        DrawDebugSphere(
-            World,
-            GetActorLocation(),
-            AgroSpreadRadius,
-            16,
-            FColor::Green,
-            false,
-            0.1f,
-            0,
-            2.f
-        );
-    }
-
-    if (!bHit) return;
-
-    for (const FOverlapResult& Result : Overlaps)
-    {
-        AMeleeEnemy* OtherEnemy = Cast<AMeleeEnemy>(Result.GetActor());
-        if (!OtherEnemy || OtherEnemy == this)
-            continue;
-
-        // Hämta andra fiendens AI controller
-        AMeleeAIController* OtherAI = Cast<AMeleeAIController>(OtherEnemy->GetController());
-        if (!OtherAI) continue;
-
-        // Skip om andra fienden redan jagar
-        if (OtherAI->GetCurrentState() == EEnemyState::Chasing)
-            continue;
-
-        //UE_LOG(LogTemp, Warning, TEXT("Agro candidate: %s"), *OtherEnemy->GetName());
-
-        // Check line of sight
-        if (bUseLineOfSightForAgroSpread)
-        {
-            FHitResult LineHit;
-            FVector Start = GetActorLocation() + FVector(0, 0, 50);
-            FVector End = OtherEnemy->GetActorLocation() + FVector(0, 0, 50);
-
-            FCollisionQueryParams TraceParams;
-            TraceParams.AddIgnoredActor(this);
-            TraceParams.AddIgnoredActor(OtherEnemy);
-
-            bool bBlocked = World->LineTraceSingleByChannel(
-                LineHit,
-                Start,
-                End,
-                ECC_Visibility,
-                TraceParams
-            );
-
-            // Debug line
-            if (bVisionDebug)
-            {
-                DrawDebugLine(
-                    World,
-                    Start,
-                    End,
-                    bBlocked ? FColor::Red : FColor::Green,
-                    false,
-                    0.15f,
-                    0,
-                    2.f
-                );
-            }
-
-            if (bBlocked)
-                continue;
-        }
-
-        // Sätt den andra fienden till chase läge
-        //UE_LOG(LogTemp, Warning, TEXT("Spreading agro to %s"), *OtherEnemy->GetName());
-        OtherEnemy->OnAgroSpreadTriggered();
-    }
-}
-
-
-void AMeleeEnemy::OnAgroSpreadTriggered()
-{
-	bCanSeePlayer = true;
-
-	//UE_LOG(LogTemp, Warning, TEXT("%s is now agro and is chasing!"), *GetName());
-}
-
-
-void AMeleeEnemy::UpdateStateVFX(EEnemyState NewState)
-{
-	if (!StateVFXComponent) return;
-
-	if (NewState == EEnemyState::Patrolling)
-	{
-		if (AMeleeAIController* AI = Cast<AMeleeAIController>(GetController()))
-		{
-			StateVFXComponent->SetAsset(nullptr);
-			StateVFXComponent->Deactivate();
-			
-			if (AI->GetCurrentMission() != EEnemyMission::Patrol)
-			{
-				StateVFXComponent->SetAsset(SearchVFX);
-				StateVFXComponent->Activate(true);
-			}
-		}
-	}
-
-	// Om state inte ändrats, gör inget, borde fungera både för VFX och ljud
-	if (PreviousState == NewState)
-	{
-		return;
-	}
-
-	// Logga state-byten
-	/*UE_LOG(LogTemp, Warning, TEXT("STATE CHANGE: %s -> %s"),
-		*UEnum::GetValueAsString(PreviousState),
-		*UEnum::GetValueAsString(NewState)
-	);*/
-
-	//UE_LOG(LogTemp, Warning, TEXT("Alert: AudioComponent playing? %d"), StateAudioComponent->IsPlaying());
-	
-	// Bara spela ljud om state faktiskt ändrats 
-	if (PreviousState != NewState)
-	{
-		switch (NewState)
-		{
-		case EEnemyState::Alert:
-			PlayStateSound(AlertSound);
-			break;
-		case EEnemyState::Chasing:
-			PlayStateSound(ChasingSound);
-			break;
-		case EEnemyState::Searching:
-			PlayStateSound(SearchingSound);
-			break;
-		default:
-			// Stoppa ljud 
-			PlayStateSound(nullptr);
-			break;
-		}
-	}
-	
-	// Uppdatera VFX 
-	switch (NewState)
-	{
-	case EEnemyState::Patrolling:
-		// Stäng av VFX
-		StateVFXComponent->SetAsset(nullptr);
-		StateVFXComponent->Deactivate();
-		break;
-
-	case EEnemyState::Alert:
-		StateVFXComponent->SetAsset(AlertVFX);
-		StateVFXComponent->Activate(true);
-		break;
-
-	case EEnemyState::Chasing:
-		StateVFXComponent->SetAsset(ChaseVFX);
-		StateVFXComponent->Activate(true);
-		break;
-
-	case EEnemyState::Searching:
-		StateVFXComponent->SetAsset(SearchVFX);
-		StateVFXComponent->Activate(true);
-		break;
-
-	default:
-		// Stäng av VFX
-		StateVFXComponent->SetAsset(nullptr);
-		StateVFXComponent->Deactivate();
-		break;
-	}
-
-	// Spara state 
-	PreviousState = NewState;
-}
-
-
-
-void AMeleeEnemy::PlayStateSound(USoundBase* NewSound)
-{
-	if (!StateAudioComponent) return;
-
-	// Gör inget om samma ljud redan spelar 
-	if (StateAudioComponent->Sound == NewSound)
-		return;
-
-	StateAudioComponent->Stop();
-	StateAudioComponent->SetSound(NewSound);
-
-	if (NewSound)
-		StateAudioComponent->Play();
-}
-
-void AMeleeEnemy::PlayHurtSound()
-{
-	if (!VoiceAudioComponent) return;
-
-	// Välj slumpmässigt mellan de två ljuden
-	USoundBase* SoundToPlay = nullptr;
-
-	if (HurtSoundOne && HurtSoundTwo)
-	{
-		SoundToPlay = (FMath::RandBool()) ? HurtSoundOne : HurtSoundTwo;
-	}
-	else if (HurtSoundOne)
-	{
-		SoundToPlay = HurtSoundOne;
-	}
-	else if (HurtSoundTwo)
-	{
-		SoundToPlay = HurtSoundTwo;
-	}
-
-	if (SoundToPlay)
-	{
-		VoiceAudioComponent->SetSound(SoundToPlay);
-		VoiceAudioComponent->Play();
-	}
-}
-
-
-void AMeleeEnemy::SetLastSeenPlayerLocation(FVector NewLocation)
-{
-	LastSeenPlayerLocation = NewLocation;
-}
-
 void AMeleeEnemy::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
@@ -955,11 +449,6 @@ void AMeleeEnemy::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	{
 		MeleeHitBox->OnComponentBeginOverlap.Clear();
 	}
-
-	if (StateVFXComponent)
-	{
-		StateVFXComponent->Deactivate();
-	}
 }
 
 // Time handle Funktioner:
@@ -968,7 +457,3 @@ void AMeleeEnemy::ResetAttackCooldown()
 	bCanAttack = true;
 }
 
-void AMeleeEnemy::ForgetHeardSound()
-{
-	bHeardSoundRecently = false;
-}

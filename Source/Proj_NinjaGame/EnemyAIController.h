@@ -59,7 +59,7 @@ protected:
 	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
 
 	UPROPERTY()
-	class AMeleeEnemy* ControlledEnemy;
+	class AEnemy* ControlledEnemy;
 
 	int32 CurrentPatrolIndex = 0;
 	EEnemyState CurrentState = EEnemyState::Patrolling;

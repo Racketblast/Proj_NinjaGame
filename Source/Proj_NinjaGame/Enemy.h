@@ -21,6 +21,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	bool bCanBeAssassinated = false;
 
+	UFUNCTION(BlueprintCallable)
+	virtual void StartAttack();
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -73,11 +76,11 @@ protected:
 
 	bool bCanSeePlayer = false;
 
-	void CheckPlayerVisibility();
+	virtual void CheckPlayerVisibility();
 
-	void CheckChaseProximityDetection();
+	virtual void CheckChaseProximityDetection();
 
-	void CheckCloseDetection();
+	virtual void CheckCloseDetection();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
 	bool bVisionDebug = true;

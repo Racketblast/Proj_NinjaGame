@@ -22,7 +22,7 @@ AEnemyAIController::AEnemyAIController()
 void AEnemyAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-	ControlledEnemy = Cast<AMeleeEnemy>(InPawn);
+	ControlledEnemy = Cast<AEnemy>(InPawn);
 
 	if (ControlledEnemy)
 	{
