@@ -237,6 +237,24 @@ void AEnemyAIController::HandleChasing(float DeltaSeconds)
 
 void AEnemyAIController::HandleSearching(float DeltaSeconds)
 {
+	// Om fienden ser spelaren igen så börjar den jaga direkt
+	if (ControlledEnemy->CanSeePlayer())
+	{
+		GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
+		GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
+		//bIsLookingAround = false;
+		CancelLookAround();
+		StartChasing();
+		return;  // Va tidigare break, när detta var i tick, vet inte om return fungerar på samma sätt 
+	}
+	
+	if (ControlledEnemy->bPlayerInAlertCone) 
+	{
+		CancelLookAround();
+		StartAlert();
+		//UE_LOG(LogTemp, Error, TEXT("StartAlert"));
+	}
+	
 	if (bIsMovingToSound && bIsInvestigatingTarget)
 	{
 		// Gör inget om vi roterar
@@ -267,23 +285,7 @@ void AEnemyAIController::HandleSearching(float DeltaSeconds)
 			bHasLookAroundTarget   = false;
 		}
 	}
-
 	
-	if (ControlledEnemy->bPlayerInAlertCone) 
-	{
-		StartAlert();
-		//UE_LOG(LogTemp, Warning, TEXT("StartAlert"));
-	}
-	
-	// Om fienden ser spelaren igen så börjar den jaga direkt
-	if (ControlledEnemy->CanSeePlayer())
-	{
-		GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
-		GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
-		bIsLookingAround = false;
-		StartChasing();
-		return;  // Va tidigare break, när detta var i tick, vet inte om return fungerar på samma sätt 
-	}
 
 	// Börjar leta efter spelaren. Ser till att BeginSearch() inte kallas flera gånger. 
 	if (!bIsLookingAround && FVector::Dist(GetPawn()->GetActorLocation(), LastKnownPlayerLocation) < 150.f)
@@ -809,6 +811,16 @@ void AEnemyAIController::LookAround()
 	
 	//MoveToLocation(ControlledPawn->GetActorLocation() + ControlledPawn->GetActorForwardVector() * FMath::RandRange(100.f, 250.f));
 }
+
+void AEnemyAIController::CancelLookAround()
+{
+	bIsLookingAround = false;
+	
+	bHasLookAroundTarget   = false;
+	bIsDoingLookAroundMove = false;
+	bIsRotating = false;
+}
+
 
 void AEnemyAIController::EndSearch()
 {

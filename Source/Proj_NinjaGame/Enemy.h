@@ -126,10 +126,9 @@ protected:
 	
 	// För Attack 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
-	float AttackRange = 100.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
 	float AttackDamage = 1.f;
+
+	float AttackRange = 0.f;
 
 	UPROPERTY(EditDefaultsOnly, Category="Combat")
 	UCapsuleComponent* AssassinationCapsule;
@@ -194,7 +193,7 @@ public:
 	FORCEINLINE UCapsuleComponent* GetHeadComponent() const { return HeadCapsule; }
 	FORCEINLINE AEnemyHandler* GetEnemyHandler() const { return EnemyHandler; }
 	FORCEINLINE void SetEnemyHandler(AEnemyHandler* NewEnemyHandler) { EnemyHandler = NewEnemyHandler; }
-	FORCEINLINE float GetAttackRange() const { return AttackRange; }
+	FORCEINLINE virtual float GetAttackRange() const { return AttackRange; } 
 	float GetHealth() const { return Health; }
 
 	void UpdateLastSeenPlayerLocation();

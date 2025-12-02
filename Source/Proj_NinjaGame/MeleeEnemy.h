@@ -21,7 +21,8 @@ public:
 	
 	void EnableHitbox(float WindowSeconds = 0.15f);
 	void DisableHitbox();
-	
+
+	FORCEINLINE virtual float GetAttackRange() const override { return AttackRange; } 
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -33,6 +34,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
 	float AttackCooldown = 1.2f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
+	float AttackRange = 100.f; 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
 	UAnimMontage* AttackMontage;

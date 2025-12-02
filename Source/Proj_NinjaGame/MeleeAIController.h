@@ -17,7 +17,7 @@ public:
 
 	virtual void RefreshChaseTarget() override;
 
-	virtual void StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation) override;
+	//virtual void StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation) override;
 	
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
@@ -31,7 +31,7 @@ protected:
 	virtual void StartChasing() override;
 	virtual void StopChasing() override;
 	virtual void OnUnPossess() override;
-	virtual void HandleChasing(float DeltaSeconds);
+	virtual void HandleChasing(float DeltaSeconds) override;
 
 private:
 	FTimerHandle StartPatrolTimerHandle;

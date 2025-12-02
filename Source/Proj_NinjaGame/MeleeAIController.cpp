@@ -57,10 +57,10 @@ void AMeleeAIController::RefreshChaseTarget()
 
 
 // Kallas just nu från kameran
-void AMeleeAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation)
+/*void AMeleeAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation)
 {
 	Super::StartChasingFromExternalOrder(LastKnownPlayerLocation);
-}
+}*/
 
 
 void AMeleeAIController::OnUnPossess()
