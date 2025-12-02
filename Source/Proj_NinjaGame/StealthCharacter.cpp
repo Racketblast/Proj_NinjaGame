@@ -310,15 +310,16 @@ void AStealthCharacter::AimStart()
 {
 	if(bIsHiding == true) return;
 	
-	if (CurrentMovementState == EPlayerMovementState::Run ) 
-	{
-		StopSprint();
-	}
-	
 	if (HeldThrowableWeapon)
 	{
+		GetWorld()->GetTimerManager().ClearTimer(AimEndTimer);
 		bIsAiming = true;
-	
+		
+		if (CurrentMovementState == EPlayerMovementState::Run ) 
+		{
+			StopSprint();
+		}
+		
 		if (MarkerClass && !SpawnedMarker)
 		{
 			FVector SpawnLoc = GetActorLocation();
@@ -331,7 +332,19 @@ void AStealthCharacter::AimStart()
 	}
 }
 
-void AStealthCharacter::AimEnd()
+void AStealthCharacter::AimEndAction()
+{
+	if (CurrentMovementState == EPlayerMovementState::Run)
+	{
+		AimEndFunction();
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().SetTimer(AimEndTimer, this, &AStealthCharacter::AimEndFunction, AimEndTimerSeconds, false);
+	}
+}
+
+void AStealthCharacter::AimEndFunction()
 {
 	bIsAiming = false;
 	
@@ -645,7 +658,7 @@ void AStealthCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		//Attacks
 		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, this, &AStealthCharacter::Attack);
 		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Started, this, &AStealthCharacter::AimStart);
-		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AStealthCharacter::AimEnd);
+		EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Completed, this, &AStealthCharacter::AimEndAction);
 		
 		EnhancedInputComponent->BindAction(ChangeWeaponAction, ETriggerEvent::Triggered, this, &AStealthCharacter::ChangeWeapon);
 		
@@ -1036,7 +1049,6 @@ void AStealthCharacter::StartSprint()
 		{
 			if (CurrentStamina > 0)
 			{
-				AimEnd();
 				// Om spelaren är i crouch så lämna det läget först
 				if (CurrentMovementState == EPlayerMovementState::Crouch)
 				{
@@ -1047,6 +1059,7 @@ void AStealthCharacter::StartSprint()
 				
 						GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 						CurrentMovementState = EPlayerMovementState::Run;
+						AimEndAction();
 					}
 				}
 				else
@@ -1055,6 +1068,7 @@ void AStealthCharacter::StartSprint()
 	
 					GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 					CurrentMovementState = EPlayerMovementState::Run;
+					AimEndAction();
 				}
 	
 				//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));

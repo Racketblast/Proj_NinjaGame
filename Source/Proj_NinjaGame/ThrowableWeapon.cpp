@@ -35,7 +35,7 @@ void AThrowableWeapon::Throw(AStealthCharacter* Player)
 	else
 	{
 		Player->HeldThrowableWeapon = nullptr;
-		Player->AimEnd();
+		Player->AimEndFunction();
 	}
 	Player->LastHeldWeapon = nullptr;
 	Destroy();

@@ -135,7 +135,9 @@ protected:
 	void AimStart();
 public:
 	UFUNCTION(BlueprintCallable, Category="Input")
-	void AimEnd();
+	void AimEndAction();
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void AimEndFunction();
 	
 	UFUNCTION(BlueprintCallable)
 	void EquipThrowWeapon(TSubclassOf<AThrowableWeapon> EquipWeapon);
@@ -183,6 +185,9 @@ protected:
 	//Weapon variables
 	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
 	bool bIsAiming;
+	FTimerHandle AimEndTimer;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
+	float AimEndTimerSeconds = 0.1f;
 	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
 	bool bCanAssassinate;
 	UPROPERTY()
