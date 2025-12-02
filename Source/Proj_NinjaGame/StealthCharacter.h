@@ -152,6 +152,7 @@ protected:
 	void Die();
 	FTimerHandle TempHandle; // Används i Die funktionen
 
+	//Use
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void Use();
 	UFUNCTION(BlueprintCallable)
@@ -159,11 +160,13 @@ protected:
 	
 	void CheckForUse();
 
+	//Used to stop showing weapons for different cases
 	UFUNCTION(BlueprintCallable)
 	void ShowActors(AActor* Actor, bool bShow);
 	UFUNCTION(BlueprintCallable)
 	void ShowWeaponActors(bool bShow);
-	
+
+	//Health
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	float Health = 3.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
@@ -178,8 +181,19 @@ protected:
 	AActor* LastUseTarget;
 
 	//Weapon variables
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
 	bool bIsAiming;
+	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
+	bool bCanAssassinate;
+	UPROPERTY()
+	TArray<class AMeleeEnemy*> EnemiesInAssassinationRange;
+	UFUNCTION()
+	void OnMeleeBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION(BlueprintCallable)
+	void OnMeleeBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	void CheckForCanAssassinate();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
 	USoundBase* ThrowSound;
@@ -229,7 +243,7 @@ public:
 	class UBoxComponent* PlayerMeleeBox;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-	TArray<class ADoor*> DoorsThatCanBeUnlocked;
+	TArray<class AKeyCard*> KeyCards;
 protected:
 	
 	// Sneak

@@ -30,6 +30,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
 	bool bNeedsToBeUnlocked = false;
+	bool PlayerCanUnlock = false;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Interact")
 	bool bIsMoving = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")

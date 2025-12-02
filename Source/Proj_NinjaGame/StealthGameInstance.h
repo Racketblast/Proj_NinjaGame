@@ -86,10 +86,37 @@ public:
 	void RestartGame();
 	UFUNCTION(BlueprintCallable)
 	bool HasGameChanged();
-
+	
+	//Dialogue
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category="Dialogue")
+	UDataTable* EventDialogueInfo;
+	UPROPERTY(BlueprintReadWrite, Category="Dialogue")
+	bool bCanPlayDialogue = false;
+	UPROPERTY(BlueprintReadOnly, Category="Dialogue")
+	bool bDialogueIsPlaying = false;
+	UPROPERTY(BlueprintReadOnly, Category="Dialogue")
+	FName CurrentDialogueRowName;
+	UPROPERTY(BlueprintReadWrite, Category="Dialogue")
+	FName StartDialogueRowName;
+	FName NextDialogueRowName;
+	UPROPERTY(BlueprintReadWrite, Category="Dialogue")
+	UAudioComponent* DialogueComponent;
+	
+	UFUNCTION(BlueprintCallable, Category="Dialogue")
+	void StartDialogue();
+	UFUNCTION()
+	void PlayNextDialogue();
+	UFUNCTION(BlueprintCallable, Category="Dialogue")
+	void StopDialogue();
+	UFUNCTION(BlueprintPure, Category="Dialogue")
+	float GetDialogueDuration();
+	
 	//WeaponSwitch
 	UFUNCTION(BlueprintCallable)
 	void SwitchOwnWeapon(EPlayerOwnThrowWeapon WeaponToSwitchTo);
+	
+private:
+	FTimerHandle DialogueTimerHandle;
 };
 
 

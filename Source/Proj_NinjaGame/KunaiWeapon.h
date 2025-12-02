@@ -18,4 +18,5 @@ public:
 	AKunaiWeapon();
 
 	virtual void Throw(AStealthCharacter* Player) override;
+	virtual void Drop(AStealthCharacter* Player) override;
 };

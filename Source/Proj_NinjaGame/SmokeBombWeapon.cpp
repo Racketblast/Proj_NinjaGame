@@ -29,3 +29,7 @@ void ASmokeBombWeapon::Throw(AStealthCharacter* Player)
 		Destroy();
 	}
 }
+
+void ASmokeBombWeapon::Drop(AStealthCharacter* Player)
+{
+}

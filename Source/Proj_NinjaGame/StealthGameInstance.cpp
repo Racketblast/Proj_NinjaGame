@@ -3,11 +3,13 @@
 
 #include "StealthGameInstance.h"
 
+#include "DialogueInfo.h"
 #include "StealthCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "ThrowableWeapon.h"
 #include "GameFramework/GameUserSettings.h"
 #include "StealthSaveGame.h"
+#include "Components/AudioComponent.h"
 
 void UStealthGameInstance::Init()
 {
@@ -141,6 +143,117 @@ bool UStealthGameInstance::HasGameChanged()
 	}
 	
 	return true;
+}
+
+void UStealthGameInstance::StartDialogue()
+{if (!EventDialogueInfo)
+	return;
+
+	if (!bCanPlayDialogue)
+		return;
+
+	
+	if (StartDialogueRowName == "")
+		return;
+	
+	CurrentDialogueRowName = StartDialogueRowName;
+
+	if (FDialogueInfo* Row = EventDialogueInfo->FindRow<FDialogueInfo>(StartDialogueRowName, TEXT("")))
+	{
+		if (CurrentGameFlag < Row->DialogueFlag || Row->DialogueFlag == 0)
+		{
+			NextDialogueRowName = Row->NextDialogue;
+
+			//Plays the dialogue for the amount of time the sound plays
+			float TimeUntilNextDialogue = 0.0f;
+			if ( APawn* Player = Cast<APawn>(UGameplayStatics::GetPlayerPawn(this, 0)))
+			{
+				if (Row->DialogueSound)
+				{
+					bDialogueIsPlaying = true;
+					DialogueComponent = UGameplayStatics::SpawnSoundAtLocation(
+						GetWorld(),
+						Row->DialogueSound,
+						Player->GetActorLocation()
+					);
+					TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
+				}
+			}
+		
+			//Goes to next dialogue
+			//This is the reason why the dialogue is broken into two functions, because it needs a delay between each dialog
+			GetWorld()->GetTimerManager().SetTimer(DialogueTimerHandle, this, &UStealthGameInstance::PlayNextDialogue, TimeUntilNextDialogue, false);
+		}
+	}
+}
+
+void UStealthGameInstance::PlayNextDialogue()
+{
+	if (!EventDialogueInfo)
+	return;
+	if (NextDialogueRowName != "")
+	{
+		CurrentDialogueRowName = NextDialogueRowName;
+		if (FDialogueInfo* Row = EventDialogueInfo->FindRow<FDialogueInfo>(NextDialogueRowName, TEXT("")))
+		{
+			NextDialogueRowName = Row->NextDialogue;
+			//Plays the dialogue for the amount of time the sound plays
+			float TimeUntilNextDialogue = 0.0f;
+			if ( APawn* Player = Cast<APawn>(UGameplayStatics::GetPlayerPawn(this, 0)))
+			{
+				if (Row->DialogueSound)
+				{
+					DialogueComponent = UGameplayStatics::SpawnSoundAtLocation(
+						GetWorld(),
+						Row->DialogueSound,
+						Player->GetActorLocation()
+					);
+					TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
+				}
+			}
+			
+			//Goes to next dialogue
+			GetWorld()->GetTimerManager().SetTimer(DialogueTimerHandle, this, &UStealthGameInstance::PlayNextDialogue, TimeUntilNextDialogue, false);
+		}
+	}
+	//If dialogue is over
+	else
+	{
+		bDialogueIsPlaying = false;
+	}
+}
+
+void UStealthGameInstance::StopDialogue()
+{
+	GetWorld()->GetTimerManager().ClearTimer(DialogueTimerHandle);
+
+	if (DialogueComponent && DialogueComponent->IsPlaying())
+	{
+		DialogueComponent->Stop();
+	}
+
+	bDialogueIsPlaying = false;
+	StartDialogueRowName = "";
+	CurrentDialogueRowName = "";
+	NextDialogueRowName = "";
+}
+
+float UStealthGameInstance::GetDialogueDuration()
+{
+	//Plays the dialogue for the amount of time the sound plays
+	float TimeUntilNextDialogue = 0.0f;
+	
+	if (CurrentDialogueRowName != "")
+	{
+		if (FDialogueInfo* Row = EventDialogueInfo->FindRow<FDialogueInfo>(CurrentDialogueRowName, TEXT("")))
+		{
+			if (Row->DialogueSound)
+			{
+				TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
+			}
+		}
+	}
+	return TimeUntilNextDialogue;
 }
 
 void UStealthGameInstance::SwitchOwnWeapon(EPlayerOwnThrowWeapon WeaponToSwitchTo)

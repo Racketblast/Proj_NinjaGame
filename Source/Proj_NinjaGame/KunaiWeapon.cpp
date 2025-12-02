@@ -28,3 +28,7 @@ void AKunaiWeapon::Throw(AStealthCharacter* Player)
 		Destroy();
 	}
 }
+
+void AKunaiWeapon::Drop(AStealthCharacter* Player)
+{
+}

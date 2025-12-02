@@ -17,18 +17,17 @@ void AKeyCard::Use_Implementation(class AStealthCharacter* Player)
 	
 	if (!Player) return;
 
-	for (auto UnlockDoor : DoorsToUnlock)
+	if (!Player->KeyCards.Contains(this))
 	{
-		if (UnlockDoor)
-		{
-			if (!Player->DoorsThatCanBeUnlocked.Contains(UnlockDoor))
-			{
-				Player->DoorsThatCanBeUnlocked.Add(UnlockDoor);
-			}
-		}
+		Player->KeyCards.Add(this);
 	}
-
+	
 	Destroy();
+}
+
+bool AKeyCard::ContainsDoor(class ADoor* Door)
+{
+	return DoorsToUnlock.Contains(Door);
 }
 
 void AKeyCard::BeginPlay()

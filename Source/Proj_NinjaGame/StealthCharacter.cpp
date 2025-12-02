@@ -21,7 +21,6 @@
 #include "StealthGameInstance.h"
 #include "ThrowableWeapon.h"
 #include "Components/BoxComponent.h"
-#include "EnvironmentQuery/EnvQueryTypes.h"
 #include "MeleeEnemy.h"
 #include "SmokeBombWeapon.h"
 #include "Navigation/PathFollowingComponent.h"
@@ -210,40 +209,33 @@ void AStealthCharacter::Attack()
 		{
 			if (CurrentMovementState != EPlayerMovementState::Run && CurrentMovementState != EPlayerMovementState::Climb)
 			{
-				if (CurrentStamina + AttackStaminaAmount >= 0)
+				if (CurrentInteractState == EPlayerInteractState::None || CurrentInteractState == EPlayerInteractState::Attack || CurrentInteractState == EPlayerInteractState::Interact)
 				{
-					if (CurrentInteractState == EPlayerInteractState::None || CurrentInteractState == EPlayerInteractState::Attack || CurrentInteractState == EPlayerInteractState::Interact)
+					CurrentInteractState = EPlayerInteractState::Attack;
+					if (CurrentMeleeWeapon->SwingSound)
 					{
-						CurrentInteractState = EPlayerInteractState::Attack;
-						if (CurrentMeleeWeapon->SwingSound)
+						UGameplayStatics::PlaySoundAtLocation(GetWorld(), CurrentMeleeWeapon->SwingSound, GetActorLocation());
+					}
+					UE_LOG(LogTemp, Display, TEXT("Melee attack"));
+					TArray<AActor*> HitActors;
+					PlayerMeleeBox->GetOverlappingActors(HitActors);
+					for (auto HitActor : HitActors)
+					{
+						if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(HitActor))
 						{
-							UGameplayStatics::PlaySoundAtLocation(GetWorld(), CurrentMeleeWeapon->SwingSound, GetActorLocation());
-						}
-						UE_LOG(LogTemp, Display, TEXT("Melee attack"));
-						CurrentStamina += AttackStaminaAmount;
-	
-						TArray<AActor*> HitActors;
-						PlayerMeleeBox->GetOverlappingActors(HitActors);
-						for (auto HitActor : HitActors)
-						{
-							if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(HitActor))
+							if (Enemy->bCanBeAssassinated && !Enemy->CanSeePlayer())
 							{
-								if (Enemy->bCanBeAssassinated && !Enemy->CanSeePlayer())
-								{
-									CurrentMeleeWeapon->bAssassinatingEnemy = true;
-									CurrentMeleeWeapon->bCanMeleeAttack = false;
-									break;
-								}
+								CurrentMeleeWeapon->bAssassinatingEnemy = true;
+								CurrentMeleeWeapon->bCanMeleeAttack = false;
+								break;
 							}
 						}
+					}
 					
-						if (!CurrentMeleeWeapon->bAssassinatingEnemy)
-						{
-							CurrentMeleeWeapon->bMeleeAttacking = true;
-							CurrentMeleeWeapon->bCanMeleeAttack = false;
-						}
-										
-						UpdateStaminaStart(RegainStaminaAmount);
+					if (!CurrentMeleeWeapon->bAssassinatingEnemy)
+					{
+						CurrentMeleeWeapon->bMeleeAttacking = true;
+						CurrentMeleeWeapon->bCanMeleeAttack = false;
 					}
 				}
 			}
@@ -272,34 +264,21 @@ void AStealthCharacter::StopThrow()
 
 void AStealthCharacter::ChangeWeapon()
 {
-	if (bIsHiding)
+	if (bIsHiding || bIsAiming || AmountOfOwnWeapon <= 0)
 		return;
 	
-	if (!bIsAiming)
+	if (HeldThrowableWeapon->bIsOwnThrowWeapon)
 	{
-		if (AmountOfOwnWeapon > 0)
+		if (LastHeldWeapon != nullptr)
 		{
-			if (AKunaiWeapon* Kunai = Cast<AKunaiWeapon>(HeldThrowableWeapon))
-			{
-				if (LastHeldWeapon != nullptr)
-				{
-					EquipThrowWeapon(LastHeldWeapon);
-				}
-			}
-			else if (ASmokeBombWeapon* SmokeBomb = Cast<ASmokeBombWeapon>(HeldThrowableWeapon))
-			{
-				if (LastHeldWeapon != nullptr)
-				{
-					EquipThrowWeapon(LastHeldWeapon);
-				}
-			}
-			else
-			{
-				if (CurrentOwnThrowWeapon != nullptr)
-				{
-					EquipThrowWeapon(CurrentOwnThrowWeapon);
-				}
-			}
+			EquipThrowWeapon(LastHeldWeapon);
+		}
+	}
+	else
+	{
+		if (CurrentOwnThrowWeapon != nullptr)
+		{
+			EquipThrowWeapon(CurrentOwnThrowWeapon);
 		}
 	}
 }
@@ -318,24 +297,10 @@ void AStealthCharacter::EquipThrowWeapon(TSubclassOf<AThrowableWeapon> EquipWeap
 
 void AStealthCharacter::DropWeapon()
 {
-	if (bIsHiding)
+	if (bIsHiding || bIsAiming || !HeldThrowableWeapon)
 		return;
-	if (!bIsAiming)
-	{
-		if (HeldThrowableWeapon)
-		{
-			if (AKunaiWeapon* Kunai = Cast<AKunaiWeapon>(HeldThrowableWeapon))
-			{
-			}
-			else if (ASmokeBombWeapon* SmokeBomb = Cast<ASmokeBombWeapon>(HeldThrowableWeapon))
-			{
-			}
-			else
-			{
-				HeldThrowableWeapon->Drop(this);
-			}
-		}
-	}
+
+	HeldThrowableWeapon->Drop(this);
 }
 
 void AStealthCharacter::AimStart()
@@ -412,6 +377,18 @@ void AStealthCharacter::UpdateProjectilePrediction()
     FPredictProjectilePathResult PredictResult;
     UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult);
 
+	if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(PredictResult.HitResult.GetActor()))
+	{
+		if (PredictResult.HitResult.Component == Enemy->GetHeadComponent())
+		{
+			UE_LOG(LogTemp, Error, TEXT("Hit head"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Hit Enemy"));
+		}
+	}
+	
 	SpawnedMarker->SetActorLocation(PredictResult.HitResult.Location);
 }
 
@@ -521,6 +498,9 @@ void AStealthCharacter::BeginPlay()
 	}
 
 	MaxAmountOfOwnWeapon = AmountOfOwnWeapon;
+	
+	PlayerMeleeBox->OnComponentBeginOverlap.AddDynamic(this, &AStealthCharacter::OnMeleeBoxBeginOverlap);
+	PlayerMeleeBox->OnComponentEndOverlap.AddDynamic(this, &AStealthCharacter::OnMeleeBoxEndOverlap);
 }
 
 void AStealthCharacter::Landed(const FHitResult& Hit)
@@ -569,6 +549,7 @@ void AStealthCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	CheckForUse();
+	CheckForCanAssassinate();
 	
 	//Gives a reticle for where the throwable object will go
 	if (bIsAiming && HeldThrowableWeapon)
@@ -804,15 +785,6 @@ void AStealthCharacter::Climb()
 						ExitClimb();
 					}
 				}
-				//Code that should work but capsule changes size almost randomly so can't use this
-				/*else
-				{
-					if (bHitLedge)
-					{
-						UE_LOG(LogTemp, Warning, TEXT("No ledge"));
-						bHitLedge = false;
-					}
-				}*/
 			}
 			
 			//If we are holding forward and jump
@@ -1151,3 +1123,67 @@ void AStealthCharacter::ResetToNormalCamera()
 	FirstPersonCameraComponent->SetRelativeLocationAndRotation(FVector(-2.8f, 5.89f, 0.0f), FRotator(0.0f, 90.0f, -90.0f));
 }
 
+
+void AStealthCharacter::OnMeleeBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(OtherActor))
+	{
+		EnemiesInAssassinationRange.AddUnique(Enemy);
+		CheckForCanAssassinate();
+	}
+}
+
+void AStealthCharacter::OnMeleeBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (AMeleeEnemy* Enemy = Cast<AMeleeEnemy>(OtherActor))
+	{
+		EnemiesInAssassinationRange.Remove(Enemy);
+		CheckForCanAssassinate();
+	}
+}
+
+void AStealthCharacter::CheckForCanAssassinate()
+{
+	if (!PlayerMeleeBox)
+		return;
+	
+	bCanAssassinate = false;
+
+	if (EnemiesInAssassinationRange.Num() == 0)
+		return;
+
+	for (AMeleeEnemy* Enemy  : EnemiesInAssassinationRange)
+	{
+		if (!Enemy) continue;
+
+		if (!Enemy->CanSeePlayer() && Enemy->bCanBeAssassinated)
+		{
+			bCanAssassinate = true;
+			return;
+		}
+	}
+
+	//Old code that can do the whole check by itself, but is more expensive
+	/*if (!PlayerMeleeBox)
+		return;
+	
+	bCanAssassinate = false;
+
+	TArray<AActor*> Overlaps;
+	PlayerMeleeBox->GetOverlappingActors(Overlaps, AMeleeEnemy::StaticClass());
+	if (Overlaps.Num() == 0)
+		return;
+
+	for (AActor* OverlapActor : Overlaps)
+	{
+		if (AMeleeEnemy* MeleeEnemy = Cast<AMeleeEnemy>(OverlapActor))
+		{
+			if (!MeleeEnemy->CanSeePlayer() && MeleeEnemy->bCanBeAssassinated)
+			{
+				bCanAssassinate = true;
+			}
+		}
+	}*/
+}
