@@ -31,6 +31,7 @@ protected:
 	virtual void StartChasing() override;
 	virtual void StopChasing() override;
 	virtual void OnUnPossess() override;
+	virtual void HandleChasing(float DeltaSeconds);
 
 private:
 	FTimerHandle StartPatrolTimerHandle;

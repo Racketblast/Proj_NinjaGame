@@ -217,7 +217,6 @@ public:
 
 
 	/* Hearing system */
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI|Perception")
 	float HearingRange = 800.f;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="AI|Perception")

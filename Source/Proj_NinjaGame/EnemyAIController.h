@@ -52,7 +52,7 @@ public:
 	// För stun
 	void StunEnemy(float Duration, TOptional<EEnemyState> WantedState = TOptional<EEnemyState>());
 
-	protected:
+protected:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void Tick(float DeltaSeconds) override;
 
@@ -63,6 +63,11 @@ public:
 
 	int32 CurrentPatrolIndex = 0;
 	EEnemyState CurrentState = EEnemyState::Patrolling;
+
+	virtual void HandlePatrolling(float DeltaSeconds); 
+	virtual void HandleAlert(float DeltaSeconds);
+	virtual void HandleChasing(float DeltaSeconds);
+	virtual void HandleSearching(float DeltaSeconds);
 	
 	FTimerHandle LoseSightTimerHandle;
 	

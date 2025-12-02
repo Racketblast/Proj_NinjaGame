@@ -74,270 +74,22 @@ void AEnemyAIController::Tick(float DeltaSeconds)
 	{
 	case EEnemyState::Patrolling:
 		{
-			if (ControlledEnemy->bPlayerInAlertCone) 
-			{
-				CurrentState = EEnemyState::Alert;
-				StartAlert();
-				//UE_LOG(LogTemp, Warning, TEXT("StartAlert"));
-			}
-			else if (ControlledEnemy->CanSeePlayer())
-			{
-				StartChasing();
-			}
-			else if (ControlledEnemy->bHeardSoundRecently && !bIsInvestigatingSound)
-			{
-				//UE_LOG(LogTemp, Warning, TEXT("Patrolling: Heard sound at %s"), *ControlledEnemy->LastHeardSoundLocation.ToString());
-				OnHeardSound(ControlledEnemy->LastHeardSoundLocation);
-				bIsInvestigatingSound = true;
-				
-				GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, this, &AEnemyAIController::ResetSoundFlag, 0.5f, false);
-			}
-			
-			// Mission 
-			if (bHasMission && CurrentMission != EEnemyMission::Patrol && CurrentState != EEnemyState::Alert)
-			{
-				StartMissionMoveTo(CurrentMissionLocation);
-				break;
-			}
-
-			// Rotation
-			if (bIsRotatingTowardPatrolPoint)
-			{
-				RotationProgress += DeltaSeconds / 2.0f; 
-
-				FRotator Current = ControlledEnemy->GetActorRotation();
-				FRotator Interp  = FMath::RInterpTo(Current, DesiredLookRotation, DeltaSeconds, 2.5f);
-
-				// Lås pitch och roll igen 
-				Interp.Pitch = 0.f;
-				Interp.Roll  = 0.f;
-
-				ControlledEnemy->SetActorRotation(Interp);
-
-				// Kolla när vi är nästan klar
-				if (Current.Equals(DesiredLookRotation, 3.0f)) // tolerans är 3 grader
-				{
-					bIsRotatingTowardPatrolPoint = false;
-
-					// När klar så börjar fienden gå
-					MoveToActor(
-						ControlledEnemy->GetPatrolPoints()[CurrentPatrolIndex]
-					);
-				}
-			}
+			HandlePatrolling(DeltaSeconds);
 			break;
 		}
 	case EEnemyState::Alert:
 		{
-			if (!GetWorldTimerManager().IsTimerActive(AlertTimerHandle))
-			{
-				GetWorldTimerManager().SetTimer(AlertTimerHandle, this, &AEnemyAIController::OnAlertTimerExpired, 3.f, false);
-			}
-			// Om fienden ser spelaren tillräckligt tydligt så börja jaga
-			if (ControlledEnemy->CanSeePlayer())
-			{
-				StartChasing();
-			}
-			else
-			{
-				// titta mot spelaren 
-				APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
-				if (Player)
-				{
-					FVector ToPlayer = Player->GetActorLocation() - ControlledEnemy->GetActorLocation();
-					ToPlayer.Z = 0;
-					if (!ToPlayer.IsNearlyZero())
-					{
-						FRotator TargetRot = ToPlayer.Rotation();
-						FRotator NewRot = FMath::RInterpTo(
-							ControlledEnemy->GetActorRotation(),
-							TargetRot,
-							DeltaSeconds,
-							3.5f
-						);
-						ControlledEnemy->SetActorRotation(NewRot);
-					}
-				}
-			}
-
+			HandleAlert(DeltaSeconds);
 			break;
 		}
 	case EEnemyState::Chasing:
 		{
-			APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(),0);
-
-			// Kamerans chase
-			if (bChasingFromExternalOrder)
-			{
-				// Om vi ser spelaren så byt till normal chase
-				if (ControlledEnemy->CanSeePlayer())
-				{
-					bChasingFromExternalOrder = false;
-				}
-				break;
-			}
-			
-			// Vanlig chase
-			if (ControlledEnemy->CanSeePlayer())
-			{
-				float Dist = FVector::Dist(GetPawn()->GetActorLocation(), Player->GetActorLocation());
-				if (Dist <= ControlledEnemy->GetAttackRange())
-				{
-					StopMovement();
-					ControlledEnemy->StartAttack();
-				}
-				else
-				{
-					MoveToActor(Player);
-				}
-				GetWorldTimerManager().ClearTimer(LoseSightTimerHandle);
-			}
-			else if (!GetWorldTimerManager().IsTimerActive(LoseSightTimerHandle))
-			{
-				UE_LOG(LogTemp, Warning, TEXT("lost sight of player during chase. Calling StopChasing"));
-				GetWorldTimerManager().SetTimer(LoseSightTimerHandle, this, &AEnemyAIController::StopChasing, ControlledEnemy->GetLoseSightTime(), false);
-			}
-			
-			
+			HandleChasing(DeltaSeconds);
 			break;
 		}
 	case EEnemyState::Searching:
 		{
-			if (bIsMovingToSound && bIsInvestigatingTarget)
-			{
-				// Gör inget om vi roterar
-				if (!bIsRotating)
-				{
-					bIsDoingMissionMoveTo = false;
-					MoveToLocation(InvestigateTarget, -1.f, true, true, false, false, 0, true);
-				}
-			}
-
-			/*if (bHasLookAroundTarget && !bIsRotating)
-			{
-				bIsDoingMissionMoveTo = false;
-				MoveToLocation(LookAroundTarget);
-			}*/
-			if (bHasLookAroundTarget)
-			{
-				if (!bIsRotating && !bIsDoingLookAroundMove)
-				{
-					StartSmoothRotationTowards(LookAroundTarget, 4);
-					
-					bIsDoingLookAroundMove = true;
-				}
-
-				// När rotationen är klar så körs MoveTo
-				if (bIsDoingLookAroundMove && !bIsRotating)
-				{
-					bIsDoingMissionMoveTo = false;
-					MoveToLocation(LookAroundTarget);
-
-					// Reset så detta inte triggas varje tick
-					bIsDoingLookAroundMove = false;
-					bHasLookAroundTarget   = false;
-				}
-			}
-
-			
-			if (ControlledEnemy->bPlayerInAlertCone) 
-			{
-				StartAlert();
-				//UE_LOG(LogTemp, Warning, TEXT("StartAlert"));
-			}
-			
-			// Om fienden ser spelaren igen så börjar den jaga direkt
-			if (ControlledEnemy->CanSeePlayer())
-			{
-				GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
-				GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
-				bIsLookingAround = false;
-				StartChasing();
-				break;
-			}
-
-			// Börjar leta efter spelaren. Ser till att BeginSearch() inte kallas flera gånger. 
-			if (!bIsLookingAround && FVector::Dist(GetPawn()->GetActorLocation(), LastKnownPlayerLocation) < 150.f)
-			{
-				bIsLookingAround = true;
-				//UE_LOG(LogTemp, Warning, TEXT("AEnemyAIController Searching Tick"));
-				BeginSearch();
-			}
-
-
-			
-			// Movement Failsafe
-			FVector CurrentLocation = GetPawn()->GetActorLocation();
-			FVector Delta = CurrentLocation - LastSearchLocation;
-			float DistanceMoved = Delta.Size();
-
-			// Kolla hastighet 
-			float Speed = ControlledEnemy->GetVelocity().Size();
-
-			if (Speed < SearchFailSpeedThreshold && DistanceMoved < 10.f)
-			{
-				// Fienden står stilla eller rör sig knappt
-				TimeWithoutMovement += DeltaSeconds;
-			}
-			else
-			{
-				// Fienden rör sig igen, så reset failsafe
-				TimeWithoutMovement = 0.f;
-			}
-
-			// Spara senaste positionen
-			LastSearchLocation = CurrentLocation;
-
-			// Trigga failsafe
-			if (TimeWithoutMovement >= SearchFailTime)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("Search failsafe triggered, returning to patrol."));
-
-				TimeWithoutMovement = 0.f;
-				bIsLookingAround = false;
-				bIsMovingToSound = false;
-				bIsInvestigatingSound = false;
-
-				CurrentState = EEnemyState::Patrolling;
-				ControlledEnemy->UpdateStateVFX(CurrentState);
-				MoveToNextPatrolPoint();
-			}
-
-			//Mission failsafe
-			if (bIsDoingMissionMoveTo)
-			{
-				FVector CurrentLocationMission = GetPawn()->GetActorLocation();
-				FVector DeltaMission = CurrentLocationMission - MissionLastLocation;
-				float DistanceMovedMission = DeltaMission.Size();
-				float SpeedMission = GetPawn()->GetVelocity().Size();
-
-				if (SpeedMission < MissionFailSafeSpeedThreshold && DistanceMovedMission < 5.f)
-				{
-					// Fienden står still eller fastnat
-					MissionTimeWithoutMovement += DeltaSeconds;
-				}
-				else
-				{
-					// Nollställ failsafe om fienden börjar röra sig igen
-					MissionTimeWithoutMovement = 0.f;
-				}
-
-				// Uppdatera sista positionen
-				MissionLastLocation = CurrentLocationMission;
-
-				// Trigga failsafe
-				if (MissionTimeWithoutMovement >= MissionFailSafeTime)
-				{
-					UE_LOG(LogTemp, Warning, TEXT("MISSION FAILSAFE TRIGGERED: Enemy stuck, aborting mission-move."));
-
-					MissionTimeWithoutMovement = 0.f;
-					bIsDoingMissionMoveTo = false;
-
-					StartMissionMoveTo(CurrentMissionLocation);
-					return;
-				}
-			}
-
+			HandleSearching(DeltaSeconds);
 			break;
 		}
 	}
@@ -354,8 +106,270 @@ void AEnemyAIController::Tick(float DeltaSeconds)
 	}
 
 	RunChaseFailsafe(DeltaSeconds);
-
 }
+
+// För tick, och så att man kan overida specefika delar av tick
+void AEnemyAIController::HandlePatrolling(float DeltaSeconds)
+{
+	if (ControlledEnemy->bPlayerInAlertCone) 
+	{
+		CurrentState = EEnemyState::Alert;
+		StartAlert();
+		//UE_LOG(LogTemp, Warning, TEXT("StartAlert"));
+	}
+	else if (ControlledEnemy->CanSeePlayer())
+	{
+		StartChasing();
+	}
+	else if (ControlledEnemy->bHeardSoundRecently && !bIsInvestigatingSound)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("Patrolling: Heard sound at %s"), *ControlledEnemy->LastHeardSoundLocation.ToString());
+		OnHeardSound(ControlledEnemy->LastHeardSoundLocation);
+		bIsInvestigatingSound = true;
+				
+		GetWorldTimerManager().SetTimer(ResetSoundFlagHandle, this, &AEnemyAIController::ResetSoundFlag, 0.5f, false);
+	}
+			
+	// Mission 
+	if (bHasMission && CurrentMission != EEnemyMission::Patrol && CurrentState != EEnemyState::Alert)
+	{
+		StartMissionMoveTo(CurrentMissionLocation);
+		return; // Va tidigare break, när detta var i tick, vet inte om return fungerar på samma sätt 
+	}
+
+	// Rotation
+	if (bIsRotatingTowardPatrolPoint)
+	{
+		RotationProgress += DeltaSeconds / 2.0f; 
+
+		FRotator Current = ControlledEnemy->GetActorRotation();
+		FRotator Interp  = FMath::RInterpTo(Current, DesiredLookRotation, DeltaSeconds, 2.5f);
+
+		// Lås pitch och roll igen 
+		Interp.Pitch = 0.f;
+		Interp.Roll  = 0.f;
+
+		ControlledEnemy->SetActorRotation(Interp);
+
+		// Kolla när vi är nästan klar
+		if (Current.Equals(DesiredLookRotation, 3.0f)) // tolerans är 3 grader
+		{
+			bIsRotatingTowardPatrolPoint = false;
+
+			// När klar så börjar fienden gå
+			MoveToActor(
+				ControlledEnemy->GetPatrolPoints()[CurrentPatrolIndex]
+			);
+		}
+	}
+}
+
+void AEnemyAIController::HandleAlert(float DeltaSeconds)
+{
+	if (!GetWorldTimerManager().IsTimerActive(AlertTimerHandle))
+	{
+		GetWorldTimerManager().SetTimer(AlertTimerHandle, this, &AEnemyAIController::OnAlertTimerExpired, 3.f, false);
+	}
+	// Om fienden ser spelaren tillräckligt tydligt så börja jaga
+	if (ControlledEnemy->CanSeePlayer())
+	{
+		StartChasing();
+	}
+	else
+	{
+		// titta mot spelaren 
+		APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
+		if (Player)
+		{
+			FVector ToPlayer = Player->GetActorLocation() - ControlledEnemy->GetActorLocation();
+			ToPlayer.Z = 0;
+			if (!ToPlayer.IsNearlyZero())
+			{
+				FRotator TargetRot = ToPlayer.Rotation();
+				FRotator NewRot = FMath::RInterpTo(
+					ControlledEnemy->GetActorRotation(),
+					TargetRot,
+					DeltaSeconds,
+					3.5f
+				);
+				ControlledEnemy->SetActorRotation(NewRot);
+			}
+		}
+	}
+}
+
+void AEnemyAIController::HandleChasing(float DeltaSeconds)
+{
+	APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(),0);
+
+	// Kamerans chase
+	if (bChasingFromExternalOrder)
+	{
+		// Om vi ser spelaren så byt till normal chase
+		if (ControlledEnemy->CanSeePlayer())
+		{
+			bChasingFromExternalOrder = false;
+		}
+		return; // Va tidigare break, när detta var i tick, vet inte om return fungerar på samma sätt 
+	}
+			
+	// Vanlig chase
+	if (ControlledEnemy->CanSeePlayer())
+	{
+		float Dist = FVector::Dist(GetPawn()->GetActorLocation(), Player->GetActorLocation());
+		if (Dist <= ControlledEnemy->GetAttackRange())
+		{
+			StopMovement();
+			ControlledEnemy->StartAttack();
+		}
+		else
+		{
+			MoveToActor(Player);
+		}
+		GetWorldTimerManager().ClearTimer(LoseSightTimerHandle);
+	}
+	else if (!GetWorldTimerManager().IsTimerActive(LoseSightTimerHandle))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("lost sight of player during chase. Calling StopChasing"));
+		GetWorldTimerManager().SetTimer(LoseSightTimerHandle, this, &AEnemyAIController::StopChasing, ControlledEnemy->GetLoseSightTime(), false);
+	}
+}
+
+void AEnemyAIController::HandleSearching(float DeltaSeconds)
+{
+	if (bIsMovingToSound && bIsInvestigatingTarget)
+	{
+		// Gör inget om vi roterar
+		if (!bIsRotating)
+		{
+			bIsDoingMissionMoveTo = false;
+			MoveToLocation(InvestigateTarget, -1.f, true, true, false, false, 0, true);
+		}
+	}
+	
+	if (bHasLookAroundTarget)
+	{
+		if (!bIsRotating && !bIsDoingLookAroundMove)
+		{
+			StartSmoothRotationTowards(LookAroundTarget, 4);
+			
+			bIsDoingLookAroundMove = true;
+		}
+
+		// När rotationen är klar så körs MoveTo
+		if (bIsDoingLookAroundMove && !bIsRotating)
+		{
+			bIsDoingMissionMoveTo = false;
+			MoveToLocation(LookAroundTarget);
+
+			// Reset så detta inte triggas varje tick
+			bIsDoingLookAroundMove = false;
+			bHasLookAroundTarget   = false;
+		}
+	}
+
+	
+	if (ControlledEnemy->bPlayerInAlertCone) 
+	{
+		StartAlert();
+		//UE_LOG(LogTemp, Warning, TEXT("StartAlert"));
+	}
+	
+	// Om fienden ser spelaren igen så börjar den jaga direkt
+	if (ControlledEnemy->CanSeePlayer())
+	{
+		GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
+		GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
+		bIsLookingAround = false;
+		StartChasing();
+		return;  // Va tidigare break, när detta var i tick, vet inte om return fungerar på samma sätt 
+	}
+
+	// Börjar leta efter spelaren. Ser till att BeginSearch() inte kallas flera gånger. 
+	if (!bIsLookingAround && FVector::Dist(GetPawn()->GetActorLocation(), LastKnownPlayerLocation) < 150.f)
+	{
+		bIsLookingAround = true;
+		//UE_LOG(LogTemp, Warning, TEXT("AEnemyAIController Searching Tick"));
+		BeginSearch();
+	}
+
+
+	
+	// Movement Failsafe
+	FVector CurrentLocation = GetPawn()->GetActorLocation();
+	FVector Delta = CurrentLocation - LastSearchLocation;
+	float DistanceMoved = Delta.Size();
+
+	// Kolla hastighet 
+	float Speed = ControlledEnemy->GetVelocity().Size();
+
+	if (Speed < SearchFailSpeedThreshold && DistanceMoved < 10.f)
+	{
+		// Fienden står stilla eller rör sig knappt
+		TimeWithoutMovement += DeltaSeconds;
+	}
+	else
+	{
+		// Fienden rör sig igen, så reset failsafe
+		TimeWithoutMovement = 0.f;
+	}
+
+	// Spara senaste positionen
+	LastSearchLocation = CurrentLocation;
+
+	// Trigga failsafe
+	if (TimeWithoutMovement >= SearchFailTime)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Search failsafe triggered, returning to patrol."));
+
+		TimeWithoutMovement = 0.f;
+		bIsLookingAround = false;
+		bIsMovingToSound = false;
+		bIsInvestigatingSound = false;
+
+		CurrentState = EEnemyState::Patrolling;
+		ControlledEnemy->UpdateStateVFX(CurrentState);
+		MoveToNextPatrolPoint();
+	}
+
+	//Mission failsafe
+	if (bIsDoingMissionMoveTo)
+	{
+		FVector CurrentLocationMission = GetPawn()->GetActorLocation();
+		FVector DeltaMission = CurrentLocationMission - MissionLastLocation;
+		float DistanceMovedMission = DeltaMission.Size();
+		float SpeedMission = GetPawn()->GetVelocity().Size();
+
+		if (SpeedMission < MissionFailSafeSpeedThreshold && DistanceMovedMission < 5.f)
+		{
+			// Fienden står still eller fastnat
+			MissionTimeWithoutMovement += DeltaSeconds;
+		}
+		else
+		{
+			// Nollställ failsafe om fienden börjar röra sig igen
+			MissionTimeWithoutMovement = 0.f;
+		}
+
+		// Uppdatera sista positionen
+		MissionLastLocation = CurrentLocationMission;
+
+		// Trigga failsafe
+		if (MissionTimeWithoutMovement >= MissionFailSafeTime)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("MISSION FAILSAFE TRIGGERED: Enemy stuck, aborting mission-move."));
+
+			MissionTimeWithoutMovement = 0.f;
+			bIsDoingMissionMoveTo = false;
+
+			StartMissionMoveTo(CurrentMissionLocation);
+			return;
+		}
+	}
+}
+
+
+
 
 void AEnemyAIController::StartAlert()
 {
@@ -383,7 +397,6 @@ void AEnemyAIController::StartAlert()
 	// Efter några sekunder om fienden fortfarande inte ser spelaren så återgår den till patrullering
 	GetWorldTimerManager().SetTimer(AlertTimerHandle, this, &AEnemyAIController::OnAlertTimerExpired, 3.f, false);
 }
-
 
 void AEnemyAIController::MoveToNextPatrolPoint()
 {

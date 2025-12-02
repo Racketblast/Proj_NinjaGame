@@ -22,6 +22,11 @@ void AMeleeAIController::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 }
 
+void AMeleeAIController::HandleChasing(float DeltaSeconds)
+{
+	Super::HandleChasing(DeltaSeconds);
+}
+
 void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result)
 {
 	if (!ControlledEnemy || !IsValid(ControlledEnemy))
@@ -60,3 +65,4 @@ void AMeleeAIController::OnUnPossess()
 {
 	Super::OnUnPossess();
 }
+
