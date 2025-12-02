@@ -3,6 +3,7 @@
 
 #include "KeyCard.h"
 
+#include "Door.h"
 #include "StealthCharacter.h"
 
 AKeyCard::AKeyCard()
@@ -20,6 +21,14 @@ void AKeyCard::Use_Implementation(class AStealthCharacter* Player)
 	if (!Player->KeyCards.Contains(this))
 	{
 		Player->KeyCards.Add(this);
+	}
+	
+	for (auto Door : DoorsToUnlock)
+	{
+		if (!Door->GetUnlockedDoor() && Door)
+		{
+			Door->UnlockDoor();
+		}
 	}
 	
 	Destroy();
