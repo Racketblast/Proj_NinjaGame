@@ -546,6 +546,17 @@ void AStealthCharacter::BeginPlay()
 	
 	PlayerInteractSphere->OnComponentBeginOverlap.AddDynamic(this, &AStealthCharacter::OnInteractSphereBeginOverlap);
 	PlayerInteractSphere->OnComponentEndOverlap.AddDynamic(this, &AStealthCharacter::OnInteractSphereEndOverlap);
+
+	//Turns on everything that is close to player if they spawn near them
+	TArray<AActor*> OverlappingActors;
+	PlayerInteractSphere->GetOverlappingActors(OverlappingActors, TSubclassOf<AInteractableObject>());
+	for (auto OverlappingActor : OverlappingActors)
+	{
+		if (AInteractableObject* Object = Cast<AInteractableObject>(OverlappingActor))
+		{
+			Object->TurnOnVFX(true);
+		}
+	}
 }
 
 void AStealthCharacter::Landed(const FHitResult& Hit)
