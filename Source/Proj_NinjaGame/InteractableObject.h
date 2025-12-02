@@ -34,4 +34,7 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category="Interact")
 	FString InteractText;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Interact")
+	bool bOverrideInteractText = false;
 };

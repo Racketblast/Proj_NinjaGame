@@ -54,6 +54,9 @@ void ADoor::Use_Implementation(class AStealthCharacter* Player)
 		
 		if (PlayerCanUnlock)
 		{
+			bOverrideInteractText = false;
+			InteractText = DoorOpenText;
+			
 			if (UnlockSound && LockSoundComponent)
 			{
 				LockSoundComponent->SetSound(UnlockSound);
@@ -105,8 +108,16 @@ void ADoor::BeginPlay()
 
 	if (GetWorld())
 	{
-		if (!bNeedsToBeUnlocked)
+		if (bNeedsToBeUnlocked)
 		{
+			bOverrideInteractText = true;
+			InteractText = DoorLockedText;
+		}
+		else
+		{
+			bOverrideInteractText = false;
+			InteractText = DoorOpenText;
+			
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.Owner = this;
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;

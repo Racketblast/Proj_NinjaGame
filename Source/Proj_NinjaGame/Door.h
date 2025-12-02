@@ -39,6 +39,10 @@ protected:
 	FRotator ClosedDoorRotation;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
 	float DoorSpeed = 90.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
+	FString DoorOpenText = "Open";
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
+	FString DoorLockedText = "Locked";
 	
 	FRotator DoorTargetRotation;
 	
