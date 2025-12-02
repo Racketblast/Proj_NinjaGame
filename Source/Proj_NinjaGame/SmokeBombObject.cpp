@@ -31,7 +31,7 @@ void ASmokeBombObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 
 	SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	SmokeComponent->SetAsset(SmokeEffect);
-	
+	ChangeSmokeBasedOnSize();
 	SmokeComponent->Activate();
 
 	SphereComp->SetGenerateOverlapEvents(true);
@@ -104,10 +104,13 @@ void ASmokeBombObject::ChangeSmokeBasedOnSize()
 {
 	if (SphereComp)
 	{
-		if (SparkleComponent)
+		if (SmokeComponent)
 		{
-			SparkleComponent->SetVariableFloat(TEXT(""), SphereComp->GetScaledSphereRadius());
-			//SparkleComponent->SetVariableFloat(TEXT("SpawnRate"), SpawnRate);
+			float NormalSpawnCount = 600.f;
+			float NormalRadius = 250.f;
+			int NewSpawnCount = NormalSpawnCount * (SphereComp->GetScaledSphereRadius()/NormalRadius);
+			SmokeComponent->SetVariableFloat(TEXT("SphereRadius"), SphereComp->GetScaledSphereRadius());
+			SmokeComponent->SetVariableInt(TEXT("SpawnCount"), NewSpawnCount);
 		}
 	}
 }
