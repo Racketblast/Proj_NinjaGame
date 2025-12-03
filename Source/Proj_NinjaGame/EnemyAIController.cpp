@@ -220,7 +220,16 @@ void AEnemyAIController::HandleChasing(float DeltaSeconds)
 		if (Dist <= ControlledEnemy->GetAttackRange())
 		{
 			StopMovement();
-			ControlledEnemy->StartAttack();
+			if (ControlledEnemy->bCanAttack)
+			{
+				if (!ControlledEnemy->bIsAttacking)
+				{
+					UE_LOG(LogTemp, Error, TEXT("AAAAAAAAAAAAAAAAAAAAA"))
+					//ControlledEnemy->bCanAttack = false;
+					ControlledEnemy->bIsAttacking = true;
+				}
+			}
+			//ControlledEnemy->StartAttack();
 		}
 		else
 		{

@@ -63,18 +63,11 @@ void AMeleeEnemy::StartAttack()
 {
 	if (!bCanAttack) return;
 
-	bCanAttack = false;
-	bHitRegisteredThisSwing = false;
+	UE_LOG(LogTemp, Error, TEXT("StartAttack"))
 
-	// Spela animation här, KOM IHÅG ATT GÖRA EN ANIMATION SENARE!!!!!!
-	if (AttackMontage)
-	{
-		UAnimInstance* AnimInst = GetMesh()->GetAnimInstance();
-		if (AnimInst)
-		{
-			AnimInst->Montage_Play(AttackMontage);
-		}
-	}
+	bCanAttack = false;
+	//bIsAttacking = true;
+	bHitRegisteredThisSwing = false;
 
 	// aktiverar hitbox en kort stund 
 	EnableHitbox(0.2f);
