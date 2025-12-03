@@ -90,4 +90,6 @@ protected:
 	
 	UPROPERTY(BlueprintReadWrite, Category="Interact")
 	ACharacter* BlockingCharacter = nullptr;
+
+	virtual void ChangeSparkleBasedOnSize() override;
 };

@@ -403,8 +403,8 @@ void AStealthCharacter::UpdateProjectilePrediction()
 	}
 	else
 	{
-		PredictParams.ProjectileRadius = 5.f;
 	}
+		PredictParams.ProjectileRadius = 5.f;
     PredictParams.MaxSimTime = 2.f; // Max simulated tim of travel per second
     PredictParams.bTraceWithCollision = true; //If hit something
     PredictParams.SimFrequency = 15.f; //How many checks per second

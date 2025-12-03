@@ -139,13 +139,13 @@ void AInteractableObject::ChangeSparkleBasedOnSize()
 		StaticMeshComponent->GetStaticMesh()->GetBounds().GetBox().GetCenterAndExtents(LocalOrigin, BoxExtent);
 		BoxExtent = BoxExtent * StaticMeshComponent->GetComponentScale();
 
-		float SpriteSize = FMath::Clamp(BoxExtent.Size() / 4.0f, 10.0f, 40.0f);
-		//float SpawnRate = FMath::Clamp(BoxExtent.Size() / 12.0f, 2.0f, 10.0f);
+		float SpriteSize = FMath::Clamp(BoxExtent.Size() / 4.0f, 10.0f, 30.0f);
+		float SpawnRate = FMath::Clamp(BoxExtent.Size() / 20.0f, 2.0f, 6.0f);
 		
 		if (SparkleComponent)
 		{
 			SparkleComponent->SetVariableFloat(TEXT("SpriteSize"), SpriteSize);
-			//SparkleComponent->SetVariableFloat(TEXT("SpawnRate"), SpawnRate);
+			SparkleComponent->SetVariableFloat(TEXT("SpawnRate"), SpawnRate);
 		}
 	}
 }

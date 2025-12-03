@@ -269,3 +269,24 @@ void ADoor::DoorEndOverlap(UPrimitiveComponent* Overlapped, AActor* OtherActor, 
 		DoorMesh->SetCanEverAffectNavigation(false);
 	}
 }
+
+void ADoor::ChangeSparkleBasedOnSize()
+{
+	if (DoorMesh && DoorMesh->GetStaticMesh())
+	{
+		FVector LocalOrigin;
+		FVector BoxExtent;
+
+		DoorMesh->GetStaticMesh()->GetBounds().GetBox().GetCenterAndExtents(LocalOrigin, BoxExtent);
+		BoxExtent = BoxExtent * DoorMesh->GetComponentScale();
+
+		float SpriteSize = FMath::Clamp(BoxExtent.Size() / 4.0f, 10.0f, 30.0f);
+		float SpawnRate = FMath::Clamp(BoxExtent.Size() / 20.0f, 2.0f, 6.0f);
+		
+		if (SparkleComponent)
+		{
+			SparkleComponent->SetVariableFloat(TEXT("SpriteSize"), SpriteSize);
+			SparkleComponent->SetVariableFloat(TEXT("SpawnRate"), SpawnRate);
+		}
+	}
+}
