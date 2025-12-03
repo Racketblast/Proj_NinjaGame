@@ -182,6 +182,8 @@ protected:
 	float Health = 3.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 	float MaxHealth = 3.f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
+	bool bIsDead = false;
 
 	//Use Variables
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
@@ -385,6 +387,8 @@ public:
 
 	/** Returns the first person mesh **/
 	USkeletalMeshComponent* GetFirstPersonMesh() const { return FirstPersonMesh; }
+	
+	bool GetIsDead() const { return bIsDead; }
 
 	/** Returns first person camera component **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }

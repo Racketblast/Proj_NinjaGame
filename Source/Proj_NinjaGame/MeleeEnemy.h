@@ -62,4 +62,12 @@ protected:
 	// Time handle Funktioner:
 	void ResetAttackCooldown();
 
+	void EnemyThrow();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Throwable")
+	TSubclassOf<class AAIThrowableObject> ThrowableObject;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Throwable")
+	float ThrowVelocity = 1000.f;
+	float ThrowCooldown = 0.f;
+	
 };

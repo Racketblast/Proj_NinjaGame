@@ -937,28 +937,32 @@ float AStealthCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 
 void AStealthCharacter::Die()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Player died!"));
-
-	GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
+	if (!bIsDead)
 	{
-		GetWorld()->GetTimerManager().SetTimer(
-			TempHandle,
-			[this]() {
-				// Säkerhetsstopp innan leveln laddas om, hade en krasch tidigare så lade till detta för att stoppa kraschen. 
-				for (TActorIterator<AAIController> It(GetWorld()); It; ++It)
-				{
-					if (AAIController* AICon = *It)
+		UE_LOG(LogTemp, Warning, TEXT("Player died!"));
+		bIsDead = true;
+
+		GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
+		{
+			GetWorld()->GetTimerManager().SetTimer(
+				TempHandle,
+				[this]() {
+					// Säkerhetsstopp innan leveln laddas om, hade en krasch tidigare så lade till detta för att stoppa kraschen. 
+					for (TActorIterator<AAIController> It(GetWorld()); It; ++It)
 					{
-						AICon->StopMovement();
-						AICon->GetPathFollowingComponent()->OnRequestFinished.RemoveAll(AICon);
-						AICon->GetWorldTimerManager().ClearAllTimersForObject(AICon);
-						AICon->UnPossess();
+						if (AAIController* AICon = *It)
+						{
+							AICon->StopMovement();
+							AICon->GetPathFollowingComponent()->OnRequestFinished.RemoveAll(AICon);
+							AICon->GetWorldTimerManager().ClearAllTimersForObject(AICon);
+							AICon->UnPossess();
+						}
 					}
-				}
-				UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), true);
-			},
-			0.2f, false);
-	});
+					UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), true);
+				},
+				0.2f, false);
+		});
+	}
 }
 
 void AStealthCharacter::ToggleSneak()
