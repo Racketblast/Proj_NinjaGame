@@ -233,11 +233,11 @@ void AThrowableObject::BeginPlay()
 
 void AThrowableObject::DestroyObject()
 {
-	StaticMeshComponent->SetStaticMesh(nullptr);
-	SetLifeSpan(10);
-	
 	if (ImpactDebris)
 	{
+		StaticMeshComponent->SetStaticMesh(nullptr);
+		SetLifeSpan(10);
+		
 		UGeometryCollectionComponent* GeoComp =
 		NewObject<UGeometryCollectionComponent>(this, UGeometryCollectionComponent::StaticClass());
 
@@ -257,5 +257,9 @@ void AThrowableObject::DestroyObject()
 			GeoComp->SetPerLevelCollisionProfileNames({"None","Debris","Debris"});
 			GeoComp->SetCanEverAffectNavigation(false);
 		}
+	}
+	else
+	{
+		Destroy();
 	}
 }

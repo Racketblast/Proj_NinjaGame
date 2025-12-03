@@ -260,7 +260,7 @@ public:
 	EEnemyState PreviousState = EEnemyState::Patrolling;
 	
 
-private:
+protected:
 	FVector LastSeenPlayerLocation;
 
 };

@@ -3,11 +3,13 @@
 
 #include "MeleeEnemy.h"
 
+#include "AIThrowableObject.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
 #include "StealthCharacter.h"
 #include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 
@@ -42,6 +44,16 @@ void AMeleeEnemy::BeginPlay()
 void AMeleeEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (ThrowCooldown > 2.0f)
+	{
+		EnemyThrow();
+		ThrowCooldown = 0.f;
+	}
+	else
+	{
+		ThrowCooldown += DeltaTime;
+	}
 }
 
 void AMeleeEnemy::CheckChaseProximityDetection()
@@ -129,5 +141,42 @@ void AMeleeEnemy::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void AMeleeEnemy::ResetAttackCooldown()
 {
 	bCanAttack = true;
+}
+
+void AMeleeEnemy::EnemyThrow()
+{
+	FVector Start = GetCapsuleComponent()->GetComponentLocation();
+	//din punkt william
+	FVector End = GetCapsuleComponent()->GetComponentLocation();
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+	{
+		End = Start;
+	}
+
+	FVector SpawnLocation = End;
+	FRotator SpawnRotation = GetCapsuleComponent()->GetComponentRotation();
+	if (ThrowableObject)
+	{
+		AAIThrowableObject* ThrownObject = GetWorld()->SpawnActor<AAIThrowableObject>(ThrowableObject, SpawnLocation, SpawnRotation);
+		ThrownObject->Thrown = true;
+		ThrownObject->SetShowVFX(false);
+		ThrownObject->bBreaksOnImpact = true;
+		ThrownObject->DealtDamage = AttackDamage;
+		//Lägg till forward från fienden till spelaren
+		ThrownObject->ThrowVelocity = GetCapsuleComponent()->GetForwardVector() * ThrowVelocity;
+
+		ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT,ECR_Ignore);
+		ThrownObject->StaticMeshComponent->SetSimulatePhysics(true);
+		ThrownObject->StaticMeshComponent->SetNotifyRigidBodyCollision(true);
+		ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);
+		ThrownObject->StaticMeshComponent->SetUseCCD(true);
+		
+		ThrownObject->StaticMeshComponent->SetPhysicsLinearVelocity(ThrownObject->ThrowVelocity, false);
+	}
 }
 
