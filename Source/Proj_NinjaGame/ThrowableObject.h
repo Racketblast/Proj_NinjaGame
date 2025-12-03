@@ -40,6 +40,10 @@ public:
 	USoundAttenuation* ThrowableAttenuation;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UGeometryCollection* ImpactDebris;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	class UBoxComponent* ThrowCollision;
+
+	void ChangeToThrowCollision(bool bCond);
 	
 protected:
 	// Called when the game starts or when spawned
@@ -63,5 +67,7 @@ protected:
 	virtual void DestroyObject();
 
 	virtual bool ShouldApplyDefaultStun() const { return true; }
+	
+	FCollisionResponseContainer StaticMeshNormalCollision;
 };
 

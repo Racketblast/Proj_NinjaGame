@@ -9,6 +9,7 @@
 #include "StealthGameInstance.h"
 #include "ThrowableWeapon.h"
 #include "SoundUtility.h"
+#include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/DamageType.h"
@@ -17,7 +18,11 @@
 
 AThrowableObject::AThrowableObject()
 {
-	StaticMeshComponent->OnComponentHit.AddDynamic(this, &AThrowableObject::ThrowableOnComponentHit);
+	ThrowCollision = CreateDefaultSubobject<UBoxComponent>("ThrowCollision");
+	RootComponent = ThrowCollision;
+	ThrowCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	ThrowCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
+	StaticMeshComponent->SetupAttachment(ThrowCollision);
 	StaticMeshComponent->SetGenerateOverlapEvents(true);
 }
 
@@ -80,6 +85,7 @@ void AThrowableObject::ThrowableOnComponentHit(UPrimitiveComponent* HitComp, AAc
 	SetShowVFX(true);
 	
 	Thrown = false;
+	ChangeToThrowCollision(false);
 	StaticMeshComponent->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Block);
 	StaticMeshComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 	SpawnFieldActor();
@@ -90,6 +96,7 @@ void AThrowableObject::ThrowableOnComponentHit(UPrimitiveComponent* HitComp, AAc
 void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Real FHitLocation: %s"), *Hit.Location.ToString());
 	if (AEnemy* Enemy = Cast<AEnemy>(OtherActor))
 	{
 		if (!Enemy->GetIsDead())
@@ -226,6 +233,31 @@ void AThrowableObject::HandlePickup(AStealthCharacter* Player)
 	Destroy();
 }
 
+void AThrowableObject::ChangeToThrowCollision(bool bCond)
+{
+	if (bCond)
+	{
+		StaticMeshNormalCollision = StaticMeshComponent->GetCollisionResponseToChannels();
+		StaticMeshComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
+		
+		ThrowCollision->SetCollisionResponseToAllChannels(ECR_Block);
+		ThrowCollision->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Ignore);
+		ThrowCollision->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+		ThrowCollision->SetNotifyRigidBodyCollision(true);
+		
+		ThrowCollision->OnComponentHit.AddDynamic(this, &AThrowableObject::ThrowableOnComponentHit);
+	}
+	else
+	{
+		StaticMeshComponent->SetCollisionResponseToChannels(StaticMeshNormalCollision);
+		
+		ThrowCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
+		
+		StaticMeshComponent->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Block);
+		StaticMeshComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+	}
+}
+
 void AThrowableObject::BeginPlay()
 {
 	Super::BeginPlay();
@@ -236,6 +268,8 @@ void AThrowableObject::DestroyObject()
 	if (ImpactDebris)
 	{
 		StaticMeshComponent->SetStaticMesh(nullptr);
+		ThrowCollision->SetSimulatePhysics(false);
+		ThrowCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
 		SetLifeSpan(10);
 		
 		UGeometryCollectionComponent* GeoComp =

@@ -25,6 +25,7 @@ public:
 
 	void SetMarkerScale(FVector Size);
 	void SetMarkerMesh(UStaticMesh* Mesh);
+	void SetMarkerRelativeLocation(FVector Location);
 	void SetGroundMaterial();
 	void SetEnemyMaterial();
 	void SetHeadMaterial();

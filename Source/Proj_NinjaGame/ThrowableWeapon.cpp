@@ -7,6 +7,7 @@
 #include "ThrowableObject.h"
 #include "KunaiWeapon.h"
 #include "Camera/CameraComponent.h"
+#include "Components/BoxComponent.h"
 
 // Sets default values
 AThrowableWeapon::AThrowableWeapon()
@@ -67,13 +68,14 @@ void AThrowableWeapon::ThrowObjectLogic(AStealthCharacter* Player)
 		ThrownObject->DealtDamage = ThrowDamage;
 		ThrownObject->ThrowVelocity = Player->FirstPersonCameraComponent->GetForwardVector() * ThrowSpeed;
 
-		ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT,ECR_Ignore);
-		ThrownObject->StaticMeshComponent->SetSimulatePhysics(true);
-		ThrownObject->StaticMeshComponent->SetNotifyRigidBodyCollision(true);
-		ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);
-		ThrownObject->StaticMeshComponent->SetUseCCD(true);
+		ThrownObject->ChangeToThrowCollision(true);
+		ThrownObject->ThrowCollision->SetNotifyRigidBodyCollision(true);
+		ThrownObject->ThrowCollision->SetCanEverAffectNavigation(false);
+		ThrownObject->ThrowCollision->SetUseCCD(true);
 		
-		ThrownObject->StaticMeshComponent->SetPhysicsLinearVelocity(ThrownObject->ThrowVelocity, false);
+		ThrownObject->ThrowCollision->SetSimulatePhysics(true);
+		
+		ThrownObject->ThrowCollision->SetPhysicsLinearVelocity(ThrownObject->ThrowVelocity, false);
 	}
 }
 

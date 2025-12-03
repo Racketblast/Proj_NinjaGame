@@ -250,6 +250,8 @@ void AStealthCharacter::Attack()
 }
 void AStealthCharacter::StartThrow()
 {
+	
+	UE_LOG(LogTemp, Warning, TEXT("Starting throw"));
 	if(bIsHiding == true) return;
 	
 	if (ThrowSound)
@@ -370,68 +372,97 @@ void AStealthCharacter::UpdateSpawnMarkerMesh()
 		{
 			SpawnedMarker->SetMarkerScale(DefaultActor->StaticMeshComponent->GetRelativeScale3D());
 			SpawnedMarker->SetMarkerMesh(DefaultActor->StaticMeshComponent->GetStaticMesh());
+			SpawnedMarker->SetMarkerRelativeLocation(DefaultActor->StaticMeshComponent->GetRelativeLocation());
 		}
 	}
 }
 
 void AStealthCharacter::UpdateProjectilePrediction()
 {
-	if (!FirstPersonCameraComponent)
+	if (!FirstPersonCameraComponent || !HeldThrowableWeapon || !SpawnedMarker)
         return;
+
+    // --------------------------------------------------
+    // MATCH THROW SPAWN POSITION EXACTLY
+    // --------------------------------------------------
+    FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+    FVector End = Start + FirstPersonCameraComponent->GetForwardVector() * CameraForwardMultiplier;
+
+    FHitResult TraceHit;
+    FCollisionQueryParams LineParams;
+    LineParams.AddIgnoredActor(this);
+
+    if (GetWorld()->LineTraceSingleByChannel(TraceHit, Start, End, ECC_Visibility, LineParams))
+    {
+        End = Start;
+    }
+
+    FVector SimPosition = End;
+
+    FVector Velocity = FirstPersonCameraComponent->GetForwardVector() * HeldThrowableWeapon->ThrowSpeed;
+
+    AThrowableObject* DefaultObject =
+        HeldThrowableWeapon->ThrownWeaponObject
+            ? HeldThrowableWeapon->ThrownWeaponObject->GetDefaultObject<AThrowableObject>()
+            : nullptr;
+
+    if (!DefaultObject || !DefaultObject->ThrowCollision)
+        return;
+
+    UBoxComponent* Box = DefaultObject->ThrowCollision;
+
+    FVector BoxExtent = Box->GetScaledBoxExtent();
+    FQuat BoxRotation = FirstPersonCameraComponent->GetComponentQuat();
 
     FCollisionQueryParams Params;
     Params.AddIgnoredActor(this);
-	
-    FPredictProjectilePathParams PredictParams;
-	FVector Start = FirstPersonCameraComponent->GetComponentLocation();
-	FVector End = FirstPersonCameraComponent->GetComponentLocation() + FirstPersonCameraComponent->GetForwardVector() * CameraForwardMultiplier;
 
-	FHitResult HitResult;
+    float TimeStep = 0.02f;  // closer to physics sub-stepping
+    float MaxTime  = 2.0f;
 
-	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
-	{
-		End = HitResult.Location;
-	}
-	
-    PredictParams.StartLocation = End;
-    PredictParams.LaunchVelocity = FirstPersonCameraComponent->GetForwardVector() * HeldThrowableWeapon->ThrowSpeed;
-	if (UStaticMesh* WeaponMesh = HeldThrowableWeapon->StaticMeshComponent->GetStaticMesh())
-	{
-		FVector BoundsExtent = WeaponMesh->GetBounds().BoxExtent;
-		//Should be better if I could predict the mesh instead of just the absolutes
-		PredictParams.ProjectileRadius = BoundsExtent.GetAbsMax();
-	}
-	else
-	{
-	}
-		PredictParams.ProjectileRadius = 5.f;
-    PredictParams.MaxSimTime = 2.f; // Max simulated tim of travel per second
-    PredictParams.bTraceWithCollision = true; //If hit something
-    PredictParams.SimFrequency = 15.f; //How many checks per second
-    PredictParams.TraceChannel = ECC_Camera;
-    PredictParams.ActorsToIgnore.Add(this);
+    for (float Time = 0; Time < MaxTime; Time += TimeStep)
+    {
+        FVector NextPos = SimPosition + Velocity * TimeStep;
+        Velocity += FVector(0, 0, GetWorld()->GetGravityZ()) * TimeStep;
+    	const float Damping = Box->GetLinearDamping();
+    	Velocity *= FMath::Pow(1.f - Damping, TimeStep);
 
-    FPredictProjectilePathResult PredictResult;
-    UGameplayStatics::PredictProjectilePath(this, PredictParams, PredictResult);
+        FHitResult Hit;
 
-	if (AEnemy* Enemy = Cast<AEnemy>(PredictResult.HitResult.GetActor()))
-	{
-		if (PredictResult.HitResult.Component == Enemy->GetHeadComponent())
-		{
-			SpawnedMarker->SetHeadMaterial();
-		}
-		else
-		{
-			SpawnedMarker->SetEnemyMaterial();
-		}
-	}
-	else
-	{
-		SpawnedMarker->SetGroundMaterial();
-	}
+        bool bHit = GetWorld()->SweepSingleByChannel(
+            Hit,
+            SimPosition,
+            NextPos,
+            BoxRotation,
+            ECC_Camera,
+            FCollisionShape::MakeBox(BoxExtent),
+            Params
+        );
 
-	SpawnedMarker->SetActorRotation(FirstPersonCameraComponent->GetComponentRotation());
-	SpawnedMarker->SetActorLocation(PredictResult.HitResult.Location);
+        if (AEnemy* Enemy = Cast<AEnemy>(Hit.GetActor()))
+        {
+            if (Hit.GetComponent() == Enemy->GetHeadComponent())
+                SpawnedMarker->SetHeadMaterial();
+            else
+                SpawnedMarker->SetEnemyMaterial();
+        }
+        else
+        {
+            SpawnedMarker->SetGroundMaterial();
+        }
+
+        if (bHit)
+        {
+            SpawnedMarker->SetActorLocation(Hit.Location);
+            SpawnedMarker->SetActorRotation(FirstPersonCameraComponent->GetComponentRotation());
+            return;
+        }
+
+        SimPosition = NextPos;
+    }
+
+    SpawnedMarker->SetActorLocation(SimPosition);
+    SpawnedMarker->SetActorRotation(FirstPersonCameraComponent->GetComponentRotation());
 }
 
 void AStealthCharacter::UpdateStaminaStart(float InStamina)

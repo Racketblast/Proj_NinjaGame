@@ -46,6 +46,11 @@ void AThrowingMarker::SetMarkerMesh(UStaticMesh* Mesh)
 	MarkerMesh->SetStaticMesh(Mesh);
 }
 
+void AThrowingMarker::SetMarkerRelativeLocation(FVector Location)
+{
+	MarkerMesh->SetRelativeLocation(Location);
+}
+
 
 void AThrowingMarker::SetGroundMaterial()
 {
