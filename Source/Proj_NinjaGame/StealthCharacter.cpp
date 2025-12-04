@@ -26,6 +26,8 @@
 #include "ThrowableObject.h"
 #include "ThrowingMarker.h"
 #include "Components/SphereComponent.h"
+#include "Components/SplineComponent.h"
+#include "Components/SplineMeshComponent.h"
 #include "Navigation/PathFollowingComponent.h"
 
 
@@ -57,6 +59,11 @@ AStealthCharacter::AStealthCharacter()
 	
 	PlayerMeleeBox = CreateDefaultSubobject<UBoxComponent>(TEXT("PlayerMeleeBox"));
 	PlayerMeleeBox->SetupAttachment(FirstPersonCameraComponent);
+
+	ThrowSpline = CreateDefaultSubobject<USplineComponent>(TEXT("ThrowSpline"));
+	ThrowSpline->SetupAttachment(FirstPersonCameraComponent);
+	ThrowSpline->SetClosedLoop(false);
+	ThrowSpline->ClearSplinePoints();
 
 	PlayerInteractSphere = CreateDefaultSubobject<USphereComponent>(TEXT("PlayerInteractSphere"));
 	PlayerInteractSphere->SetupAttachment(RootComponent);
@@ -257,7 +264,6 @@ void AStealthCharacter::StartThrow()
 	{
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ThrowSound, GetActorLocation());
 	}
-	UE_LOG(LogTemp, Warning, TEXT("PredictedHit throw location: %s"), *PredictedHit.Location.ToString());
 	HeldThrowableWeapon->Throw(this);
 	bCanThrow = true;
 }
@@ -331,7 +337,7 @@ void AStealthCharacter::AimStart()
 			FVector SpawnLoc = GetActorLocation();
 			FRotator SpawnRot = FRotator::ZeroRotator;
 			SpawnedMarker = GetWorld()->SpawnActor<AThrowingMarker>(MarkerClass, SpawnLoc, SpawnRot);
-			UpdateSpawnMarkerMesh();
+			SpawnedMarker->UpdateSpawnMarkerMesh(HeldThrowableWeapon->ThrownWeaponObject);
 			
 			HeldThrowableWeapon->ThrownWeaponObject;
 		}
@@ -362,18 +368,50 @@ void AStealthCharacter::AimEndFunction()
 	}
 }
 
-void AStealthCharacter::UpdateSpawnMarkerMesh()
+void AStealthCharacter::ClearPredictionMeshes()
 {
-	if (HeldThrowableWeapon->ThrownWeaponObject && HeldThrowableWeapon && SpawnedMarker)
+	for (USplineMeshComponent* Comp : PredictionMeshSegments)
 	{
-		AThrowableObject* DefaultActor = HeldThrowableWeapon->ThrownWeaponObject->GetDefaultObject<AThrowableObject>();
-				
-		if (DefaultActor->StaticMeshComponent->GetStaticMesh())
+		if (Comp)
+			Comp->DestroyComponent();
+	}
+
+	PredictionMeshSegments.Empty();
+}
+
+void AStealthCharacter::BuildSplineMeshes(UMaterialInterface* PredictionMaterial)
+{
+	int32 NumPoints = ThrowSpline->GetNumberOfSplinePoints();
+	if (NumPoints < 2) return;
+
+	const int32 SkipFirstPoints = 20;
+	const int32 Step = 8;
+	
+	for (int32 i = SkipFirstPoints; i < NumPoints - 1; i+=Step)
+	{
+		FVector StartPos = ThrowSpline->GetLocationAtSplinePoint(i, ESplineCoordinateSpace::Local);
+		FVector StartTangent = ThrowSpline->GetTangentAtSplinePoint(i, ESplineCoordinateSpace::Local);
+
+		FVector EndPos = ThrowSpline->GetLocationAtSplinePoint(i + 1, ESplineCoordinateSpace::Local);
+		FVector EndTangent = ThrowSpline->GetTangentAtSplinePoint(i + 1, ESplineCoordinateSpace::Local);
+
+		USplineMeshComponent* MeshComp = NewObject<USplineMeshComponent>(this);
+		MeshComp->RegisterComponent();
+		MeshComp->SetMobility(EComponentMobility::Movable);
+		MeshComp->AttachToComponent(ThrowSpline, FAttachmentTransformRules::KeepRelativeTransform);
+
+		MeshComp->SetStaticMesh(PredictionMesh);
+		if (PredictionMaterial)
 		{
-			SpawnedMarker->SetMarkerScale(DefaultActor->StaticMeshComponent->GetRelativeScale3D());
-			SpawnedMarker->SetMarkerMesh(DefaultActor->StaticMeshComponent->GetStaticMesh());
-			SpawnedMarker->SetMarkerRelativeLocation(DefaultActor->StaticMeshComponent->GetRelativeLocation());
+			MeshComp->SetMaterial(0, PredictionMaterial);
 		}
+
+		MeshComp->SetStartAndEnd(StartPos, StartTangent, EndPos, EndTangent);
+
+		MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		MeshComp->SetForwardAxis(ESplineMeshAxis::X);
+
+		PredictionMeshSegments.Add(MeshComp);
 	}
 }
 
@@ -382,48 +420,57 @@ void AStealthCharacter::UpdateProjectilePrediction()
     if (!FirstPersonCameraComponent || !HeldThrowableWeapon || !SpawnedMarker)
         return;
 
-    FVector Start = FirstPersonCameraComponent->GetComponentLocation();
-    FVector EndTrace = Start + FirstPersonCameraComponent->GetForwardVector() * CameraForwardMultiplier;
+	ClearPredictionMeshes();
+	ThrowSpline->ClearSplinePoints(false);
+	
+    FVector TraceStart = FirstPersonCameraComponent->GetComponentLocation();
+    FVector TraceEnd = TraceStart + FirstPersonCameraComponent->GetForwardVector() * CameraForwardMultiplier;
 
-    FHitResult HitResult;
-    FCollisionQueryParams ParamsLineTrace;
-    ParamsLineTrace.AddIgnoredActor(this);
+    FHitResult TraceResult;
+    FCollisionQueryParams TraceParams;
+    TraceParams.AddIgnoredActor(this);
 
-    if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, EndTrace, ECC_Camera, ParamsLineTrace))
+    if (GetWorld()->LineTraceSingleByChannel(TraceResult, TraceStart, TraceEnd, ECC_Camera, TraceParams))
     {
-        EndTrace = Start;
+        TraceEnd = TraceStart;
     }
 
-    FVector SimPos = EndTrace;
+    FVector SimPos = TraceEnd;
     FVector Velocity = FirstPersonCameraComponent->GetForwardVector() * HeldThrowableWeapon->ThrowSpeed;
     float GravityZ = GetWorld()->GetGravityZ();
 
-    UBoxComponent* Box = nullptr;
+    UBoxComponent* PredictionBox = nullptr;
     if (HeldThrowableWeapon->ThrownWeaponObject)
     {
         AThrowableObject* DefaultActor = HeldThrowableWeapon->ThrownWeaponObject->GetDefaultObject<AThrowableObject>();
         if (DefaultActor && DefaultActor->ThrowCollision)
         {
-            Box = DefaultActor->ThrowCollision;
+            PredictionBox = DefaultActor->ThrowCollision;
         }
     }
-    if (!Box) return;
+    if (!PredictionBox) return;
 
-    FVector BoxExtent = Box->GetScaledBoxExtent();
+    FVector BoxExtent = PredictionBox->GetScaledBoxExtent();
     FQuat BoxRotation = FirstPersonCameraComponent->GetComponentQuat();
 
-    FCollisionQueryParams Params;
-    Params.AddIgnoredActor(this);
+    FCollisionQueryParams PredictionParams;
+    PredictionParams.AddIgnoredActor(this);
 
-    float TimeStep = GetWorld()->GetDeltaSeconds();
+    float TimeStep = GetWorld()->GetDeltaSeconds()/2;
     float MaxTime = 2.f;
 
+	int32 SplineIndex = 0;
+	
     for (float t = 0; t < MaxTime; t += TimeStep)
     {
         Velocity.Z += GravityZ * TimeStep;
 
+    	ThrowSpline->AddSplinePoint(SimPos, ESplineCoordinateSpace::World, false);
+    	
         FVector NextPos = SimPos + Velocity * TimeStep;
 
+    	FHitResult PredictedHit;
+    	
         bool bHit = GetWorld()->SweepSingleByChannel(
             PredictedHit,
             SimPos,
@@ -431,30 +478,44 @@ void AStealthCharacter::UpdateProjectilePrediction()
             BoxRotation,
             ECC_Camera,
             FCollisionShape::MakeBox(BoxExtent),
-            Params
+            PredictionParams
         );
-
-        if (AEnemy* Enemy = Cast<AEnemy>(PredictedHit.GetActor()))
-        {
-            if (PredictedHit.GetComponent() == Enemy->GetHeadComponent())
-                SpawnedMarker->SetHeadMaterial();
-            else
-                SpawnedMarker->SetEnemyMaterial();
-        }
-        else
-        {
-            SpawnedMarker->SetGroundMaterial();
-        }
 
         if (bHit)
         {
+        	if (AEnemy* Enemy = Cast<AEnemy>(PredictedHit.GetActor()))
+        	{
+        		if (PredictedHit.GetComponent() == Enemy->GetHeadComponent())
+        		{
+        			SpawnedMarker->SetHeadMaterial();
+        		}
+        		else
+        		{
+        			SpawnedMarker->SetEnemyMaterial();
+        		}
+        	}
+        	else
+        	{
+        		SpawnedMarker->SetGroundMaterial();
+        	}
+        	
+        	ThrowSpline->AddSplinePoint(PredictedHit.Location, ESplineCoordinateSpace::World, false);
+        	ThrowSpline->UpdateSpline();
+	        if (SpawnedMarker->GetMeshMaterial())
+	        {
+				BuildSplineMeshes(SpawnedMarker->GetMeshMaterial());
+	        }
+        	
             SpawnedMarker->SetActorLocation(PredictedHit.Location);
             SpawnedMarker->SetActorRotation(FirstPersonCameraComponent->GetComponentRotation());
             return;
         }
 
         SimPos = NextPos;
+        ++SplineIndex;
     }
+	ThrowSpline->AddSplinePoint(SimPos, ESplineCoordinateSpace::World, false);
+	ThrowSpline->UpdateSpline();
 
     SpawnedMarker->SetActorLocation(SimPos);
     SpawnedMarker->SetActorRotation(FirstPersonCameraComponent->GetComponentRotation());
@@ -637,6 +698,11 @@ void AStealthCharacter::Tick(float DeltaTime)
 	if (bIsAiming && HeldThrowableWeapon)
 	{
 		UpdateProjectilePrediction();
+	}
+	else
+	{
+		ClearPredictionMeshes();
+		ThrowSpline->ClearSplinePoints(false);
 	}
 
 	//Climbing

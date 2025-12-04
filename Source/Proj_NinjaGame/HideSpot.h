@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InteractableObject.h"
 #include "PlayerUseInterface.h"
 #include "GameFramework/Actor.h"
 #include "HideSpot.generated.h"
@@ -11,7 +12,7 @@
 
 
 UCLASS()
-class PROJ_NINJAGAME_API AHideSpot : public AActor, public IPlayerUseInterface
+class PROJ_NINJAGAME_API AHideSpot : public AInteractableObject
 {
 	GENERATED_BODY()
 	
@@ -38,7 +39,7 @@ protected:
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	USceneComponent* Root;
+	USceneComponent* HideRoot;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UStaticMeshComponent* HideMesh;
@@ -60,10 +61,6 @@ public:
 	
 	virtual void Use_Implementation(AStealthCharacter* Player) override;
 	
-	virtual void ShowInteractable_Implementation(bool bShow) override;
-	
-	UPROPERTY(EditDefaultsOnly, Category="HideSpot")
-	FString InteractText;
 	UPROPERTY(EditDefaultsOnly, Category="HideSpot")
 	FString EnterText = "Hide";
 	UPROPERTY(EditDefaultsOnly, Category="HideSpot")

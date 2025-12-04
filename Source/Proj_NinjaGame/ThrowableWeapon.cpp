@@ -6,6 +6,7 @@
 #include "StealthCharacter.h"
 #include "ThrowableObject.h"
 #include "KunaiWeapon.h"
+#include "ThrowingMarker.h"
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
 
@@ -31,7 +32,10 @@ void AThrowableWeapon::Throw(AStealthCharacter* Player)
 	{
 		Player->HeldThrowableWeapon = GetWorld()->SpawnActor<AThrowableWeapon>(Player->CurrentOwnThrowWeapon);
 		Player->HeldThrowableWeapon->AttachToComponent(Player->FirstPersonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("HandGrip_L"));
-		Player->UpdateSpawnMarkerMesh();
+		if (Player->GetThrowingMarker())
+		{
+			Player->GetThrowingMarker()->UpdateSpawnMarkerMesh(Player->HeldThrowableWeapon->ThrownWeaponObject);
+		}
 	}
 	else
 	{

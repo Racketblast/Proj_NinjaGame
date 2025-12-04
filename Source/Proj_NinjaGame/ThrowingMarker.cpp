@@ -4,6 +4,8 @@
 #include "ThrowingMarker.h"
 
 #include "NiagaraComponent.h"
+#include "ThrowableObject.h"
+#include "Components/BoxComponent.h"
 
 // Sets default values
 AThrowingMarker::AThrowingMarker()
@@ -16,6 +18,7 @@ AThrowingMarker::AThrowingMarker()
 	MarkerMesh = CreateDefaultSubobject<UStaticMeshComponent>("MarkerMesh");
 	MarkerMesh->SetupAttachment(MarkerRootComponent);
 	MarkerMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	MarkerMesh->SetForceDisableNanite(true);
 	
 	MarkerVFX = CreateDefaultSubobject<UNiagaraComponent>("MarkerVFX");
 	MarkerVFX->SetupAttachment(MarkerRootComponent);
@@ -51,36 +54,68 @@ void AThrowingMarker::SetMarkerRelativeLocation(FVector Location)
 	MarkerMesh->SetRelativeLocation(Location);
 }
 
+void AThrowingMarker::AddVFXMarkerRelativeLocation(FVector Location)
+{
+	FVector NewLocation = {MarkerVFX->GetRelativeLocation().X, MarkerVFX->GetRelativeLocation().Y, Location.Z};
+	MarkerVFX->SetRelativeLocation(NewLocation);
+}
+
+void AThrowingMarker::UpdateSpawnMarkerMesh(TSubclassOf<class AThrowableObject> ObjectClass)
+{
+	if (ObjectClass)
+	{
+		AThrowableObject* DefaultActor = ObjectClass->GetDefaultObject<AThrowableObject>();
+		if (DefaultActor && DefaultActor->StaticMeshComponent->GetStaticMesh())
+		{
+			SetMarkerScale(DefaultActor->StaticMeshComponent->GetRelativeScale3D());
+			SetMarkerMesh(DefaultActor->StaticMeshComponent->GetStaticMesh());
+			SetMarkerRelativeLocation(DefaultActor->StaticMeshComponent->GetRelativeLocation());
+			AddVFXMarkerRelativeLocation(DefaultActor->ThrowCollision->GetScaledBoxExtent());
+		}
+	}
+}
 
 void AThrowingMarker::SetGroundMaterial()
 {
-	if (GroundHitMaterial)
+	if (GroundHitMaterial && MarkerMesh->GetMaterial(0) != GroundHitMaterial)
 	{
-		if (MarkerMesh->GetMaterial(0) != GroundHitMaterial)
-		{
-			MarkerMesh->SetMaterial(0,GroundHitMaterial);
-		}
+		MarkerMesh->SetMaterial(0,GroundHitMaterial);
+	}
+	if (GroundHitVFX && MarkerVFX->GetAsset() != GroundHitVFX)
+	{
+		MarkerVFX->SetAsset(GroundHitVFX);
 	}
 }
 
 void AThrowingMarker::SetEnemyMaterial()
 {
-	if (EnemyHitMaterial)
+	if (EnemyHitMaterial && MarkerMesh->GetMaterial(0) != EnemyHitMaterial)
 	{
-		if (MarkerMesh->GetMaterial(0) != EnemyHitMaterial)
-		{
-			MarkerMesh->SetMaterial(0,EnemyHitMaterial);
-		}
+		MarkerMesh->SetMaterial(0,EnemyHitMaterial);
+	}
+	if (EnemyHitVFX && MarkerVFX->GetAsset() != EnemyHitVFX)
+	{
+		MarkerVFX->SetAsset(EnemyHitVFX);
 	}
 }
 
 void AThrowingMarker::SetHeadMaterial()
 {
-	if (HeadHitMaterial)
+	if (HeadHitMaterial && MarkerMesh->GetMaterial(0) != HeadHitMaterial)
 	{
-		if (MarkerMesh->GetMaterial(0) != HeadHitMaterial)
-		{
-			MarkerMesh->SetMaterial(0,HeadHitMaterial);
-		}
+		MarkerMesh->SetMaterial(0,HeadHitMaterial);
 	}
+	if (HeadHitVFX && MarkerVFX->GetAsset() != HeadHitVFX)
+	{
+		MarkerVFX->SetAsset(HeadHitVFX);
+	}
+}
+
+UMaterialInterface* AThrowingMarker::GetMeshMaterial() const
+{
+	if (MarkerMesh && MarkerMesh->GetMaterial(0))
+	{
+		return MarkerMesh->GetMaterial(0);
+	}
+	return nullptr;
 }

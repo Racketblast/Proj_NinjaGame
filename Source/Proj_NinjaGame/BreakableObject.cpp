@@ -59,10 +59,9 @@ void ABreakableObject::OnCompHit(UPrimitiveComponent* HitComp, AActor* OtherActo
 
 void ABreakableObject::BreakObject()
 {
-	FVector StaticScale = StaticMeshComponent->GetComponentScale();
-	StaticMeshComponent->DestroyComponent(true);
-	
 	SetLifeSpan(10);
+	FVector StaticScale = StaticMeshComponent->GetComponentScale();
+	StaticMeshComponent->SetStaticMesh(nullptr);
 
 	if (ImpactDebris)
 	{

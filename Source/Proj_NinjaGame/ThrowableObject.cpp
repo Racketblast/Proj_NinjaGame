@@ -10,6 +10,7 @@
 #include "StealthGameInstance.h"
 #include "ThrowableWeapon.h"
 #include "SoundUtility.h"
+#include "ThrowingMarker.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -37,7 +38,10 @@ void AThrowableObject::Use_Implementation(class AStealthCharacter* Player)
 	
 	HandlePickup(Player);
 
-	Player->UpdateSpawnMarkerMesh();
+	if (Player->GetThrowingMarker())
+	{
+		Player->GetThrowingMarker()->UpdateSpawnMarkerMesh(Player->HeldThrowableWeapon->ThrownWeaponObject);
+	}
 }
 
 void AThrowableObject::ShowInteractable_Implementation(bool bShow)
@@ -97,7 +101,6 @@ void AThrowableObject::ThrowableOnComponentHit(UPrimitiveComponent* HitComp, AAc
 void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Real FHitLocation: %s"), *Hit.Location.ToString());
 	if (AEnemy* Enemy = Cast<AEnemy>(OtherActor))
 	{
 		if (!Enemy->GetIsDead())
@@ -263,6 +266,7 @@ void AThrowableObject::ChangeToThrowCollision(bool bCond)
 		ThrowCollision->SetCollisionResponseToAllChannels(ECR_Block);
 		ThrowCollision->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Ignore);
 		ThrowCollision->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+		ThrowCollision->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 	}
 	else
 	{
@@ -324,7 +328,7 @@ void AThrowableObject::DestroyObject()
 		{
 			FTransform MeshTransform = StaticMeshComponent->GetComponentTransform();
 			
-			GeoComp->SetupAttachment(GetRootComponent());
+			GeoComp->SetupAttachment(StaticMeshComponent);
 			GeoComp->SetWorldTransform(MeshTransform);
 			GeoComp->RegisterComponent();
 
@@ -332,8 +336,7 @@ void AThrowableObject::DestroyObject()
 
 			GeoComp->SetRestCollection(ImpactDebris);
 
-			GeoComp->SetCollisionProfileName(TEXT("Player"));
-			GeoComp->SetPerLevelCollisionProfileNames({"None","Debris","Debris"});
+			GeoComp->SetPerLevelCollisionProfileNames({"Debris","Debris","Debris"});
 			GeoComp->SetCanEverAffectNavigation(false);
 		}
 	}
