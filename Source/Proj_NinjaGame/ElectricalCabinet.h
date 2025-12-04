@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Enemy.h"
 #include "InteractableObject.h"
 #include "ElectricalCabinet.generated.h"
 /**
@@ -44,4 +45,16 @@ protected:
 	UFUNCTION()
 	void EnemyBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	// För att skicka en ny fiende ifall den första misslyckas med att sätta på den igen. 
+	FTimerHandle RetryEnemySendTimer;
+
+	UPROPERTY(EditAnywhere, Category="Electrical Cabinet")
+	float RetrySendInterval = 60.f;
+	
+	void RetrySendEnemy();
+
+	// Fienden som sist skickades 
+	UPROPERTY()
+	AEnemy* LastSentEnemy = nullptr;
 };

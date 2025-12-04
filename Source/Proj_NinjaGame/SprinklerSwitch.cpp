@@ -39,6 +39,24 @@ void ASprinklerSwitch::TurnPowerOnOff()
 	ReduceEnemyHearingRange(bPowerOn);
 
 	SendClosetEnemy();
+
+	// starta timer
+	if (bPowerOn)
+	{
+		//UE_LOG(LogTemp, Error, TEXT("TurnPowerOnOff, start timer"));
+		GetWorld()->GetTimerManager().SetTimer(
+			RetryEnemySendTimer, 
+			this, 
+			&ASprinklerSwitch::RetrySendEnemy, 
+			RetrySendInterval, 
+			true
+		);
+	}
+	else // stoppa timer
+	{
+		//UE_LOG(LogTemp, Error, TEXT("TurnPowerOnOff, stop timer"));
+		GetWorld()->GetTimerManager().ClearTimer(RetryEnemySendTimer);
+	}
 	
 	bPowerOn = !bPowerOn;
 }
@@ -90,6 +108,12 @@ void ASprinklerSwitch::SendClosetEnemy()
 {
 	if (!EnemyHandler)
 		return;
+
+	if (IsValid(LastSentEnemy)) 
+	{
+		return;
+	}
+	
 	if (bPowerOn)
 	{
 		if (AEnemy* Enemy = EnemyHandler->GetClosestEnemyToLocation(GetActorLocation()))
@@ -99,6 +123,9 @@ void ASprinklerSwitch::SendClosetEnemy()
 				AI->SetCurrentMission(EEnemyMission::Sprinkler);
 				//Enemy->OnSuspiciousLocation.Broadcast(EnemyHitBox->GetComponentLocation()); 
 				AI->AssignMission(EEnemyMission::Sprinkler, EnemyHitBox->GetComponentLocation());
+
+				// Spara denna fiende som nu är ansvarig
+				LastSentEnemy = Enemy;
 			}
 		}
 	}
@@ -111,6 +138,7 @@ void ASprinklerSwitch::EnemyBeginOverlap(UPrimitiveComponent* OverlappedComponen
 	{
 		if (AEnemyAIController* AI = Cast<AEnemyAIController>(Enemy->GetController()))
 		{
+			LastSentEnemy = nullptr;
 			if (AI->GetCurrentMission() == EEnemyMission::Sprinkler)
 			{
 				if (bPowerOn)
@@ -123,6 +151,37 @@ void ASprinklerSwitch::EnemyBeginOverlap(UPrimitiveComponent* OverlappedComponen
 					TurnPowerOnOff();
 				}
 			}
+		}
+	}
+}
+
+
+void ASprinklerSwitch::RetrySendEnemy()
+{
+	// Om den är på igen så stoppa timern
+	if (bPowerOn)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(RetryEnemySendTimer);
+		return;
+	}
+
+	if (!EnemyHandler)
+		return;
+
+	if (IsValid(LastSentEnemy)) 
+	{
+		return;
+	}
+
+	//UE_LOG(LogTemp, Error, TEXT("RetrySendEnemy"));
+	
+	if (AEnemy* Enemy = EnemyHandler->GetClosestEnemyToLocation(GetActorLocation()))
+	{
+		if (AEnemyAIController* AI = Cast<AEnemyAIController>(Enemy->GetController()))
+		{
+			AI->SetCurrentMission(EEnemyMission::Electrical);
+			//Enemy->OnSuspiciousLocation.Broadcast(EnemyHitBox->GetComponentLocation()); 
+			AI->AssignMission(EEnemyMission::Electrical, EnemyHitBox->GetComponentLocation());
 		}
 	}
 }

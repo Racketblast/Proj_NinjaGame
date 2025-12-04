@@ -96,6 +96,9 @@ protected:
 	// VFX
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="VFX")
 	UNiagaraComponent* StateVFXComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="VFX")
+	UNiagaraComponent* OnOfVFXComponent;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
 	UNiagaraSystem* AlertVFX;
@@ -103,9 +106,18 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
 	UNiagaraSystem* DetectedVFX;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
+	UNiagaraSystem* CameraOnVFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
+	UNiagaraSystem* CameraOfVFX;
+
 	// Audio
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Audio")
 	UAudioComponent* StateAudioComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Audio")
+	UAudioComponent* AudioComponent;
 
 	UPROPERTY(EditAnywhere, Category="Audio")
 	USoundBase* AlertSound;
@@ -120,6 +132,8 @@ protected:
 	FLinearColor HexToLinearColor(const FString& Hex);
 
 	void SetSpotlightColorFromHex(const FString& HexColor);
+
+	float OriginalIntensity;
 
 
 public:	

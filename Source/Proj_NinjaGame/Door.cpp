@@ -31,6 +31,10 @@ ADoor::ADoor()
 	DoorHitBox->SetupAttachment(DoorMesh);
 	SparkleComponent->SetupAttachment(DoorMesh);
 
+	StateVFXComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("StateVFX"));
+	StateVFXComponent->SetupAttachment(DoorMesh);
+	StateVFXComponent->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
+
 	//See how this could work.
 	//DoorNavModifierComponent = CreateDefaultSubobject<UNavModifierComponent>(TEXT("DoorMovementComponent"));
 	
@@ -59,6 +63,8 @@ void ADoor::Use_Implementation(class AStealthCharacter* Player)
 				LockSoundComponent->Play();
 			}
 			bNeedsToBeUnlocked = false;
+
+			UpdateDoorVFX(); 
 			
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.Owner = this;
@@ -101,6 +107,8 @@ void ADoor::BeginPlay()
 {
 	Super::BeginPlay();
     ClosedDoorRotation = StaticMeshComponent->GetRelativeRotation();
+	
+	UpdateDoorVFX();
 
 	if (GetWorld())
 	{
@@ -189,7 +197,6 @@ void ADoor::UnlockDoor()
 	bOverrideInteractText = false;
 	InteractText = DoorUnlockText;
 	PlayerCanUnlock = true;
-	
 }
 
 bool ADoor::CanPushCharacter(ACharacter* Character, FVector PushDir, float PushDistance)
@@ -290,3 +297,33 @@ void ADoor::ChangeSparkleBasedOnSize()
 		}
 	}
 }
+
+void ADoor::UpdateDoorVFX()
+{
+	if (!StateVFXComponent) return;
+	if (!UnlockedVFX || !LockedVFX) return;
+
+	UNiagaraSystem* NewSystem; 
+
+	if (!bNeedsToBeUnlocked) 
+	{
+		NewSystem = UnlockedVFX;
+	}
+	else
+	{
+		NewSystem = LockedVFX;
+	}
+	
+	if (!NewSystem) return;
+	
+	//UE_LOG(LogTemp, Warning, TEXT("Door VFX Updated"));
+	
+	StateVFXComponent->DeactivateImmediate();
+	StateVFXComponent->SetAsset(nullptr);
+	StateVFXComponent->ResetSystem();
+
+	// Sätt den nya effekten
+	StateVFXComponent->SetAsset(NewSystem);
+	StateVFXComponent->Activate(true);
+}
+

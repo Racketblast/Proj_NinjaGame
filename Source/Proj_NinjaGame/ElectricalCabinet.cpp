@@ -8,6 +8,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/LightComponent.h"
 #include "Engine/Light.h"
+#include "Storage/Nodes/FileEntry.h"
 
 AElectricalCabinet::AElectricalCabinet()
 {
@@ -38,6 +39,25 @@ void AElectricalCabinet::TurnPowerOnOff()
 
 	SendClosetEnemy();
 	
+
+	// starta timer
+	if (bPowerOn)
+	{
+		//UE_LOG(LogTemp, Error, TEXT("TurnPowerOnOff, start timer"));
+		GetWorld()->GetTimerManager().SetTimer(
+			RetryEnemySendTimer, 
+			this, 
+			&AElectricalCabinet::RetrySendEnemy, 
+			RetrySendInterval, 
+			true
+		);
+	}
+	else // stoppa timer
+	{
+		//UE_LOG(LogTemp, Error, TEXT("TurnPowerOnOff, stop timer"));
+		GetWorld()->GetTimerManager().ClearTimer(RetryEnemySendTimer);
+	}
+
 	bPowerOn = !bPowerOn;
 }
 
@@ -96,6 +116,11 @@ void AElectricalCabinet::SendClosetEnemy()
 	if (!EnemyHandler)
 		return;
 
+	if (IsValid(LastSentEnemy)) 
+	{
+		return;
+	}
+
 	if (bPowerOn)
 	{
 		if (AEnemy* Enemy = EnemyHandler->GetClosestEnemyToLocation(GetActorLocation()))
@@ -105,6 +130,9 @@ void AElectricalCabinet::SendClosetEnemy()
 				AI->SetCurrentMission(EEnemyMission::Electrical);
 				//Enemy->OnSuspiciousLocation.Broadcast(EnemyHitBox->GetComponentLocation()); 
 				AI->AssignMission(EEnemyMission::Electrical, EnemyHitBox->GetComponentLocation());
+
+				// Spara denna fiende som nu är ansvarig
+				LastSentEnemy = Enemy;
 			}
 		}
 	}
@@ -117,6 +145,7 @@ void AElectricalCabinet::EnemyBeginOverlap(UPrimitiveComponent* OverlappedCompon
 	{
 		if (AEnemyAIController* AI = Cast<AEnemyAIController>(Enemy->GetController()))
 		{
+			LastSentEnemy = nullptr;
 			if (AI->GetCurrentMission() == EEnemyMission::Electrical)
 			{
 				if (bPowerOn)
@@ -129,6 +158,37 @@ void AElectricalCabinet::EnemyBeginOverlap(UPrimitiveComponent* OverlappedCompon
 					TurnPowerOnOff();
 				}
 			}
+		}
+	}
+}
+
+
+void AElectricalCabinet::RetrySendEnemy()
+{
+	// Om den är på igen så stoppa timern
+	if (bPowerOn)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(RetryEnemySendTimer);
+		return;
+	}
+
+	if (!EnemyHandler)
+		return;
+
+	if (IsValid(LastSentEnemy)) 
+	{
+		return;
+	}
+	
+	//UE_LOG(LogTemp, Error, TEXT("RetrySendEnemy"));
+	
+	if (AEnemy* Enemy = EnemyHandler->GetClosestEnemyToLocation(GetActorLocation()))
+	{
+		if (AEnemyAIController* AI = Cast<AEnemyAIController>(Enemy->GetController()))
+		{
+			AI->SetCurrentMission(EEnemyMission::Electrical);
+			//Enemy->OnSuspiciousLocation.Broadcast(EnemyHitBox->GetComponentLocation()); 
+			AI->AssignMission(EEnemyMission::Electrical, EnemyHitBox->GetComponentLocation());
 		}
 	}
 }

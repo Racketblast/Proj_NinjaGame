@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "InteractableObject.h"
+#include "NiagaraSystem.h"
 #include "Door.generated.h"
 
 /**
@@ -92,4 +93,17 @@ protected:
 	ACharacter* BlockingCharacter = nullptr;
 
 	virtual void ChangeSparkleBasedOnSize() override;
+
+	// VFX
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="VFX")
+	UNiagaraComponent* StateVFXComponent;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="VFX")
+	UNiagaraSystem* LockedVFX;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="VFX")
+	UNiagaraSystem* UnlockedVFX;
+	
+	void UpdateDoorVFX();
+
 };

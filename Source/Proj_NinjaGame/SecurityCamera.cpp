@@ -35,11 +35,19 @@ ASecurityCamera::ASecurityCamera()
 	
 	StateAudioComponent->bAutoActivate = false; 	// styr ljuden i koden, så detta ska vara false
 
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	AudioComponent->SetupAttachment(RootComponent);
+	
+	AudioComponent->bAutoActivate = false;
+
 	// VFX
 	StateVFXComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("StateVFX"));
 	StateVFXComponent->SetupAttachment(CameraMesh);
 	StateVFXComponent->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
 
+	OnOfVFXComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("OnOfVFX"));
+	OnOfVFXComponent->SetupAttachment(CameraMesh);
+	//OnOfVFXComponent->SetRelativeLocation(FVector(0.f, 0.f, 20.f));
 
 	// Spotlight
 	VisionSpotlight = CreateDefaultSubobject<USpotLightComponent>(TEXT("VisionSpotlight"));
@@ -50,7 +58,7 @@ ASecurityCamera::ASecurityCamera()
 	VisionSpotlight->SetOuterConeAngle(35.f);
 
 	// Spotlight: styrka
-	VisionSpotlight->Intensity = 3000.f;   
+	//VisionSpotlight->Intensity = 3000.f;   
 	VisionSpotlight->bUseInverseSquaredFalloff = false;
 
 	// Spotlight: Färge
@@ -90,6 +98,26 @@ void ASecurityCamera::BeginPlay()
 	VisionSpotlight->AttachToComponent(CameraMesh,
 	FAttachmentTransformRules::SnapToTargetIncludingScale,
 	"Vision");
+
+	OriginalIntensity = VisionSpotlight->Intensity;
+
+	if (OnOfVFXComponent && CameraOnVFX)
+	{
+		OnOfVFXComponent->SetAsset(CameraOnVFX);
+		OnOfVFXComponent->Activate(true);
+	}
+
+	OnOfVFXComponent->AttachToComponent(CameraMesh,
+	FAttachmentTransformRules::SnapToTargetIncludingScale,
+	"Vision");
+
+	OnOfVFXComponent->SetRelativeLocation(FVector(-5.f, 0.f, 10.f));
+
+	// Audio
+	if (AudioComponent)
+	{
+		AudioComponent->Play();
+	}
 }
 
 
@@ -303,7 +331,19 @@ void ASecurityCamera::ActivateCamera()
 	if (VisionSpotlight)
 	{
 		VisionSpotlight->SetVisibility(true);
-		VisionSpotlight->SetIntensity(3000.f); 
+		VisionSpotlight->SetIntensity(OriginalIntensity); // Va 300
+	}
+
+	if (OnOfVFXComponent && CameraOnVFX)
+	{
+		OnOfVFXComponent->SetAsset(CameraOnVFX);
+		OnOfVFXComponent->Activate(true);
+	}
+
+	// Audio
+	if (AudioComponent)
+	{
+		AudioComponent->Play();
 	}
 	
 
@@ -336,15 +376,28 @@ void ASecurityCamera::DisableCamera()
 		StateVFXComponent->Activate(false);
 	}
 
+	if (OnOfVFXComponent && CameraOfVFX)
+	{
+		OnOfVFXComponent->SetAsset(CameraOfVFX);
+		OnOfVFXComponent->Activate(true);
+	}
+
+	// SpotLight
 	if (VisionSpotlight)
 	{
 		VisionSpotlight->SetVisibility(false);
 		VisionSpotlight->SetIntensity(0.f);
 	}
 
+	// Audio
 	if (StateAudioComponent)
 	{
 		StateAudioComponent->Stop();
+	}
+
+	if (AudioComponent)
+	{
+		AudioComponent->Stop();
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("SecurityCamera Disabled"));
@@ -379,6 +432,13 @@ void ASecurityCamera::Die()
 	
 	DisableCamera();
 	bIsCameraDead = true;
+
+	// VFX
+	if (OnOfVFXComponent)
+	{
+		OnOfVFXComponent->SetAsset(nullptr);
+		OnOfVFXComponent->Activate(false);
+	}
 
 
 	// Hämta EnemyHandler
