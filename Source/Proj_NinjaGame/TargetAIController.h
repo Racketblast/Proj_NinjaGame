@@ -14,4 +14,7 @@ class PROJ_NINJAGAME_API ATargetAIController : public AEnemyAIController
 {
 	GENERATED_BODY()
 	ATargetAIController();
+protected:
+	virtual void HandleChasing(float DeltaSeconds) override;
+	virtual void StartChasing() override;
 };

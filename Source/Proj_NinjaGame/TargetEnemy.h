@@ -21,4 +21,6 @@ class PROJ_NINJAGAME_API ATargetEnemy : public AEnemy
 public:
 	ATargetEnemy();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<AActor*> RunTowardsActors;
 };
