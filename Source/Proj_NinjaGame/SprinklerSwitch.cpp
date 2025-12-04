@@ -108,6 +108,12 @@ void ASprinklerSwitch::SendClosetEnemy()
 {
 	if (!EnemyHandler)
 		return;
+
+	if (IsValid(LastSentEnemy)) 
+	{
+		return;
+	}
+	
 	if (bPowerOn)
 	{
 		if (AEnemy* Enemy = EnemyHandler->GetClosestEnemyToLocation(GetActorLocation()))
@@ -117,6 +123,9 @@ void ASprinklerSwitch::SendClosetEnemy()
 				AI->SetCurrentMission(EEnemyMission::Sprinkler);
 				//Enemy->OnSuspiciousLocation.Broadcast(EnemyHitBox->GetComponentLocation()); 
 				AI->AssignMission(EEnemyMission::Sprinkler, EnemyHitBox->GetComponentLocation());
+
+				// Spara denna fiende som nu är ansvarig
+				LastSentEnemy = Enemy;
 			}
 		}
 	}
@@ -129,6 +138,7 @@ void ASprinklerSwitch::EnemyBeginOverlap(UPrimitiveComponent* OverlappedComponen
 	{
 		if (AEnemyAIController* AI = Cast<AEnemyAIController>(Enemy->GetController()))
 		{
+			LastSentEnemy = nullptr;
 			if (AI->GetCurrentMission() == EEnemyMission::Sprinkler)
 			{
 				if (bPowerOn)
@@ -157,6 +167,11 @@ void ASprinklerSwitch::RetrySendEnemy()
 
 	if (!EnemyHandler)
 		return;
+
+	if (IsValid(LastSentEnemy)) 
+	{
+		return;
+	}
 
 	//UE_LOG(LogTemp, Error, TEXT("RetrySendEnemy"));
 	

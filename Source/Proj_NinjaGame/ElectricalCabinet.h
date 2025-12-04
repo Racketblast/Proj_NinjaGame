@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Enemy.h"
 #include "InteractableObject.h"
 #include "ElectricalCabinet.generated.h"
 /**
@@ -52,4 +53,8 @@ protected:
 	float RetrySendInterval = 60.f;
 	
 	void RetrySendEnemy();
+
+	// Fienden som sist skickades 
+	UPROPERTY()
+	AEnemy* LastSentEnemy = nullptr;
 };
