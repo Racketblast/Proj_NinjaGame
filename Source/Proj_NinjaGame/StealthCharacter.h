@@ -154,6 +154,10 @@ protected:
 	void Die();
 	FTimerHandle TempHandle; // Används i Die funktionen
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Audio")
+	UAudioComponent* PlayerVoiceAudioComponent;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Audio")
+	USoundBase* JumpSound;
 	//Use
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void Use();
@@ -240,15 +244,20 @@ public:
 	
 protected:
 	//Projectile marker
-	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
+	UPROPERTY(BlueprintReadWrite, Category = "Prediction")
 	class AThrowingMarker* SpawnedMarker;
+	UPROPERTY(EditDefaultsOnly, Category="Prediction")
+	class USplineComponent* ThrowSpline;
 	
-public:
-	void UpdateSpawnMarkerMesh();
-	
-protected:
+	UPROPERTY(EditDefaultsOnly, Category="Prediction")
+	UStaticMesh* PredictionMesh;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	TArray<class USplineMeshComponent*> PredictionMeshSegments;
+	
+	void ClearPredictionMeshes();
+	void BuildSplineMeshes(UMaterialInterface* PredictionMaterial = nullptr);
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Prediction")
 	TSubclassOf<AThrowingMarker> MarkerClass;
 	
     void UpdateProjectilePrediction();
@@ -395,6 +404,8 @@ public:
 
 	EPlayerMovementState GetPlayerMovementState() const { return CurrentMovementState; }
 	
+	AThrowingMarker* GetThrowingMarker() const { return SpawnedMarker; }
+	
 	UPROPERTY(BlueprintReadWrite)
 	bool bHasCompletedTheMission = false;
 
@@ -422,5 +433,4 @@ public:
 	float HideMaxYaw;
 
 	FRotator HideBaseRotation;
-	FHitResult PredictedHit;
 };

@@ -36,7 +36,7 @@ void AInteractableObject::ShowInteractable_Implementation(bool bShow)
 {
 	IPlayerUseInterface::ShowInteractable_Implementation(bShow);
 
-	bIsShowingItself = bShow;
+	bPlayerLookingAtThis = bShow;
 	
 	StaticMeshComponent->SetRenderCustomDepth(bShow);
 	TArray<USceneComponent*> SceneChildren;
@@ -75,20 +75,20 @@ void AInteractableObject::UpdateShowInteractable_Implementation()
 {
 	IPlayerUseInterface::UpdateShowInteractable_Implementation();
 
-	StaticMeshComponent->SetRenderCustomDepth(bIsShowingItself);
+	StaticMeshComponent->SetRenderCustomDepth(bPlayerLookingAtThis);
 	TArray<USceneComponent*> SceneChildren;
 	StaticMeshComponent->GetChildrenComponents(true, SceneChildren);
 	for (USceneComponent* Child : SceneChildren)
 	{
 		if (UStaticMeshComponent* ChildMesh = Cast<UStaticMeshComponent>(Child))
 		{
-			ChildMesh->SetRenderCustomDepth(bIsShowingItself);
+			ChildMesh->SetRenderCustomDepth(bPlayerLookingAtThis);
 		}
 	}
 	
 	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance()))
 	{
-		if (bIsShowingItself)
+		if (bPlayerLookingAtThis)
 		{
 			if (HoverSound)
 			{

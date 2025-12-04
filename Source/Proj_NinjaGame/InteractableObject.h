@@ -41,8 +41,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Interact")
 	bool bOverrideInteractText = false;
 	
-	UPROPERTY(EditDefaultsOnly, Category="Interact")
-	bool bIsShowingItself = false;
+	UPROPERTY(VisibleAnywhere, Category="Interact")
+	bool bPlayerLookingAtThis = false;
 
 	UPROPERTY(EditDefaultsOnly)
 	class UNiagaraComponent* SparkleComponent;
