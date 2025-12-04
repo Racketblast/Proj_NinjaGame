@@ -27,8 +27,6 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	float DealtDamage = 5.f;
 	UPROPERTY(BlueprintReadWrite)
-	FVector ThrowVelocity = {0,0,0};
-	UPROPERTY(BlueprintReadWrite)
 	bool bBreaksOnImpact = true;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<AThrowableWeapon> ThrowableWeapon;
@@ -42,12 +40,18 @@ public:
 	UGeometryCollection* ImpactDebris;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	class UBoxComponent* ThrowCollision;
+	
+	UPROPERTY(BlueprintReadWrite)
+	FVector ThrowVelocity = {0,0,0};
+	UPROPERTY(BlueprintReadWrite)
+	float GravityZ = -980.f;
 
 	void ChangeToThrowCollision(bool bCond);
-	
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class AFieldSystemActor> FieldActorClass;
@@ -67,7 +71,5 @@ protected:
 	virtual void DestroyObject();
 
 	virtual bool ShouldApplyDefaultStun() const { return true; }
-	
-	FCollisionResponseContainer StaticMeshNormalCollision;
 };
 

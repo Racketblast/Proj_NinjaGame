@@ -3,6 +3,7 @@
 
 #include "ThrowableObject.h"
 
+#include "BreakableObject.h"
 #include "MeleeEnemy.h"
 #include "SecurityCamera.h"
 #include "StealthCharacter.h"
@@ -185,6 +186,22 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 			DestroyObject();
 		}
 	}
+	else if (ABreakableObject* Breakable = Cast<ABreakableObject>(OtherActor))
+	{
+		Breakable->BreakObject();
+		if (ImpactGroundSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation(), 1, 1,0, ThrowableAttenuation);
+		}
+		if (bBreaksOnImpact)
+		{
+			DestroyObject();
+		}
+		else
+		{
+			ThrowCollision->SetSimulatePhysics(true);
+		}
+	}
 	else
 	{
 		if (ImpactGroundSound)
@@ -194,6 +211,10 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 		if (bBreaksOnImpact)
 		{
 			DestroyObject();
+		}
+		else
+		{
+			ThrowCollision->SetSimulatePhysics(true);
 		}
 	}
 
@@ -237,24 +258,17 @@ void AThrowableObject::ChangeToThrowCollision(bool bCond)
 {
 	if (bCond)
 	{
-		StaticMeshNormalCollision = StaticMeshComponent->GetCollisionResponseToChannels();
 		StaticMeshComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
 		
 		ThrowCollision->SetCollisionResponseToAllChannels(ECR_Block);
 		ThrowCollision->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Ignore);
 		ThrowCollision->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
-		ThrowCollision->SetNotifyRigidBodyCollision(true);
-		
-		ThrowCollision->OnComponentHit.AddDynamic(this, &AThrowableObject::ThrowableOnComponentHit);
 	}
 	else
 	{
-		StaticMeshComponent->SetCollisionResponseToChannels(StaticMeshNormalCollision);
-		
-		ThrowCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
+		ThrowCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 		
 		StaticMeshComponent->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Block);
-		StaticMeshComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 	}
 }
 
@@ -263,12 +277,46 @@ void AThrowableObject::BeginPlay()
 	Super::BeginPlay();
 }
 
+void AThrowableObject::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (!Thrown) return;
+
+	FVector Start = GetActorLocation();
+
+	ThrowVelocity.Z += GravityZ * DeltaTime;
+
+	FVector NextPos = Start + ThrowVelocity * DeltaTime;
+
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->SweepSingleByChannel(
+		Hit,
+		Start,
+		NextPos,
+		ThrowCollision->GetComponentQuat(),
+		ECC_Camera,
+		FCollisionShape::MakeBox(ThrowCollision->GetScaledBoxExtent()),
+		Params))
+	{
+		SetActorLocation(Hit.Location);
+		ThrowableOnComponentHit(ThrowCollision, Hit.GetActor(), Hit.GetComponent(), FVector::ZeroVector, Hit);
+		Thrown = false;
+		return;
+	}
+
+	SetActorLocation(NextPos);
+}
+
+
 void AThrowableObject::DestroyObject()
 {
 	if (ImpactDebris)
 	{
 		StaticMeshComponent->SetStaticMesh(nullptr);
-		ThrowCollision->SetSimulatePhysics(false);
 		ThrowCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
 		SetLifeSpan(10);
 		

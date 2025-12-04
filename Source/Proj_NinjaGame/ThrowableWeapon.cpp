@@ -54,7 +54,7 @@ void AThrowableWeapon::ThrowObjectLogic(AStealthCharacter* Player)
 
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
-		End = Player->FirstPersonCameraComponent->GetComponentLocation();
+		End = Start;
 	}
 	
 	FVector SpawnLocation = End;
@@ -67,15 +67,10 @@ void AThrowableWeapon::ThrowObjectLogic(AStealthCharacter* Player)
 		ThrownObject->bBreaksOnImpact = bBreakOnImpact;
 		ThrownObject->DealtDamage = ThrowDamage;
 		ThrownObject->ThrowVelocity = Player->FirstPersonCameraComponent->GetForwardVector() * ThrowSpeed;
+		ThrownObject->GravityZ = GetWorld()->GetGravityZ();
 
 		ThrownObject->ChangeToThrowCollision(true);
-		ThrownObject->ThrowCollision->SetNotifyRigidBodyCollision(true);
-		ThrownObject->ThrowCollision->SetCanEverAffectNavigation(false);
 		ThrownObject->ThrowCollision->SetUseCCD(true);
-		
-		ThrownObject->ThrowCollision->SetSimulatePhysics(true);
-		
-		ThrownObject->ThrowCollision->SetPhysicsLinearVelocity(ThrownObject->ThrowVelocity, false);
 	}
 }
 
@@ -87,9 +82,11 @@ void AThrowableWeapon::Drop(AStealthCharacter* Player)
 	{
 		AThrowableObject* ThrownObject = GetWorld()->SpawnActor<AThrowableObject>(ThrownWeaponObject, SpawnLocation, SpawnRotation);
 		
-		ThrownObject->StaticMeshComponent->SetSimulatePhysics(true);
-		ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);
+		ThrownObject->ThrowCollision->SetSimulatePhysics(true);
+		ThrownObject->ThrowCollision->SetCanEverAffectNavigation(false);
 		ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+		ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+		ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);
 	}
 	if (Player->AmountOfOwnWeapon > 0)
 	{

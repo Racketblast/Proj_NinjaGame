@@ -422,4 +422,5 @@ public:
 	float HideMaxYaw;
 
 	FRotator HideBaseRotation;
+	FHitResult PredictedHit;
 };
