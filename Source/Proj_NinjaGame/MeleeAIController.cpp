@@ -215,6 +215,10 @@ void AMeleeAIController::StartBackOff(FVector BackLocation)
 void AMeleeAIController::StopBackOff()
 {
 	bBackingOff = false;
+	
+	APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(),0);
+	if (!Player) return;
+	StartSmoothRotationTowards(Player->GetActorLocation(), 2.0f);
 }
 
 

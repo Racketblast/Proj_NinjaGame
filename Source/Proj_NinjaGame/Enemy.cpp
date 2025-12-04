@@ -250,7 +250,19 @@ void AEnemy::CheckPlayerVisibility()
 	// Variabler 
 	FVector EnemyLocation = GetActorLocation() + FVector(0, 0, 50);
 	FVector Forward = GetActorForwardVector();
-	FVector LookDirection = Forward.RotateAngleAxis(10.f, GetActorRightVector()); // gör konen lite nedåtriktad
+	//FVector LookDirection = Forward.RotateAngleAxis(10.f, GetActorRightVector()); // gör konen lite nedåtriktad
+	FVector LookDirection;
+
+	if (bIsChasing)
+	{
+		// Titta direkt mott spelaren när fienden är i chase 
+		LookDirection = (PlayerPawn->GetActorLocation() - EnemyLocation).GetSafeNormal();
+	}
+	else
+	{
+		// gör konen lite nedåtriktad
+		LookDirection = Forward.RotateAngleAxis(10.f, GetActorRightVector());
+	}
 	/*FVector ToPlayer = PlayerPawn->GetActorLocation() - EnemyLocation;
 	float Distance = ToPlayer.Size();*/
 	ToPlayer.Normalize();
