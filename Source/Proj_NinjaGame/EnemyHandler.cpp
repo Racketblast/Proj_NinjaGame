@@ -8,6 +8,7 @@
 #include "NavigationPath.h"
 #include "NavigationSystem.h"
 #include "SecurityCamera.h"
+#include "TargetEnemy.h"
 
 
 AEnemyHandler::AEnemyHandler()
@@ -132,6 +133,10 @@ AEnemy* AEnemyHandler::GetClosestEnemyToLocation(FVector TargetLocation)
 	{
 		AEnemy* Enemy = Cast<AEnemy>(EnemyActor);
 		if (!Enemy) continue;
+
+		
+		if (ATargetEnemy* TargetEnemy = Cast<ATargetEnemy>(EnemyActor))
+			continue;
 		
 		// Skippa fiender som redan har ett mission
 		AAIController* AICon = Cast<AAIController>(Enemy->GetController());
@@ -216,6 +221,9 @@ TArray<AEnemy*> AEnemyHandler::GetTwoClosestEnemies(FVector TargetLocation)
 		AEnemy* Enemy = Cast<AEnemy>(Actor);
 		if (!Enemy) continue;
 
+		if (ATargetEnemy* TargetEnemy = Cast<ATargetEnemy>(Enemy))
+			continue;
+		
 		UNavigationPath* NavPath = NavSys->FindPathToLocationSynchronously(
 			World,
 			Enemy->GetActorLocation(),

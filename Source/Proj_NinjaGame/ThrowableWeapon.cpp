@@ -68,6 +68,8 @@ void AThrowableWeapon::ThrowObjectLogic(AStealthCharacter* Player)
 		ThrownObject->DealtDamage = ThrowDamage;
 		ThrownObject->ThrowVelocity = Player->FirstPersonCameraComponent->GetForwardVector() * ThrowSpeed;
 		ThrownObject->GravityZ = GetWorld()->GetGravityZ();
+		ThrownObject->ThrowCollision->SetCanEverAffectNavigation(false);
+		ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);
 
 		ThrownObject->ChangeToThrowCollision(true);
 		ThrownObject->ThrowCollision->SetUseCCD(true);
