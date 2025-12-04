@@ -37,6 +37,12 @@ protected:
 	UStaticMeshComponent* MarkerMesh;
 	UPROPERTY(EditDefaultsOnly, Category = "Marker")
 	class UNiagaraComponent* MarkerVFX;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	class UNiagaraSystem* GroundHitVFX;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	class UNiagaraSystem* EnemyHitVFX;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	class UNiagaraSystem* HeadHitVFX;
 
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")

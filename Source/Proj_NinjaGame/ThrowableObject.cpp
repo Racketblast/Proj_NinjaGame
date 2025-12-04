@@ -324,7 +324,7 @@ void AThrowableObject::DestroyObject()
 		{
 			FTransform MeshTransform = StaticMeshComponent->GetComponentTransform();
 			
-			GeoComp->SetupAttachment(GetRootComponent());
+			GeoComp->SetupAttachment(StaticMeshComponent);
 			GeoComp->SetWorldTransform(MeshTransform);
 			GeoComp->RegisterComponent();
 

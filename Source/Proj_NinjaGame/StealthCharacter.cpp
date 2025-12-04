@@ -437,9 +437,13 @@ void AStealthCharacter::UpdateProjectilePrediction()
         if (AEnemy* Enemy = Cast<AEnemy>(PredictedHit.GetActor()))
         {
             if (PredictedHit.GetComponent() == Enemy->GetHeadComponent())
+            {
                 SpawnedMarker->SetHeadMaterial();
+            }
             else
+            {
                 SpawnedMarker->SetEnemyMaterial();
+            }
         }
         else
         {

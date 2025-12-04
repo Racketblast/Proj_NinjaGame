@@ -16,6 +16,7 @@ AThrowingMarker::AThrowingMarker()
 	MarkerMesh = CreateDefaultSubobject<UStaticMeshComponent>("MarkerMesh");
 	MarkerMesh->SetupAttachment(MarkerRootComponent);
 	MarkerMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	MarkerMesh->Nanite(true);
 	
 	MarkerVFX = CreateDefaultSubobject<UNiagaraComponent>("MarkerVFX");
 	MarkerVFX->SetupAttachment(MarkerRootComponent);
@@ -54,33 +55,36 @@ void AThrowingMarker::SetMarkerRelativeLocation(FVector Location)
 
 void AThrowingMarker::SetGroundMaterial()
 {
-	if (GroundHitMaterial)
+	if (GroundHitMaterial && MarkerMesh->GetMaterial(0) != GroundHitMaterial)
 	{
-		if (MarkerMesh->GetMaterial(0) != GroundHitMaterial)
-		{
-			MarkerMesh->SetMaterial(0,GroundHitMaterial);
-		}
+		MarkerMesh->SetMaterial(0,GroundHitMaterial);
+	}
+	if (GroundHitVFX && MarkerVFX->GetAsset() != GroundHitVFX)
+	{
+		MarkerVFX->SetAsset(GroundHitVFX);
 	}
 }
 
 void AThrowingMarker::SetEnemyMaterial()
 {
-	if (EnemyHitMaterial)
+	if (EnemyHitMaterial && MarkerMesh->GetMaterial(0) != EnemyHitMaterial)
 	{
-		if (MarkerMesh->GetMaterial(0) != EnemyHitMaterial)
-		{
-			MarkerMesh->SetMaterial(0,EnemyHitMaterial);
-		}
+		MarkerMesh->SetMaterial(0,EnemyHitMaterial);
+	}
+	if (EnemyHitVFX && MarkerVFX->GetAsset() != EnemyHitVFX)
+	{
+		MarkerVFX->SetAsset(EnemyHitVFX);
 	}
 }
 
 void AThrowingMarker::SetHeadMaterial()
 {
-	if (HeadHitMaterial)
+	if (HeadHitMaterial && MarkerMesh->GetMaterial(0) != HeadHitMaterial)
 	{
-		if (MarkerMesh->GetMaterial(0) != HeadHitMaterial)
-		{
-			MarkerMesh->SetMaterial(0,HeadHitMaterial);
-		}
+		MarkerMesh->SetMaterial(0,HeadHitMaterial);
+	}
+	if (HeadHitVFX && MarkerVFX->GetAsset() != HeadHitVFX)
+	{
+		MarkerVFX->SetAsset(HeadHitVFX);
 	}
 }
