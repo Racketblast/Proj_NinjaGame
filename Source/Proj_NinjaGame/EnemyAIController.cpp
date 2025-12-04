@@ -227,6 +227,7 @@ void AEnemyAIController::HandleChasing(float DeltaSeconds)
 					UE_LOG(LogTemp, Error, TEXT("AAAAAAAAAAAAAAAAAAAAA"))
 					//ControlledEnemy->bCanAttack = false;
 					ControlledEnemy->bIsAttacking = true;
+					// Fiendens Animation blueprint startar melee attack animationen och kallar på StartAttack via en anim notify state
 				}
 			}
 			//ControlledEnemy->StartAttack();
@@ -1244,6 +1245,11 @@ void AEnemyAIController::StunEnemy(float Duration, TOptional<EEnemyState> Wanted
 		Duration,
 		false
 	);
+}
+
+void AEnemyAIController::StartBackOff(FVector BackLocation)
+{
+	//Implementationen av denna funktion finns i Melee Controller
 }
 
 

@@ -258,7 +258,12 @@ public:
 	void UpdateStateVFX(EEnemyState NewState);
 
 	EEnemyState PreviousState = EEnemyState::Patrolling;
-	
+
+
+	// Throw:
+	virtual void EnemyThrow();
+	virtual float GetThrowRange() const;
+	virtual float GetThrowCooldown() const;
 
 protected:
 	FVector LastSeenPlayerLocation;

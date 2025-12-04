@@ -51,6 +51,8 @@ public:
 
 	// För stun
 	void StunEnemy(float Duration, TOptional<EEnemyState> WantedState = TOptional<EEnemyState>());
+	
+	void virtual StartBackOff(FVector BackLocation);
 
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
