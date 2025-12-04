@@ -101,7 +101,6 @@ void AThrowableObject::ThrowableOnComponentHit(UPrimitiveComponent* HitComp, AAc
 void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Real FHitLocation: %s"), *Hit.Location.ToString());
 	if (AEnemy* Enemy = Cast<AEnemy>(OtherActor))
 	{
 		if (!Enemy->GetIsDead())

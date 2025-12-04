@@ -242,7 +242,6 @@ protected:
 	//Projectile marker
 	UPROPERTY(BlueprintReadWrite, Category = "Prediction")
 	class AThrowingMarker* SpawnedMarker;
-	FHitResult PredictedHit;
 	UPROPERTY(EditDefaultsOnly, Category="Prediction")
 	class USplineComponent* ThrowSpline;
 	

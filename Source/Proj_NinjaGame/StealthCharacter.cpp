@@ -264,7 +264,6 @@ void AStealthCharacter::StartThrow()
 	{
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ThrowSound, GetActorLocation());
 	}
-	UE_LOG(LogTemp, Warning, TEXT("PredictedHit throw location: %s"), *PredictedHit.Location.ToString());
 	HeldThrowableWeapon->Throw(this);
 	bCanThrow = true;
 }
@@ -424,40 +423,40 @@ void AStealthCharacter::UpdateProjectilePrediction()
 	ClearPredictionMeshes();
 	ThrowSpline->ClearSplinePoints(false);
 	
-    FVector Start = FirstPersonCameraComponent->GetComponentLocation();
-    FVector EndTrace = Start + FirstPersonCameraComponent->GetForwardVector() * CameraForwardMultiplier;
+    FVector TraceStart = FirstPersonCameraComponent->GetComponentLocation();
+    FVector TraceEnd = TraceStart + FirstPersonCameraComponent->GetForwardVector() * CameraForwardMultiplier;
 
-    FHitResult HitResult;
-    FCollisionQueryParams ParamsLineTrace;
-    ParamsLineTrace.AddIgnoredActor(this);
+    FHitResult TraceResult;
+    FCollisionQueryParams TraceParams;
+    TraceParams.AddIgnoredActor(this);
 
-    if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, EndTrace, ECC_Camera, ParamsLineTrace))
+    if (GetWorld()->LineTraceSingleByChannel(TraceResult, TraceStart, TraceEnd, ECC_Camera, TraceParams))
     {
-        EndTrace = Start;
+        TraceEnd = TraceStart;
     }
 
-    FVector SimPos = EndTrace;
+    FVector SimPos = TraceEnd;
     FVector Velocity = FirstPersonCameraComponent->GetForwardVector() * HeldThrowableWeapon->ThrowSpeed;
     float GravityZ = GetWorld()->GetGravityZ();
 
-    UBoxComponent* Box = nullptr;
+    UBoxComponent* PredictionBox = nullptr;
     if (HeldThrowableWeapon->ThrownWeaponObject)
     {
         AThrowableObject* DefaultActor = HeldThrowableWeapon->ThrownWeaponObject->GetDefaultObject<AThrowableObject>();
         if (DefaultActor && DefaultActor->ThrowCollision)
         {
-            Box = DefaultActor->ThrowCollision;
+            PredictionBox = DefaultActor->ThrowCollision;
         }
     }
-    if (!Box) return;
+    if (!PredictionBox) return;
 
-    FVector BoxExtent = Box->GetScaledBoxExtent();
+    FVector BoxExtent = PredictionBox->GetScaledBoxExtent();
     FQuat BoxRotation = FirstPersonCameraComponent->GetComponentQuat();
 
-    FCollisionQueryParams Params;
-    Params.AddIgnoredActor(this);
+    FCollisionQueryParams PredictionParams;
+    PredictionParams.AddIgnoredActor(this);
 
-    float TimeStep = GetWorld()->GetDeltaSeconds();
+    float TimeStep = GetWorld()->GetDeltaSeconds()/2;
     float MaxTime = 2.f;
 
 	int32 SplineIndex = 0;
@@ -470,6 +469,8 @@ void AStealthCharacter::UpdateProjectilePrediction()
     	
         FVector NextPos = SimPos + Velocity * TimeStep;
 
+    	FHitResult PredictedHit;
+    	
         bool bHit = GetWorld()->SweepSingleByChannel(
             PredictedHit,
             SimPos,
@@ -477,7 +478,7 @@ void AStealthCharacter::UpdateProjectilePrediction()
             BoxRotation,
             ECC_Camera,
             FCollisionShape::MakeBox(BoxExtent),
-            Params
+            PredictionParams
         );
 
         if (bHit)
