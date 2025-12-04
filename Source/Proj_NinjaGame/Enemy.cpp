@@ -109,7 +109,7 @@ void AEnemy::CheckChaseProximityDetection()
 	
 	if (StealthPlayer->bIsHiddenFromEnemy) return;
 
-	const float ChaseProximityRadius = 550.f; // var 350
+	const float ChaseProximityRadius = 400.f; // var 350
 	const float Distance = FVector::Dist(GetActorLocation(), PlayerPawn->GetActorLocation());
 
 	// Debug sphere
@@ -256,7 +256,7 @@ void AEnemy::CheckPlayerVisibility()
 	ToPlayer.Normalize();
 
 	// Skillnad mellan patrull och chase läge 
-	float EffectiveVisionRange = bIsChasing ? VisionRange : VisionRange * 0.6f;
+	float EffectiveVisionRange = bIsChasing ? VisionRange : VisionRange * 0.8f; // var tidigare 0.6
 	float EffectiveVisionAngle = bIsChasing ? VisionAngle : VisionAngle * 0.8f; // var tidigare 0.5
 
 	// Rita debug för fiendens synfält, alltså konerna
