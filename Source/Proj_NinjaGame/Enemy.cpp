@@ -109,7 +109,7 @@ void AEnemy::CheckChaseProximityDetection()
 	
 	if (StealthPlayer->bIsHiddenFromEnemy) return;
 
-	const float ChaseProximityRadius = 350.f; 
+	const float ChaseProximityRadius = 550.f; // var 350
 	const float Distance = FVector::Dist(GetActorLocation(), PlayerPawn->GetActorLocation());
 
 	// Debug sphere
@@ -257,7 +257,7 @@ void AEnemy::CheckPlayerVisibility()
 
 	// Skillnad mellan patrull och chase läge 
 	float EffectiveVisionRange = bIsChasing ? VisionRange : VisionRange * 0.6f;
-	float EffectiveVisionAngle = bIsChasing ? VisionAngle : VisionAngle * 0.5f;
+	float EffectiveVisionAngle = bIsChasing ? VisionAngle : VisionAngle * 0.8f; // var tidigare 0.5
 
 	// Rita debug för fiendens synfält, alltså konerna
 	if (!bIsChasing && bVisionDebug)
@@ -881,3 +881,20 @@ void AEnemy::ForgetHeardSound()
 }
 
 
+
+
+//Throw
+void AEnemy::EnemyThrow()
+{
+	// Den riktiga implementationen finns i melee fienden
+}
+
+float AEnemy::GetThrowRange() const
+{
+	return 0;
+}
+
+float AEnemy::GetThrowCooldown() const
+{
+	return 0;
+}

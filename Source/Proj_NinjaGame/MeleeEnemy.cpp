@@ -25,6 +25,9 @@ AMeleeEnemy::AMeleeEnemy()
 	MeleeHitBox->SetCollisionObjectType(ECC_WorldDynamic);
 	MeleeHitBox->SetCollisionResponseToAllChannels(ECR_Ignore);
 	MeleeHitBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	// ProjectileSpawnPoint
+	ProjectileSpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("ProjectileSpawnPoint"));
+	ProjectileSpawnPoint->SetupAttachment(GetMesh()); 
 }
 
 
@@ -45,7 +48,7 @@ void AMeleeEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (ThrowCooldown > 2.0f)
+	/*if (ThrowCooldown > 2.0f)
 	{
 		EnemyThrow();
 		ThrowCooldown = 0.f;
@@ -53,7 +56,7 @@ void AMeleeEnemy::Tick(float DeltaTime)
 	else
 	{
 		ThrowCooldown += DeltaTime;
-	}
+	}*/
 }
 
 void AMeleeEnemy::CheckChaseProximityDetection()
@@ -143,11 +146,12 @@ void AMeleeEnemy::ResetAttackCooldown()
 	bCanAttack = true;
 }
 
-void AMeleeEnemy::EnemyThrow()
+/*void AMeleeEnemy::EnemyThrow()
 {
+	if (!ProjectileSpawnPoint || !ThrowableObject) return;
+
 	FVector Start = GetCapsuleComponent()->GetComponentLocation();
-	//din punkt william
-	FVector End = GetCapsuleComponent()->GetComponentLocation();
+	FVector End = ProjectileSpawnPoint->GetComponentLocation();
 
 	FHitResult HitResult;
 	FCollisionQueryParams Params;
@@ -158,25 +162,183 @@ void AMeleeEnemy::EnemyThrow()
 		End = Start;
 	}
 
+	//FVector SpawnLocation = ProjectileSpawnPoint->GetComponentLocation();
 	FVector SpawnLocation = End;
-	FRotator SpawnRotation = GetCapsuleComponent()->GetComponentRotation();
-	if (ThrowableObject)
+	FRotator SpawnRotation = (PlayerPawn->GetActorLocation() - SpawnLocation).Rotation();
+
+	AAIThrowableObject* ThrownObject = GetWorld()->SpawnActor<AAIThrowableObject>(
+		ThrowableObject,
+		SpawnLocation,
+		SpawnRotation
+	);
+
+	if (ThrownObject)
 	{
-		AAIThrowableObject* ThrownObject = GetWorld()->SpawnActor<AAIThrowableObject>(ThrowableObject, SpawnLocation, SpawnRotation);
 		ThrownObject->Thrown = true;
 		ThrownObject->SetShowVFX(false);
 		ThrownObject->bBreaksOnImpact = true;
 		ThrownObject->DealtDamage = AttackDamage;
-		//Lägg till forward från fienden till spelaren
-		ThrownObject->ThrowVelocity = GetCapsuleComponent()->GetForwardVector() * ThrowVelocity;
 
-		ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT,ECR_Ignore);
+		// velocity
+		FVector Direction = (PlayerPawn->GetActorLocation() - SpawnLocation).GetSafeNormal();
+		ThrownObject->ThrowVelocity = Direction * ThrowVelocity;
+
+		ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Ignore);
 		ThrownObject->StaticMeshComponent->SetSimulatePhysics(true);
 		ThrownObject->StaticMeshComponent->SetNotifyRigidBodyCollision(true);
 		ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);
 		ThrownObject->StaticMeshComponent->SetUseCCD(true);
-		
+
 		ThrownObject->StaticMeshComponent->SetPhysicsLinearVelocity(ThrownObject->ThrowVelocity, false);
 	}
+}*/
+
+void AMeleeEnemy::EnemyThrow()
+{
+	if (!ProjectileSpawnPoint || !ThrowableObject) return;
+
+	FVector SpawnLocation = ProjectileSpawnPoint->GetComponentLocation();
+	FVector PlayerLocation = PlayerPawn->GetActorLocation();
+
+	float ProjectileSpeed = 1100.f;
+	FVector PredictedLocation = PredictPlayerLocation(ProjectileSpeed);
+	
+	/*if (Distance < 300.f)
+	{
+		PredictedLocation = PlayerLocation; // ingen prediction på nära håll
+	}*/
+
+	// Ändrar hur högt fienden vill kasta, tycker inte riktigt att detta fungerar för tillfället
+	float ArcHeight = 0.f;
+	bool bBlocked = IsThrowPathBlocked(SpawnLocation, PredictedLocation, ArcHeight);
+
+	if (bBlocked)
+	{
+		ArcHeight = 200.f; 
+		bBlocked = IsThrowPathBlocked(SpawnLocation, PredictedLocation, ArcHeight);
+	}
+
+	/*if (bBlocked)
+	{
+		for (int i = 0; i < 3; i++)
+		{
+			if (!IsThrowPathBlocked(SpawnLocation, PredictedLocation, ArcHeight))
+				break;
+
+			ArcHeight += 150.f; 
+		}
+	}*/
+
+	if (bBlocked)
+	{
+		// Back off, fungerar inte just nu!
+		UE_LOG(LogTemp, Warning, TEXT("EnemyThrow: bBlocked är true"));
+		FVector BackLoc = GetActorLocation() - GetActorForwardVector() * 250.f;
+		AMeleeAIController* AICon = Cast<AMeleeAIController>(GetController());
+		if (AICon)
+		{
+			AICon->StartBackOff(BackLoc); 
+		}
+		return;
+	}
+
+
+	// Spawn Projectile
+	AAIThrowableObject* ThrownObject = GetWorld()->SpawnActor<AAIThrowableObject>(
+		ThrowableObject,
+		SpawnLocation,
+		(PredictedLocation - SpawnLocation).Rotation()
+	);
+
+	if (!ThrownObject) return;
+
+	ThrownObject->Thrown = true;
+	ThrownObject->SetShowVFX(false);
+	ThrownObject->bBreaksOnImpact = true;
+	ThrownObject->DealtDamage = AttackDamage;
+
+	// Throw Velocity
+	FVector LaunchVelocity;
+	FVector StartPos = SpawnLocation;
+	FVector EndPos = PredictedLocation;
+
+	FVector AdjustedEndPos = EndPos;
+	AdjustedEndPos.Z -= 40.f; 
+	
+	bool bHasSolution = UGameplayStatics::SuggestProjectileVelocity(
+		this,
+		LaunchVelocity,
+		StartPos,
+		AdjustedEndPos,
+		1100.f,
+		false,
+		0.f,
+		0.f,
+		ESuggestProjVelocityTraceOption::DoNotTrace
+	);
+
+	if (!bHasSolution)
+	{
+		LaunchVelocity = (AdjustedEndPos - StartPos).GetSafeNormal() * 1200.f;
+	}
+	
+	// LaunchVelocity.Z += 300.f; 
+	LaunchVelocity.Z += 150.f;  
+
+	// Cap Z speed så fienden inte skjuter för högt
+	LaunchVelocity.Z = FMath::Clamp(LaunchVelocity.Z, -2000.f, 850.f);
+
+	
+	ThrownObject->StaticMeshComponent->SetPhysicsLinearVelocity(LaunchVelocity);
+	ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Ignore);
+	ThrownObject->StaticMeshComponent->SetSimulatePhysics(true);
+	//ThrownObject->StaticMeshComponent->SetPhysicsLinearVelocity(ThrownObject->ThrowVelocity, false);
+	ThrownObject->StaticMeshComponent->SetNotifyRigidBodyCollision(true);
+	ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);
+	ThrownObject->StaticMeshComponent->SetUseCCD(true);
 }
 
+
+
+bool AMeleeEnemy::IsThrowPathBlocked(const FVector& SpawnLocation, const FVector& TargetLocation, float TestArcHeight)
+{
+	const int Samples = 10;
+
+	for (int i = 1; i <= Samples; i++)
+	{
+		float T = (float)i / Samples;
+
+		FVector SamplePoint = FMath::Lerp(SpawnLocation, TargetLocation, T);
+		
+		SamplePoint.Z += TestArcHeight * FMath::Sin(T * PI); 
+
+		FHitResult Hit;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+
+		if (GetWorld()->LineTraceSingleByChannel(Hit, SpawnLocation, SamplePoint, ECC_Visibility, Params))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("IsThrowPathBlocked: Något blockerar kastet"));
+			return true; 
+		}
+	}
+
+	return false; 
+}
+
+
+FVector AMeleeEnemy::PredictPlayerLocation(float ProjectileSpeed) const
+{
+	if (!PlayerPawn) return FVector::ZeroVector;
+
+	FVector PlayerLocation = PlayerPawn->GetActorLocation();
+	FVector PlayerVelocity = PlayerPawn->GetVelocity();
+
+	FVector Origin = ProjectileSpawnPoint->GetComponentLocation();
+
+	float Distance = FVector::Dist(Origin, PlayerLocation);
+
+	float TravelTime = Distance / ProjectileSpeed;
+
+	return PlayerLocation + PlayerVelocity * TravelTime;
+}

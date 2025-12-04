@@ -18,6 +18,10 @@ public:
 	virtual void RefreshChaseTarget() override;
 
 	//virtual void StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation) override;
+
+	virtual void StartBackOff(FVector BackLocation) override;
+
+	void StopBackOff();
 	
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
@@ -32,9 +36,16 @@ protected:
 	virtual void StopChasing() override;
 	virtual void OnUnPossess() override;
 	virtual void HandleChasing(float DeltaSeconds) override;
+	
+	bool CannotReachPlayer(APawn* Player);
+
+	bool bBackingOff = false;
+	float BackOffDuration = 0.7f;
 
 private:
 	FTimerHandle StartPatrolTimerHandle;
+	FTimerHandle BackOffTimerHandle;
 	FVector LastKnownPlayerLocation;
 	bool bChasingFromExternalOrder = false;
+	float RangedThrowCooldown = 0;
 };
