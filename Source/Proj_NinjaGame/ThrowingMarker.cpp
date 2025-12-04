@@ -4,6 +4,8 @@
 #include "ThrowingMarker.h"
 
 #include "NiagaraComponent.h"
+#include "ThrowableObject.h"
+#include "Components/BoxComponent.h"
 
 // Sets default values
 AThrowingMarker::AThrowingMarker()
@@ -16,7 +18,7 @@ AThrowingMarker::AThrowingMarker()
 	MarkerMesh = CreateDefaultSubobject<UStaticMeshComponent>("MarkerMesh");
 	MarkerMesh->SetupAttachment(MarkerRootComponent);
 	MarkerMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	MarkerMesh->Nanite(true);
+	MarkerMesh->SetForceDisableNanite(true);
 	
 	MarkerVFX = CreateDefaultSubobject<UNiagaraComponent>("MarkerVFX");
 	MarkerVFX->SetupAttachment(MarkerRootComponent);
@@ -52,6 +54,26 @@ void AThrowingMarker::SetMarkerRelativeLocation(FVector Location)
 	MarkerMesh->SetRelativeLocation(Location);
 }
 
+void AThrowingMarker::AddVFXMarkerRelativeLocation(FVector Location)
+{
+	FVector NewLocation = {MarkerVFX->GetRelativeLocation().X, MarkerVFX->GetRelativeLocation().Y, Location.Z};
+	MarkerVFX->SetRelativeLocation(NewLocation);
+}
+
+void AThrowingMarker::UpdateSpawnMarkerMesh(TSubclassOf<class AThrowableObject> ObjectClass)
+{
+	if (ObjectClass)
+	{
+		AThrowableObject* DefaultActor = ObjectClass->GetDefaultObject<AThrowableObject>();
+		if (DefaultActor && DefaultActor->StaticMeshComponent->GetStaticMesh())
+		{
+			SetMarkerScale(DefaultActor->StaticMeshComponent->GetRelativeScale3D());
+			SetMarkerMesh(DefaultActor->StaticMeshComponent->GetStaticMesh());
+			SetMarkerRelativeLocation(DefaultActor->StaticMeshComponent->GetRelativeLocation());
+			AddVFXMarkerRelativeLocation(DefaultActor->ThrowCollision->GetScaledBoxExtent());
+		}
+	}
+}
 
 void AThrowingMarker::SetGroundMaterial()
 {
@@ -87,4 +109,13 @@ void AThrowingMarker::SetHeadMaterial()
 	{
 		MarkerVFX->SetAsset(HeadHitVFX);
 	}
+}
+
+UMaterialInterface* AThrowingMarker::GetMeshMaterial() const
+{
+	if (MarkerMesh && MarkerMesh->GetMaterial(0))
+	{
+		return MarkerMesh->GetMaterial(0);
+	}
+	return nullptr;
 }

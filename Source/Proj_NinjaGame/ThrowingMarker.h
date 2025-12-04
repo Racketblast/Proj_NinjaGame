@@ -26,9 +26,12 @@ public:
 	void SetMarkerScale(FVector Size);
 	void SetMarkerMesh(UStaticMesh* Mesh);
 	void SetMarkerRelativeLocation(FVector Location);
+	void AddVFXMarkerRelativeLocation(FVector Location);
+	void UpdateSpawnMarkerMesh(TSubclassOf<class AThrowableObject> ObjectClass);
 	void SetGroundMaterial();
 	void SetEnemyMaterial();
 	void SetHeadMaterial();
+	UMaterialInterface* GetMeshMaterial() const;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Marker")
@@ -52,3 +55,5 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	UMaterial* HeadHitMaterial;
 };
+
+
