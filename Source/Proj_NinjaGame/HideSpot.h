@@ -26,16 +26,16 @@ protected:
 	void ExitHideSpot();
 
 	UPROPERTY(EditAnywhere, Category = "HideSpot|Camera")
-	float MinPitch = -10.0f;
+	float MinPitch = -20.0f;
 
 	UPROPERTY(EditAnywhere, Category = "HideSpot|Camera")
-	float MaxPitch = 20.0f;
+	float MaxPitch = 40.0f;
 
 	UPROPERTY(EditAnywhere, Category = "HideSpot|Camera")
-	float MinYaw = -30.0f;
+	float MinYaw = -60.0f;
 
 	UPROPERTY(EditAnywhere, Category = "HideSpot|Camera")
-	float MaxYaw = 30.0f;
+	float MaxYaw = 60.0f;
 
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)

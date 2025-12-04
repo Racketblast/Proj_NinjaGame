@@ -25,6 +25,7 @@
 #include "SmokeBombWeapon.h"
 #include "ThrowableObject.h"
 #include "ThrowingMarker.h"
+#include "Components/AudioComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/SplineComponent.h"
 #include "Components/SplineMeshComponent.h"
@@ -56,6 +57,10 @@ AStealthCharacter::AStealthCharacter()
 	FirstPersonMesh->SetOnlyOwnerSee(true);
 	FirstPersonMesh->FirstPersonPrimitiveType = EFirstPersonPrimitiveType::FirstPerson;
 	FirstPersonMesh->SetCollisionProfileName(FName("NoCollision"));
+	
+	PlayerVoiceAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("PlayerVoiceAudioComponent"));
+	PlayerVoiceAudioComponent->SetupAttachment(RootComponent);
+	PlayerVoiceAudioComponent->SetAutoActivate(false);
 	
 	PlayerMeleeBox = CreateDefaultSubobject<UBoxComponent>(TEXT("PlayerMeleeBox"));
 	PlayerMeleeBox->SetupAttachment(FirstPersonCameraComponent);
@@ -183,7 +188,12 @@ void AStealthCharacter::DoJumpStart()
 	// pass Jump to the character
 	Jump();
 	bHoldingJump = true;
-
+	if (GetCharacterMovement()->MovementMode == MOVE_Walking)
+	{
+		PlayerVoiceAudioComponent->SetSound(JumpSound);
+		PlayerVoiceAudioComponent->Play();
+	}
+	
 	/*UE_LOG(LogTemp, Warning, TEXT("CurrentMovementState: %s"), *MovementStateToString(CurrentMovementState));
 	UE_LOG(LogTemp, Warning, TEXT("RememberedJumpState: %s"), *MovementStateToString(RememberedJumpState));*/
 }

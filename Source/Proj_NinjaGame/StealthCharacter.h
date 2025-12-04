@@ -154,6 +154,10 @@ protected:
 	void Die();
 	FTimerHandle TempHandle; // Används i Die funktionen
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Audio")
+	UAudioComponent* PlayerVoiceAudioComponent;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Audio")
+	USoundBase* JumpSound;
 	//Use
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void Use();
