@@ -252,10 +252,14 @@ void AMeleeEnemy::EnemyThrow()
 
 	if (!ThrownObject) return;
 
+
+	ThrownObject->ChangeToThrowCollision(true);
+	ThrownObject->ThrowCollision->SetUseCCD(true);
 	ThrownObject->Thrown = true;
 	ThrownObject->SetShowVFX(false);
 	ThrownObject->bBreaksOnImpact = true;
 	ThrownObject->DealtDamage = AttackDamage;
+	ThrownObject->GravityZ = GetWorld()->GetGravityZ();
 
 	// Throw Velocity
 	FVector LaunchVelocity;
@@ -279,23 +283,17 @@ void AMeleeEnemy::EnemyThrow()
 
 	if (!bHasSolution)
 	{
-		LaunchVelocity = (AdjustedEndPos - StartPos).GetSafeNormal() * 1200.f;
+		LaunchVelocity = (AdjustedEndPos - StartPos).GetSafeNormal() * ProjectileSpeed;
 	}
 	
 	// LaunchVelocity.Z += 300.f; 
-	LaunchVelocity.Z += 150.f;  
 
 	// Cap Z speed så fienden inte skjuter för högt
-	LaunchVelocity.Z = FMath::Clamp(LaunchVelocity.Z, -2000.f, 850.f);
-
 	
-	ThrownObject->StaticMeshComponent->SetPhysicsLinearVelocity(LaunchVelocity);
-	ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Ignore);
-	ThrownObject->StaticMeshComponent->SetSimulatePhysics(true);
-	//ThrownObject->StaticMeshComponent->SetPhysicsLinearVelocity(ThrownObject->ThrowVelocity, false);
-	ThrownObject->StaticMeshComponent->SetNotifyRigidBodyCollision(true);
-	ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);
-	ThrownObject->StaticMeshComponent->SetUseCCD(true);
+	ThrownObject->ThrowVelocity = LaunchVelocity;
+
+	ThrownObject->ChangeToThrowCollision(true);
+	ThrownObject->ThrowCollision->SetUseCCD(true);
 }
 
 

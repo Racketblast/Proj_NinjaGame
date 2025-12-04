@@ -262,7 +262,7 @@ void AThrowableObject::ChangeToThrowCollision(bool bCond)
 		
 		ThrowCollision->SetCollisionResponseToAllChannels(ECR_Block);
 		ThrowCollision->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Ignore);
-		ThrowCollision->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+		ThrowCollision->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
 	}
 	else
 	{
@@ -282,7 +282,7 @@ void AThrowableObject::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	if (!Thrown) return;
-
+	
 	FVector Start = GetActorLocation();
 
 	ThrowVelocity.Z += GravityZ * DeltaTime;
@@ -304,8 +304,6 @@ void AThrowableObject::Tick(float DeltaTime)
 	{
 		SetActorLocation(Hit.Location);
 		ThrowableOnComponentHit(ThrowCollision, Hit.GetActor(), Hit.GetComponent(), FVector::ZeroVector, Hit);
-		Thrown = false;
-		return;
 	}
 
 	SetActorLocation(NextPos);

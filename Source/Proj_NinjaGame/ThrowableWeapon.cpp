@@ -52,7 +52,7 @@ void AThrowableWeapon::ThrowObjectLogic(AStealthCharacter* Player)
 	Params.AddIgnoredActor(Player);
 	Params.AddIgnoredActor(this);
 
-	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Camera, Params))
 	{
 		End = Start;
 	}
@@ -86,6 +86,7 @@ void AThrowableWeapon::Drop(AStealthCharacter* Player)
 		ThrownObject->ThrowCollision->SetCanEverAffectNavigation(false);
 		ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 		ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+		ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
 		ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);
 	}
 	if (Player->AmountOfOwnWeapon > 0)

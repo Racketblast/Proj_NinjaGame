@@ -389,7 +389,7 @@ void AStealthCharacter::UpdateProjectilePrediction()
     FCollisionQueryParams ParamsLineTrace;
     ParamsLineTrace.AddIgnoredActor(this);
 
-    if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, EndTrace, ECC_Visibility, ParamsLineTrace))
+    if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, EndTrace, ECC_Camera, ParamsLineTrace))
     {
         EndTrace = Start;
     }
