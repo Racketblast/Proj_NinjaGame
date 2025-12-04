@@ -39,6 +39,24 @@ void ASprinklerSwitch::TurnPowerOnOff()
 	ReduceEnemyHearingRange(bPowerOn);
 
 	SendClosetEnemy();
+
+	// starta timer
+	if (bPowerOn)
+	{
+		//UE_LOG(LogTemp, Error, TEXT("TurnPowerOnOff, start timer"));
+		GetWorld()->GetTimerManager().SetTimer(
+			RetryEnemySendTimer, 
+			this, 
+			&ASprinklerSwitch::RetrySendEnemy, 
+			RetrySendInterval, 
+			true
+		);
+	}
+	else // stoppa timer
+	{
+		//UE_LOG(LogTemp, Error, TEXT("TurnPowerOnOff, stop timer"));
+		GetWorld()->GetTimerManager().ClearTimer(RetryEnemySendTimer);
+	}
 	
 	bPowerOn = !bPowerOn;
 }
@@ -123,6 +141,32 @@ void ASprinklerSwitch::EnemyBeginOverlap(UPrimitiveComponent* OverlappedComponen
 					TurnPowerOnOff();
 				}
 			}
+		}
+	}
+}
+
+
+void ASprinklerSwitch::RetrySendEnemy()
+{
+	// Om den är på igen så stoppa timern
+	if (bPowerOn)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(RetryEnemySendTimer);
+		return;
+	}
+
+	if (!EnemyHandler)
+		return;
+
+	//UE_LOG(LogTemp, Error, TEXT("RetrySendEnemy"));
+	
+	if (AEnemy* Enemy = EnemyHandler->GetClosestEnemyToLocation(GetActorLocation()))
+	{
+		if (AEnemyAIController* AI = Cast<AEnemyAIController>(Enemy->GetController()))
+		{
+			AI->SetCurrentMission(EEnemyMission::Electrical);
+			//Enemy->OnSuspiciousLocation.Broadcast(EnemyHitBox->GetComponentLocation()); 
+			AI->AssignMission(EEnemyMission::Electrical, EnemyHitBox->GetComponentLocation());
 		}
 	}
 }
