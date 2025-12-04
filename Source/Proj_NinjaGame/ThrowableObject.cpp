@@ -314,12 +314,11 @@ void AThrowableObject::Tick(float DeltaTime)
 
 void AThrowableObject::DestroyObject()
 {
+	SetLifeSpan(10);
+	StaticMeshComponent->SetStaticMesh(nullptr);
+	ThrowCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
 	if (ImpactDebris)
 	{
-		StaticMeshComponent->SetStaticMesh(nullptr);
-		ThrowCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
-		SetLifeSpan(10);
-		
 		UGeometryCollectionComponent* GeoComp =
 		NewObject<UGeometryCollectionComponent>(this, UGeometryCollectionComponent::StaticClass());
 
@@ -339,9 +338,5 @@ void AThrowableObject::DestroyObject()
 			GeoComp->SetPerLevelCollisionProfileNames({"None","Debris","Debris"});
 			GeoComp->SetCanEverAffectNavigation(false);
 		}
-	}
-	else
-	{
-		Destroy();
 	}
 }
