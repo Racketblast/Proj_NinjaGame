@@ -15,34 +15,29 @@ AHideSpot::AHideSpot()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	Root = CreateDefaultSubobject<USceneComponent>("Root");
-	SetRootComponent(Root);
-
-	HideMesh = CreateDefaultSubobject<UStaticMeshComponent>("HideMesh");
-	HideMesh->SetupAttachment(Root);
+	HideRoot = CreateDefaultSubobject<USceneComponent>("Root");
+	SetRootComponent(HideRoot);
+	
+	StaticMeshComponent->SetupAttachment(HideRoot);
 
 	// Camera location 
 	CameraPosition = CreateDefaultSubobject<USceneComponent>("CameraPosition");
-	CameraPosition->SetupAttachment(Root);
+	CameraPosition->SetupAttachment(HideRoot);
 
 	// Vart spelaren hamnar efter att dem lämnar hide object
 	ExitPoint = CreateDefaultSubobject<USceneComponent>("ExitPoint"); 
-	ExitPoint->SetupAttachment(Root);
+	ExitPoint->SetupAttachment(HideRoot);
 
 	ExitBox = CreateDefaultSubobject<UBoxComponent>("ExitBox");
 	ExitBox->SetupAttachment(CameraPosition);
 	ExitBox->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Ignore);
-
-	// Collison
-	HideMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	HideMesh->SetCollisionObjectType(ECC_WorldDynamic);
 
 	/*const ECollisionChannel InteractChannel = static_cast<ECollisionChannel>(14);
 	// Sätt Interact kanalen till Block 
 	HideMesh->SetCollisionResponseToChannel(InteractChannel, ECR_Block);
 	HideMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);*/
 
-	HideMesh->SetGenerateOverlapEvents(false);
+	StaticMeshComponent->SetGenerateOverlapEvents(false);
 
 	
 	bOccupied = false;
@@ -55,42 +50,11 @@ void AHideSpot::BeginPlay()
 	InteractText = EnterText;
 }
 
-
-void AHideSpot::ShowInteractable_Implementation(bool bShow)
-{
-	IPlayerUseInterface::ShowInteractable_Implementation(bShow);
-	
-	HideMesh->SetRenderCustomDepth(bShow);
-	TArray<USceneComponent*> SceneChildren;
-	HideMesh->GetChildrenComponents(true, SceneChildren);
-	for (USceneComponent* Child : SceneChildren)
-	{
-		if (UStaticMeshComponent* ChildMesh = Cast<UStaticMeshComponent>(Child))
-		{
-			ChildMesh->SetRenderCustomDepth(bShow);
-		}
-	}
-	
-	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance()))
-	{
-		if (bShow)
-		{
-			GI->CurrentInteractText = InteractText;
-		}
-		else
-		{
-			GI->CurrentInteractText = "";
-		}
-	}
-}
-
 void AHideSpot::Use_Implementation(AStealthCharacter* Player)
 {
-	if (!Player) return;
-	IPlayerUseInterface::Use_Implementation(Player);
+	Super::Use_Implementation(Player);
 	if (bOccupied)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("AHideSpot: exit"));
 		ExitHideSpot();
 		return;
 	}
@@ -107,10 +71,7 @@ void AHideSpot::EnterHideSpot(AStealthCharacter* Player)
 	bOccupied = true;
 	PlayerPawn = Player;
 	InteractText = ExitText;
-	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance()))
-	{
-		GI->CurrentInteractText = InteractText;
-	}
+	Execute_UpdateShowInteractable(this);
 	
 
 	// Stänger av collisions
@@ -174,10 +135,7 @@ void AHideSpot::ExitHideSpot()
 	
 	Player->bIsHiding = false;
 	InteractText = EnterText;
-	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance()))
-	{
-		GI->CurrentInteractText = InteractText;
-	}
+	Execute_UpdateShowInteractable(this);
 
 	// Återställer kameran
 	Player->ResetToNormalCamera();
