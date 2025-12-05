@@ -22,5 +22,5 @@ public:
 	ATargetEnemy();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<AActor*> RunTowardsActors;
+	TArray<class ATargetEnemyExit*> RunTowardsExits;
 };

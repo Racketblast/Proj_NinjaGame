@@ -14,8 +14,15 @@ class PROJ_NINJAGAME_API ATargetAIController : public AEnemyAIController
 {
 	GENERATED_BODY()
 	ATargetAIController();
+	virtual void BeginPlay() override;
 protected:
 	virtual void HandleChasing(float DeltaSeconds) override;
 	virtual void StartChasing() override;
 	virtual void StopChasing() override;
+
+	FVector GetClosetExit();
+	
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	class ATargetEnemy* TargetEnemy;
 };

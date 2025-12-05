@@ -4,12 +4,25 @@
 #include "TargetAIController.h"
 
 #include "Enemy.h"
+#include "NavigationPath.h"
 #include "NavigationSystem.h"
 #include "TargetEnemy.h"
+#include "TargetEnemyExit.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 ATargetAIController::ATargetAIController()
 {
+}
+
+void ATargetAIController::BeginPlay()
+{
+	Super::BeginPlay();
+
+
+	if (ATargetEnemy* Enemy = Cast<ATargetEnemy>(ControlledEnemy))
+	{
+		TargetEnemy = Enemy;
+	}
 }
 
 void ATargetAIController::HandleChasing(float DeltaSeconds)
@@ -28,46 +41,81 @@ void ATargetAIController::StartChasing()
 		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetRunSpeed(); 
 	}
 	
-	if (ATargetEnemy* TargetEnemy = Cast<ATargetEnemy>(ControlledEnemy))
+	if (TargetEnemy)
 	{
-		if (TargetEnemy->RunTowardsActors[0])
+		MoveToLocation(GetClosetExit());
+
+		TArray<AActor*> OverlapActors;
+		ControlledEnemy->GetOverlappingActors(OverlapActors);
+		for (auto OverlapActor : OverlapActors)
 		{
-			FVector GroundedLocation = TargetEnemy->RunTowardsActors[0]->GetActorLocation();
-
-			FHitResult Hit;
-			FCollisionQueryParams Params;
-			Params.AddIgnoredActor(ControlledEnemy);
-
-			FVector TraceStart = TargetEnemy->RunTowardsActors[0]->GetActorLocation() + FVector(0, 0, 200);
-			FVector TraceEnd   = TargetEnemy->RunTowardsActors[0]->GetActorLocation() - FVector(0, 0, 500);
-
-			if (GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, Params))
+			for (auto ExitActor : TargetEnemy->RunTowardsExits)
 			{
-				GroundedLocation = Hit.ImpactPoint;
+				if (ExitActor == Cast<ATargetEnemyExit>(OverlapActor))
+				{
+					
+				}
 			}
-			else
-			{
-				GroundedLocation.Z = ControlledEnemy->GetActorLocation().Z;
-			}
-
-			// Project to NavMesh 
-			FNavLocation Projected;
-			UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
-
-			if (NavSys && NavSys->ProjectPointToNavigation(
-					GroundedLocation,
-					Projected,
-					FVector(ControlledEnemy->HearingRange, ControlledEnemy->HearingRange, ControlledEnemy->HearingRange)  
-				))
-			{
-				GroundedLocation = Projected.Location;
-			}
-			
-			MoveToLocation(GroundedLocation);
 		}
 	}
 }
 
 void ATargetAIController::StopChasing()
 {
+}
+
+FVector ATargetAIController::GetClosetExit()
+{
+	UWorld* World = GetWorld();
+	if (!World) return {};
+
+	UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(World);
+	if (!NavSys) return {};
+
+	// Projektera målpunkten till navmesh
+	FNavLocation ProjectedLocation;
+	if (!NavSys->ProjectPointToNavigation(
+			ControlledEnemy->GetActorLocation(),
+			ProjectedLocation,
+			FVector(200.f, 200.f, 500.f) 
+		))
+	{
+		return {};
+	}
+
+	FVector BestLocation = {};
+	float BestDistance = TNumericLimits<float>::Max();
+
+	if (!TargetEnemy)
+		return{};
+	for (auto Exit : TargetEnemy->RunTowardsExits)
+	{
+		if (!Exit)
+			continue;
+		
+
+		UNavigationPath* NavPath = NavSys->FindPathToLocationSynchronously(
+			World,
+			ProjectedLocation.Location,
+			Exit->GetActorLocation()
+		);
+
+		if (NavPath && NavPath->IsValid() && NavPath->PathPoints.Num() > 1)
+		{
+			float PathLength = 0.f;
+
+			for (int32 i = 1; i < NavPath->PathPoints.Num(); i++)
+			{
+				PathLength += FVector::Dist(NavPath->PathPoints[i - 1], NavPath->PathPoints[i]);
+			}
+
+			if (PathLength < BestDistance)
+			{
+				BestDistance = PathLength;
+				BestLocation = Exit->GetActorLocation();
+			}
+		}
+	}
+	UE_LOG(LogTemp, Warning, TEXT("BestLocation: %s"), *BestLocation.ToString());
+	return BestLocation;
 }

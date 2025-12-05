@@ -141,13 +141,8 @@ void ASprinklerSwitch::EnemyBeginOverlap(UPrimitiveComponent* OverlappedComponen
 			LastSentEnemy = nullptr;
 			if (AI->GetCurrentMission() == EEnemyMission::Sprinkler)
 			{
-				if (bPowerOn)
+				if (!bPowerOn)
 				{
-					//AI->SetCurrentMission(EEnemyMission::Patrol);
-				}
-				else
-				{
-					//AI->SetCurrentMission(EEnemyMission::Patrol);
 					TurnPowerOnOff();
 				}
 			}
@@ -179,9 +174,9 @@ void ASprinklerSwitch::RetrySendEnemy()
 	{
 		if (AEnemyAIController* AI = Cast<AEnemyAIController>(Enemy->GetController()))
 		{
-			AI->SetCurrentMission(EEnemyMission::Electrical);
+			AI->SetCurrentMission(EEnemyMission::Sprinkler);
 			//Enemy->OnSuspiciousLocation.Broadcast(EnemyHitBox->GetComponentLocation()); 
-			AI->AssignMission(EEnemyMission::Electrical, EnemyHitBox->GetComponentLocation());
+			AI->AssignMission(EEnemyMission::Sprinkler, EnemyHitBox->GetComponentLocation());
 		}
 	}
 }
