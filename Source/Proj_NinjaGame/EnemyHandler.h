@@ -32,9 +32,21 @@ public:
 	TArray<AEnemy*> GetTwoClosestEnemies(FVector TargetLocation);
 	
 	AEnemy* GetClosestEnemyToLocation(FVector TargetLocation);
+
+	bool GetAEnemyHasSeenPlayer() const { return bAEnemyHasSeenPlayer; }
+
+	bool GetAreAllEnemiesDead() const { return bAreAllEnemiesDead; }
+
+	bool GetAreAllEnemiesAlive() const { return bAreAllEnemiesDead; }
 	
 protected:
 	bool bEnemySeesPlayer = false; 	// True om minst en fiende jagar spelaren
+
+	bool bAEnemyHasSeenPlayer = false;
+
+	bool bAreAllEnemiesDead = false;
+
+	bool bAreAllEnemiesAlive = false;
 	
 	UPROPERTY()
 	TArray<AActor*> AllEnemies;
