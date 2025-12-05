@@ -152,6 +152,7 @@ protected:
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
 
 	void Die();
+	
 	FTimerHandle TempHandle; // Används i Die funktionen
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Audio")
@@ -188,6 +189,8 @@ protected:
 	float MaxHealth = 3.f;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
 	bool bIsDead = false;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Stats")
+	TSubclassOf<UUserWidget> DeathScreenWidget;
 
 	//Use Variables
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
