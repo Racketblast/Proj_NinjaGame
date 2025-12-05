@@ -79,7 +79,10 @@ void AThrowingMarker::SetGroundMaterial()
 {
 	if (GroundHitMaterial && MarkerMesh->GetMaterial(0) != GroundHitMaterial)
 	{
-		MarkerMesh->SetMaterial(0,GroundHitMaterial);
+		for (int i = 0; i < MarkerMesh->GetNumMaterials(); ++i)
+		{
+			MarkerMesh->SetMaterial(i,GroundHitMaterial);
+		}
 	}
 	if (GroundHitVFX && MarkerVFX->GetAsset() != GroundHitVFX)
 	{
@@ -91,7 +94,10 @@ void AThrowingMarker::SetEnemyMaterial()
 {
 	if (EnemyHitMaterial && MarkerMesh->GetMaterial(0) != EnemyHitMaterial)
 	{
-		MarkerMesh->SetMaterial(0,EnemyHitMaterial);
+		for (int i = 0; i < MarkerMesh->GetNumMaterials(); ++i)
+		{
+			MarkerMesh->SetMaterial(i,EnemyHitMaterial);
+		}
 	}
 	if (EnemyHitVFX && MarkerVFX->GetAsset() != EnemyHitVFX)
 	{
@@ -103,7 +109,10 @@ void AThrowingMarker::SetHeadMaterial()
 {
 	if (HeadHitMaterial && MarkerMesh->GetMaterial(0) != HeadHitMaterial)
 	{
-		MarkerMesh->SetMaterial(0,HeadHitMaterial);
+		for (int i = 0; i < MarkerMesh->GetNumMaterials(); ++i)
+		{
+			MarkerMesh->SetMaterial(i,HeadHitMaterial);
+		}
 	}
 	if (HeadHitVFX && MarkerVFX->GetAsset() != HeadHitVFX)
 	{
