@@ -5,6 +5,7 @@
 
 #include "Enemy.h"
 #include "TargetEnemy.h"
+#include "Blueprint/UserWidget.h"
 #include "Components/BoxComponent.h"
 
 // Sets default values
@@ -20,8 +21,20 @@ ATargetEnemyExit::ATargetEnemyExit()
 	EnemyHitBox->OnComponentBeginOverlap.AddDynamic(this, &ATargetEnemyExit::EnemyBeginOverlap);
 }
 
+void ATargetEnemyExit::PlayerLoses()
+{
+	if (LoseScreen)
+	{
+		if (UUserWidget* LoseWidget = CreateWidget<UUserWidget>(GetWorld(), LoseScreen))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Player loses"));
+			LoseWidget->AddToViewport();
+		}
+	}
+}
+
 void ATargetEnemyExit::EnemyBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+                                         UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (ATargetEnemy* TargetEnemy = Cast<ATargetEnemy>(OtherActor))
 	{
@@ -29,7 +42,7 @@ void ATargetEnemyExit::EnemyBeginOverlap(UPrimitiveComponent* OverlappedComponen
 		{
 			if (AI->GetCurrentState() == EEnemyState::Chasing)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Enemy Got to Exit"));
+				PlayerLoses();
 			}
 		}
 	}

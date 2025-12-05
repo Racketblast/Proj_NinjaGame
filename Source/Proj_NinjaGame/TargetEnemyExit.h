@@ -17,9 +17,16 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	class UBoxComponent* EnemyHitBox;
-	
+
+	UFUNCTION(BlueprintCallable)
+	void PlayerLoses();
+protected:
 	UFUNCTION()
 	void EnemyBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
+	TSubclassOf<UUserWidget> LoseScreen;
+	
 };

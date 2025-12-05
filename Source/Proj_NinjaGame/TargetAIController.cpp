@@ -53,7 +53,7 @@ void ATargetAIController::StartChasing()
 			{
 				if (ExitActor == Cast<ATargetEnemyExit>(OverlapActor))
 				{
-					
+					ExitActor->PlayerLoses();
 				}
 			}
 		}
