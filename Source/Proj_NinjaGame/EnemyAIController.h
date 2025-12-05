@@ -90,6 +90,8 @@ protected:
 	void EndSearch();
 	void OnTargetLost();
 
+	bool bChasingFromExternalOrder = false;
+
 	//Stun
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stun")
 	bool bIsStunned = false;
@@ -174,7 +176,6 @@ private:
 	bool bIsLookingAround = false;
 	bool bIsInvestigatingSound = false;
 	bool bIsMovingToSound = false;
-	bool bChasingFromExternalOrder = false;
 
 	
 	int32 LookAroundCount = 0;

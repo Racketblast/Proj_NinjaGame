@@ -39,9 +39,11 @@ void AMeleeAIController::HandleChasing(float DeltaSeconds)
 		return;
 	}
 
+	//UE_LOG(LogTemp, Warning, TEXT("CHASE TICK: ChasingFromExternalOrder:%d  CanSeePlayer:%d"), bChasingFromExternalOrder, ControlledEnemy->CanSeePlayer());
 	// Kamerans chase
 	if (bChasingFromExternalOrder)
 	{
+
 		// Om vi ser spelaren så byt till normal chase
 		if (ControlledEnemy->CanSeePlayer())
 		{
