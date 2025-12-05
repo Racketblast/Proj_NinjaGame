@@ -1016,7 +1016,8 @@ void AEnemyAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayer
 		ControlledEnemy->bIsChasing = true;
 		LastKnownPlayerLocation = LastSpottedPlayerLocation;
 		ControlledEnemy->SetLastSeenPlayerLocation(LastSpottedPlayerLocation);
-		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetRunSpeed(); 
+		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetRunSpeed();
+		DrawDebugSphere(GetWorld(), LastKnownPlayerLocation, 25.f, 12, FColor::Green, false, 5.f);
 	}
 
 	StopMovement();
@@ -1230,6 +1231,9 @@ void AEnemyAIController::StunEnemy(float Duration, TOptional<EEnemyState> Wanted
 	// Stoppa all movement
 	StopMovement();
 	ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = 0.f; // stannar helt
+	
+	// Lås rotation
+	ControlledEnemy->bRotationLocked = true;
 
 	// Sätt StateAfterStun
 	if (WantedState.IsSet())
@@ -1316,7 +1320,8 @@ void AEnemyAIController::EndStun()
 	{
 		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
 	}
-	
+
+	ControlledEnemy->bRotationLocked = false;
 	CurrentState = StateAfterStun;
 	ControlledEnemy->UpdateStateVFX(CurrentState);
 }

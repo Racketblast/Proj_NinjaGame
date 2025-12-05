@@ -74,6 +74,14 @@ void AMeleeAIController::HandleChasing(float DeltaSeconds)
 		if (!bWithinMeleeRange && bWithinThrowRange && bCannotReach)
 		{
 			StopMovement();
+			// Rotation
+			//StartSmoothRotationTowards(Player->GetActorLocation(), 2.0f);
+			FVector ToPlayer = Player->GetActorLocation() - ControlledEnemy->GetActorLocation();
+			ToPlayer.Z = 0.f;
+			if (!ToPlayer.IsNearlyZero())
+			{
+				ControlledEnemy->SetActorRotation(ToPlayer.Rotation());
+			}
 			
 			//ControlledEnemy->EnemyThrow();
 			if (RangedThrowCooldown > 2.0f)

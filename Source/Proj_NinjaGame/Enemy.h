@@ -223,7 +223,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category="Combat")
 	bool bIsAttacking = false;
 
-
+	UPROPERTY()
+	bool bRotationLocked = false;
+	
 	/* Hearing system */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI|Perception")
 	float HearingRange = 800.f;
