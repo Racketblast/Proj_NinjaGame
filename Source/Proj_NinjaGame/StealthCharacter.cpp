@@ -25,6 +25,7 @@
 #include "SmokeBombWeapon.h"
 #include "ThrowableObject.h"
 #include "ThrowingMarker.h"
+#include "Blueprint/UserWidget.h"
 #include "Components/AudioComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/SplineComponent.h"
@@ -293,8 +294,10 @@ void AStealthCharacter::ChangeWeapon()
 	
 	if (HeldThrowableWeapon->bIsOwnThrowWeapon)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Trying"));
 		if (LastHeldWeapon != nullptr)
 		{
+		UE_LOG(LogTemp, Warning, TEXT("succseed"));
 			EquipThrowWeapon(LastHeldWeapon);
 		}
 	}
@@ -1044,26 +1047,37 @@ void AStealthCharacter::Die()
 		UE_LOG(LogTemp, Warning, TEXT("Player died!"));
 		bIsDead = true;
 
-		GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
+		if (DeathScreenWidget)
 		{
-			GetWorld()->GetTimerManager().SetTimer(
-				TempHandle,
-				[this]() {
-					// Säkerhetsstopp innan leveln laddas om, hade en krasch tidigare så lade till detta för att stoppa kraschen. 
-					for (TActorIterator<AAIController> It(GetWorld()); It; ++It)
-					{
-						if (AAIController* AICon = *It)
+			if (UUserWidget* ExitWidget = CreateWidget<UUserWidget>(GetWorld(), DeathScreenWidget))
+			{
+				ExitWidget->AddToViewport();
+			}
+		}
+		else
+		{
+			GetWorld()->GetTimerManager().SetTimerForNextTick([this]()
+			{
+				GetWorld()->GetTimerManager().SetTimer(
+					TempHandle,
+					[this]() {
+						// Säkerhetsstopp innan leveln laddas om, hade en krasch tidigare så lade till detta för att stoppa kraschen. 
+						for (TActorIterator<AAIController> It(GetWorld()); It; ++It)
 						{
-							AICon->StopMovement();
-							AICon->GetPathFollowingComponent()->OnRequestFinished.RemoveAll(AICon);
-							AICon->GetWorldTimerManager().ClearAllTimersForObject(AICon);
-							AICon->UnPossess();
+							if (AAIController* AICon = *It)
+							{
+								AICon->StopMovement();
+								AICon->GetPathFollowingComponent()->OnRequestFinished.RemoveAll(AICon);
+								AICon->GetWorldTimerManager().ClearAllTimersForObject(AICon);
+								AICon->UnPossess();
+							}
 						}
-					}
-					UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), true);
-				},
-				0.2f, false);
-		});
+						UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), true);
+					},
+					0.2f, false);
+			});
+		}
+		
 	}
 }
 
