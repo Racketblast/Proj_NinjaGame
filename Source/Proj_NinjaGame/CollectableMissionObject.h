@@ -39,4 +39,12 @@ protected:
 	float GetDistanceMoved() const;
 public:
 	virtual void Tick(float DeltaTime) override;
+	
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE class AMissionHandler* GetMissionHandler() const { return MissionHandler; }
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE void SetMissionHandler(AMissionHandler* NewMissionHandler) { MissionHandler = NewMissionHandler; }
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	AMissionHandler* MissionHandler;
 };

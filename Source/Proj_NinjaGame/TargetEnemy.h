@@ -23,4 +23,13 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<class ATargetEnemyExit*> RunTowardsExits;
+
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE class AMissionHandler* GetMissionHandler() const { return MissionHandler; }
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE void SetMissionHandler(AMissionHandler* NewMissionHandler) { MissionHandler = NewMissionHandler; }
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	AMissionHandler* MissionHandler;
+	virtual void Die() override;
 };

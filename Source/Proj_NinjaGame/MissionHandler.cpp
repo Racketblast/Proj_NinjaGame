@@ -3,7 +3,10 @@
 
 #include "MissionHandler.h"
 
+#include "CollectableMissionObject.h"
 #include "EnemyHandler.h"
+#include "StealthCharacter.h"
+#include "TargetEnemy.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -23,6 +26,7 @@ void AMissionHandler::BeginPlay()
 	GetWorld(), AEnemyHandler::StaticClass()
 	));
 	
+	SetupMissionObjectives();
 }
 
 // Called every frame
@@ -32,6 +36,38 @@ void AMissionHandler::Tick(float DeltaTime)
 
 }
 
+void AMissionHandler::SetupMissionObjectives()
+{
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATargetEnemy::StaticClass(), AllTargets);
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACollectableMissionObject::StaticClass(), AllMissionObjects);
+
+	for (auto Target : AllTargets)
+	{
+		if (ATargetEnemy* TargetEnemy = Cast<ATargetEnemy>(Target))
+		{
+			TargetEnemy->SetMissionHandler(this);
+			TotalTargetsToKill++;
+		}
+	}
+	
+	for (auto Objects : AllMissionObjects)
+	{
+		if (ACollectableMissionObject* CollectableObject = Cast<ACollectableMissionObject>(Objects))
+		{
+			CollectableObject->SetMissionHandler(this);
+			TotalObjectsToSteal++;
+		}
+	}
+
+	if (TargetsToKill < 0)
+	{
+		TargetsToKill = TotalTargetsToKill;
+	}
+	if (ObjectsToSteal < 0)
+	{
+		ObjectsToSteal = TotalObjectsToSteal;
+	}
+}
 
 // Kalla funktionen när spelaren har klarat missionet 
 float AMissionHandler::CalculateScore(float TimeTaken)
@@ -109,4 +145,27 @@ void AMissionHandler::AddStealthKillScore()
 
 	CurrentScore += StealthKillScoreValue;
 	UE_LOG(LogTemp, Log, TEXT("Stealth kill! +%d score. Current total: %d"), StealthKillScoreValue, CurrentScore);
+}
+
+void AMissionHandler::RemoveObjectiveFromTotal(AActor* ThisObject)
+{
+	if (Cast<ATargetEnemy>(ThisObject))
+	{
+		TargetsKilled++;
+		AllTargets.Remove(ThisObject);
+	}
+	else if (Cast<ACollectableMissionObject>(ThisObject))
+	{
+		ObjectsStolen++;
+		AllMissionObjects.Remove(ThisObject);
+	}
+
+	//Player did everything
+	if (TargetsKilled >= TargetsToKill && ObjectsStolen >= ObjectsToSteal)
+	{
+		if (AStealthCharacter* Player = Cast<AStealthCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+		{
+			Player->bHasCompletedTheMission = true;
+		}
+	}
 }

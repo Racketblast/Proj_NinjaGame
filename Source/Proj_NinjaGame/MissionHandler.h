@@ -46,7 +46,25 @@ protected:
 
 	int32 CalculateTimeBonus(float TimeTaken) const;
 	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Objective")
+	TArray<AActor*> AllTargets;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Objective")
+	TArray<AActor*> AllMissionObjects;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Objective")
+	int TotalTargetsToKill;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Objective")
+	int TargetsToKill = -1;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Objective")
+	int TargetsKilled = 0;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Objective")
+	int TotalObjectsToSteal;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Objective")
+	int ObjectsToSteal = -1;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Objective")
+	int ObjectsStolen = 0;
 
+	void SetupMissionObjectives();
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -55,4 +73,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Scoring")
 	void AddStealthKillScore();
+
+	UFUNCTION(BlueprintCallable, Category="Objective")
+	void RemoveObjectiveFromTotal(AActor* ThisObject);
 };
+
+

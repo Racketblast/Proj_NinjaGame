@@ -3,6 +3,7 @@
 
 #include "CollectableMissionObject.h"
 
+#include "MissionHandler.h"
 #include "StealthCharacter.h"
 
 ACollectableMissionObject::ACollectableMissionObject()
@@ -13,7 +14,15 @@ void ACollectableMissionObject::Use_Implementation(class AStealthCharacter* Play
 {
 	Super::Use_Implementation(Player);
 
-	Player->bHasCompletedTheMission = true;
+	if (MissionHandler)
+	{
+		MissionHandler->RemoveObjectiveFromTotal(this);
+	}
+	else
+	{
+		Player->bHasCompletedTheMission = true;
+	}
+	
 	Destroy();
 }
 

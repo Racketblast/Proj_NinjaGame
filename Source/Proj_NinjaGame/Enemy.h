@@ -66,7 +66,7 @@ protected:
 
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 
-	void Die();
+	virtual void Die();
 
 	UPROPERTY(BlueprintReadWrite)
 	class AEnemyHandler* EnemyHandler;
