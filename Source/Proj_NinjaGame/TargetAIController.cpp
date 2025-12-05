@@ -67,3 +67,7 @@ void ATargetAIController::StartChasing()
 		}
 	}
 }
+
+void ATargetAIController::StopChasing()
+{
+}
