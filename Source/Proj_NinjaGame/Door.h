@@ -97,6 +97,9 @@ protected:
 	// VFX
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="VFX")
 	UNiagaraComponent* StateVFXComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="VFX")
+	UNiagaraComponent* StateVFXComponentTwo;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="VFX")
 	UNiagaraSystem* LockedVFX;
