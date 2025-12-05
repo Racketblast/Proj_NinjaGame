@@ -22,6 +22,7 @@
 #include "ThrowableWeapon.h"
 #include "Components/BoxComponent.h"
 #include "MeleeEnemy.h"
+#include "SecurityCamera.h"
 #include "SmokeBombWeapon.h"
 #include "ThrowableObject.h"
 #include "ThrowingMarker.h"
@@ -507,6 +508,10 @@ void AStealthCharacter::UpdateProjectilePrediction()
         			SpawnedMarker->SetEnemyMaterial();
         		}
         	}
+	        else if (Cast<ASecurityCamera>(PredictedHit.GetActor()))
+	        {
+	        	SpawnedMarker->SetHeadMaterial();
+	        }
         	else
         	{
         		SpawnedMarker->SetGroundMaterial();
