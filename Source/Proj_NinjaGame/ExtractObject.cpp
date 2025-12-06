@@ -27,6 +27,7 @@ void AExtractObject::Use_Implementation(class AStealthCharacter* Player)
 		{
 			if (MissionHandler) 
 			{
+				//UE_LOG(LogTemp, Error, TEXT("AExtractObject: CalculateScore!"));
 				//MissionHandler->SetMissionTimerActive(false);
 				MissionHandler->CalculateScore(MissionHandler->GetMissionTimeElapsed());
 			}
