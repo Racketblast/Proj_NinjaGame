@@ -7,6 +7,8 @@
 #include "GameFramework/Actor.h"
 #include "EnemyHandler.generated.h"
 
+class AMissionHandler;
+
 UCLASS()
 class PROJ_NINJAGAME_API AEnemyHandler : public AActor
 {
@@ -42,6 +44,8 @@ public:
 protected:
 	bool bEnemySeesPlayer = false; 	// True om minst en fiende jagar spelaren
 
+	bool bAnyAlert = false;
+
 	bool bAreAllEnemiesDead = false;
 
 	bool bAreAllEnemiesAlive = true;
@@ -52,6 +56,9 @@ protected:
 	TArray<AActor*> AllEnemies;
 	UPROPERTY()
 	TArray<AActor*> AllSecurityCameras;
+
+	UPROPERTY()
+	AMissionHandler* MissionHandler = nullptr;
 	
 	void UpdateEnemyStates();
 };

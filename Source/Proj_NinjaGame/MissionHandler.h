@@ -108,6 +108,9 @@ public:
 	int32 GetStealthKills() const { return StealthKills; }
 
 	UFUNCTION(BlueprintCallable, Category="Scoring")
+	FString FormatTime(float TimeTaken) const;
+
+	UFUNCTION(BlueprintCallable, Category="Scoring")
 	void AddStealthKillScore();
 
 	UFUNCTION(BlueprintCallable, Category="Objective")

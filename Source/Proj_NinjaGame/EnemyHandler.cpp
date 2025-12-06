@@ -3,6 +3,7 @@
 
 #include "EnemyHandler.h"
 #include "MeleeEnemy.h"
+#include "MissionHandler.h"
 #include "Kismet/GameplayStatics.h"
 #include "MeleeAIController.h"
 #include "NavigationPath.h"
@@ -41,6 +42,16 @@ void AEnemyHandler::BeginPlay()
 	}
 	
 	UE_LOG(LogTemp, Warning, TEXT("EnemyHandler found %d enemies"), AllEnemies.Num());
+
+	
+	MissionHandler = Cast<AMissionHandler>(
+		UGameplayStatics::GetActorOfClass(GetWorld(), AMissionHandler::StaticClass())
+	);
+
+	if (!MissionHandler)
+	{
+		UE_LOG(LogTemp, Error, TEXT("EnemyHandler: Could not find MissionHandler!"));
+	}
 }
 
 void AEnemyHandler::Tick(float DeltaSeconds)
@@ -57,7 +68,17 @@ void AEnemyHandler::RemoveEnemy(AActor* EnemyRemoved)
 		AllEnemies.Remove(EnemyRemoved);
 		bAreAllEnemiesAlive = false;
 		bAreAllEnemiesDead = (AllEnemies.Num() == 0);
-	}
+
+		if (!bEnemySeesPlayer && !bAnyAlert)
+		{
+			if (MissionHandler)
+			{
+				MissionHandler->AddStealthKillScore();
+
+				UE_LOG(LogTemp, Warning, TEXT("EnemyHandler: Stealth kill detected! Calling AddStealthKillScore()"));
+			}
+		}
+	} 
 }
 
 void AEnemyHandler::RemoveCamera(AActor* CameraRemoved)
@@ -68,11 +89,13 @@ void AEnemyHandler::RemoveCamera(AActor* CameraRemoved)
 	}
 }
 
+
 void AEnemyHandler::UpdateEnemyStates()
 {
 	bool bAnyChasing = false;
+	bool bAnyAlertLocal = false;
 
-	// Går igenom alla fiender för att se om någon ut av dem är i Chasing State
+	// Går igenom alla fiender för att se om någon ut av dem är i Chasing State eller Alert state
 	for (AActor* EnemyActor : AllEnemies)
 	{
 		AEnemy* Enemy = Cast<AEnemy>(EnemyActor);
@@ -81,14 +104,19 @@ void AEnemyHandler::UpdateEnemyStates()
 		AEnemyAIController* AICon = Cast<AEnemyAIController>(Enemy->GetController());
 		if (!AICon) continue;
 
-		if (AICon->GetCurrentState() == EEnemyState::Chasing)
+		EEnemyState CurrentState = AICon->GetCurrentState();
+
+		if (CurrentState == EEnemyState::Chasing)
 		{
 			bAnyChasing = true;
-			break;
+		}
+
+		if (CurrentState == EEnemyState::Alert)
+		{
+			bAnyAlertLocal = true;
 		}
 	}
-
-	//Debug
+	
 	if (bEnemySeesPlayer != bAnyChasing)
 	{
 		bEnemySeesPlayer = bAnyChasing;
@@ -103,9 +131,15 @@ void AEnemyHandler::UpdateEnemyStates()
 			UE_LOG(LogTemp, Warning, TEXT("EnemyHandler: A enemy sees player: FALSE"));
 		}
 	}
+	
+	bAnyAlert = bAnyAlertLocal;
 
 	bEnemySeesPlayer = bAnyChasing;
+	
+	// Debug
+	//UE_LOG(LogTemp, Log, TEXT("EnemyHandler: Alert=%s | Chasing=%s"), bAnyAlert ? TEXT("TRUE") : TEXT("FALSE"), bEnemySeesPlayer ? TEXT("TRUE") : TEXT("FALSE"));
 }
+
 
 
 AEnemy* AEnemyHandler::GetClosestEnemyToLocation(FVector TargetLocation)

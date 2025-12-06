@@ -4,7 +4,6 @@
 #include "MissionHandler.h"
 
 #include "CollectableMissionObject.h"
-#include "EnemyHandler.h"
 #include "StealthCharacter.h"
 #include "TargetEnemy.h"
 #include "Kismet/GameplayStatics.h"
@@ -19,9 +18,7 @@ void AMissionHandler::BeginPlay()
 {
 	Super::BeginPlay();
 
-	EnemyHandler = Cast<AEnemyHandler>(UGameplayStatics::GetActorOfClass(
-	GetWorld(), AEnemyHandler::StaticClass()
-	));
+	EnemyHandler = Cast<AEnemyHandler>(UGameplayStatics::GetActorOfClass( GetWorld(), AEnemyHandler::StaticClass() ));
 	
 	SetupMissionObjectives();
 
@@ -219,6 +216,27 @@ void AMissionHandler::SetMissionTimerActive(bool bActive)
 	else
 	{
 		bMissionTimerActive = false;
+	}
+}
+
+FString AMissionHandler::FormatTime(float TimeTaken) const
+{
+	// Runda ned till hela sekunder
+	int32 TotalSeconds = FMath::FloorToInt(TimeTaken);
+
+	// Plocka ut timmar, minuter, sekunder
+	int32 Hours = TotalSeconds / 3600;
+	int32 Minutes = (TotalSeconds % 3600) / 60;
+	int32 Seconds = TotalSeconds % 60;
+
+	// Bygg strängen
+	if (Hours > 0)
+	{
+		return FString::Printf(TEXT("%02d:%02d:%02d"), Hours, Minutes, Seconds);
+	}
+	else
+	{
+		return FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
 	}
 }
 
