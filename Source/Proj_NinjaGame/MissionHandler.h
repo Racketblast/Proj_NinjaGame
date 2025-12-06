@@ -36,7 +36,7 @@ protected:
 	int32 BaseTimeBonus = 10000;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scoring|Time")
-	int32 PenaltyPerMinute = 1000;
+	float PenaltyPerSecond = 1.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scoring|Time")
 	int32 MinimumTimeBonus = 1000;

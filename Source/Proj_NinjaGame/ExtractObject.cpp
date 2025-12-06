@@ -7,6 +7,7 @@
 #include "MissionHandler.h"
 #include "StealthCharacter.h"
 #include "Blueprint/UserWidget.h"
+#include "Kismet/GameplayStatics.h"
 
 AExtractObject::AExtractObject()
 {
@@ -53,4 +54,11 @@ void AExtractObject::Use_Implementation(class AStealthCharacter* Player)
 void AExtractObject::BeginPlay()
 {
 	Super::BeginPlay();
+
+	MissionHandler = Cast<AMissionHandler>(UGameplayStatics::GetActorOfClass(GetWorld(), AMissionHandler::StaticClass()));
+
+	if (!MissionHandler)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AExtractObject: Could not find MissionHandler!"));
+	}
 }

@@ -99,6 +99,7 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 	{
 		if (!Player->bHasCompletedTheMission)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("CalculateScore: bHasCompletedTheMission is false"));
 			return Score;
 		}
 	}
@@ -170,26 +171,24 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 	return FinalScore;
 }
 
-
 int32 AMissionHandler::CalculateTimeBonus(float TimeTaken) const
 {
-	// full bonus
+	// Full bonus om man ligger under eller exakt på threshold
 	if (TimeTaken <= TimeThresholdSeconds)
 	{
 		return BaseTimeBonus;
 	}
 
-	// Hur många hela minuter över threshold
-	float TimeOverSeconds = TimeTaken - TimeThresholdSeconds;
-	int32 MinutesOver = TimeOverSeconds / 60.f; // FMath::FloorToInt(TimeOverSeconds / 60.f);
+	float SecondsOver = TimeTaken - TimeThresholdSeconds;
 
-	int32 Penalty = MinutesOver * PenaltyPerMinute;
+	// penalty per sekund 
+	int32 Penalty = SecondsOver * PenaltyPerSecond;
 
 	int32 FinalBonus = BaseTimeBonus - Penalty;
-
+	
 	// Se till att bonus aldrig går under minvärdet
 	FinalBonus = FMath::Max(FinalBonus, MinimumTimeBonus);
-	
+
 	return FinalBonus;
 }
 

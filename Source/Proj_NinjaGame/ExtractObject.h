@@ -6,9 +6,8 @@
 #include "InteractableObject.h"
 #include "ExtractObject.generated.h"
 
-/**
- * 
- */
+class AMissionHandler;
+
 UCLASS()
 class PROJ_NINJAGAME_API AExtractObject : public AInteractableObject
 {
@@ -25,8 +24,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interact")
 	class AEnemyHandler* EnemyHandler;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interact")
-	class AMissionHandler* MissionHandler;
+	UPROPERTY()
+	AMissionHandler* MissionHandler = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
 	TSubclassOf<UUserWidget> ExitWidgetClass;
