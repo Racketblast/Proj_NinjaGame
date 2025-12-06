@@ -39,9 +39,11 @@ void AMeleeAIController::HandleChasing(float DeltaSeconds)
 		return;
 	}
 
+	//UE_LOG(LogTemp, Warning, TEXT("CHASE TICK: ChasingFromExternalOrder:%d  CanSeePlayer:%d"), bChasingFromExternalOrder, ControlledEnemy->CanSeePlayer());
 	// Kamerans chase
 	if (bChasingFromExternalOrder)
 	{
+
 		// Om vi ser spelaren så byt till normal chase
 		if (ControlledEnemy->CanSeePlayer())
 		{
@@ -74,6 +76,14 @@ void AMeleeAIController::HandleChasing(float DeltaSeconds)
 		if (!bWithinMeleeRange && bWithinThrowRange && bCannotReach)
 		{
 			StopMovement();
+			// Rotation
+			//StartSmoothRotationTowards(Player->GetActorLocation(), 2.0f);
+			FVector ToPlayer = Player->GetActorLocation() - ControlledEnemy->GetActorLocation();
+			ToPlayer.Z = 0.f;
+			if (!ToPlayer.IsNearlyZero())
+			{
+				ControlledEnemy->SetActorRotation(ToPlayer.Rotation());
+			}
 			
 			//ControlledEnemy->EnemyThrow();
 			if (RangedThrowCooldown > 2.0f)

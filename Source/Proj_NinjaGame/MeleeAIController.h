@@ -46,6 +46,6 @@ private:
 	FTimerHandle StartPatrolTimerHandle;
 	FTimerHandle BackOffTimerHandle;
 	FVector LastKnownPlayerLocation;
-	bool bChasingFromExternalOrder = false;
+	//bool bChasingFromExternalOrder = false;
 	float RangedThrowCooldown = 0;
 };

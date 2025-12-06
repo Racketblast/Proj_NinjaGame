@@ -4,6 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
+#include "EditorCategoryUtils.h"
 #include "EnemyHandler.h"
 #include "MeleeAIController.h"
 #include "StealthCharacter.h"
@@ -75,6 +76,11 @@ void AEnemy::BeginPlay()
 
 void AEnemy::FaceRotation(FRotator NewRotation, float DeltaTime)
 {
+	if (bRotationLocked) // För stunen
+	{
+		return;
+	}
+	
 	FVector Vel = GetVelocity();
 	Vel.Z = 0;
 
@@ -268,8 +274,8 @@ void AEnemy::CheckPlayerVisibility()
 	ToPlayer.Normalize();
 
 	// Skillnad mellan patrull och chase läge 
-	float EffectiveVisionRange = bIsChasing ? VisionRange : VisionRange * 0.8f; // var tidigare 0.6
-	float EffectiveVisionAngle = bIsChasing ? VisionAngle : VisionAngle * 0.8f; // var tidigare 0.5
+	float EffectiveVisionRange = bIsChasing ? VisionRange : VisionRange * 0.6f; 
+	float EffectiveVisionAngle = bIsChasing ? VisionAngle * 1.5f : VisionAngle * 0.5f; 
 
 	// Rita debug för fiendens synfält, alltså konerna
 	if (!bIsChasing && bVisionDebug)
@@ -458,6 +464,14 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Enemy hit by player and survived, Enemy spotted player!"));
 				bCanSeePlayer = true;     
+			}
+			if (DamageCauser && !DamageCauser->IsA(AStealthCharacter::StaticClass()))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Enemy hit by throwing object and survived, Enemy spotted player!"));
+				if (AEnemyAIController* AI = Cast<AEnemyAIController>(GetController()))
+				{
+					AI->StartChasingFromExternalOrder(PlayerPawn->GetActorLocation());
+				}
 			}
 		}
 
