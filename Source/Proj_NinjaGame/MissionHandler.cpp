@@ -67,6 +67,15 @@ void AMissionHandler::SetupMissionObjectives()
 	{
 		ObjectsToSteal = TotalObjectsToSteal;
 	}
+
+	//Failsafe if there is no objective
+	if (TargetsToKill <= 0 && ObjectsToSteal <= 0)
+	{
+		if (AStealthCharacter* Player = Cast<AStealthCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+		{
+			Player->bHasCompletedTheMission = true;
+		}
+	}
 }
 
 // Kalla funktionen när spelaren har klarat missionet 
