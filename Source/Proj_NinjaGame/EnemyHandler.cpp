@@ -55,6 +55,8 @@ void AEnemyHandler::RemoveEnemy(AActor* EnemyRemoved)
 	if (AllEnemies.Contains(EnemyRemoved))
 	{
 		AllEnemies.Remove(EnemyRemoved);
+		bAreAllEnemiesAlive = false;
+		bAreAllEnemiesDead = (AllEnemies.Num() == 0);
 	}
 }
 
@@ -93,6 +95,7 @@ void AEnemyHandler::UpdateEnemyStates()
 
 		if (bEnemySeesPlayer)
 		{
+			AmountOfTimesSpottet++;
 			UE_LOG(LogTemp, Warning, TEXT("EnemyHandler: A enemy sees player: TRUE"));
 		}
 		else

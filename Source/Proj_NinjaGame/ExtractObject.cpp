@@ -4,6 +4,7 @@
 #include "ExtractObject.h"
 
 #include "EnemyHandler.h"
+#include "MissionHandler.h"
 #include "StealthCharacter.h"
 #include "Blueprint/UserWidget.h"
 
@@ -23,6 +24,11 @@ void AExtractObject::Use_Implementation(class AStealthCharacter* Player)
 	{
 		if (!EnemyHandler->GetEnemySeesPlayer())
 		{
+			if (MissionHandler) 
+			{
+				//MissionHandler->SetMissionTimerActive(false);
+				MissionHandler->CalculateScore(MissionHandler->GetMissionTimeElapsed());
+			}
 			if (ExitWidgetClass)
 			{
 				if (UUserWidget* ExitWidget = CreateWidget<UUserWidget>(GetWorld(), ExitWidgetClass))

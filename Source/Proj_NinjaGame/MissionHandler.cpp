@@ -9,15 +9,12 @@
 #include "TargetEnemy.h"
 #include "Kismet/GameplayStatics.h"
 
-// Sets default values
+
 AMissionHandler::AMissionHandler()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
 }
 
-// Called when the game starts or when spawned
 void AMissionHandler::BeginPlay()
 {
 	Super::BeginPlay();
@@ -27,13 +24,31 @@ void AMissionHandler::BeginPlay()
 	));
 	
 	SetupMissionObjectives();
+
+	bMissionTimerActive = true;
+	MissionTimeElapsed = 0.0f;
 }
 
-// Called every frame
 void AMissionHandler::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (bMissionTimerActive)
+	{
+		MissionTimeElapsed += DeltaTime;
+	}
+
+	// Debug
+	if (GEngine)
+	{
+		// Tid debug, så att den är på skärmen
+		GEngine->AddOnScreenDebugMessage(
+			2,						
+			0.0f,					
+			FColor::Cyan,			
+			FString::Printf(TEXT("Mission Time: %.2f"), MissionTimeElapsed)
+		);
+	}
 }
 
 void AMissionHandler::SetupMissionObjectives()
@@ -81,15 +96,34 @@ void AMissionHandler::SetupMissionObjectives()
 // Kalla funktionen när spelaren har klarat missionet 
 float AMissionHandler::CalculateScore(float TimeTaken)
 {
-	//Lite start score, kanske för att man klara av missionet
-	float Score = 1000;
+	float Score = 0.0f;
+	
+	if (AStealthCharacter* Player = Cast<AStealthCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+	{
+		if (!Player->bHasCompletedTheMission)
+		{
+			return Score;
+		}
+	}
+
+	SetMissionTimerActive(false); // borde antagligen sätta precis innan CalculateScore kallas, men vet inte ännu vart jag borde göra det
+
+	//Lite start score för att man klara av missionet
+	Score += 5000;
 	
 	float ScoreMultiplier = 1.0f;
 
-	Score += CurrentScore;
+	Score += StealthKillScore;
 
 	// Lägg till tidsbonus
 	Score += CalculateTimeBonus(TimeTaken);
+
+	TimeScoreBonus = CalculateTimeBonus(TimeTaken);
+
+	UE_LOG(LogTemp, Warning, TEXT("MISSION SCORE DEBUG START"));
+	UE_LOG(LogTemp, Warning, TEXT("Mission Complete Score: %f"), Score - StealthKillScore - CalculateTimeBonus(TimeTaken));
+	UE_LOG(LogTemp, Warning, TEXT("StealthKillScoreValue Added: %i"), StealthKillScore);
+	UE_LOG(LogTemp, Warning, TEXT("Time Bonus: %i (TimeTaken: %f sec)"), CalculateTimeBonus(TimeTaken), TimeTaken);
 
 	if (!EnemyHandler)
 	{
@@ -97,25 +131,44 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 		return FinalScore = Score *= ScoreMultiplier;
 	}
 
-	//  ifall man inte blev sedd
-	if (!EnemyHandler->GetAEnemyHasSeenPlayer())
+	TimesSpotted = EnemyHandler->GetAmountOfTimesSpottet();
+	// ifall man inte blev sedd
+	if (TimesSpotted == 0)
 	{
 		Score += 5000;
+		TimesSpottedScore = 5000;
+		UE_LOG(LogTemp, Warning, TEXT("Player was never spotted: +5000"));
+	}
+	else
+	{
+		TimesSpottedScore -= TimesSpotted * 100;
+		Score -= TimesSpottedScore;
+		UE_LOG(LogTemp, Warning, TEXT("Player spotted %d times: -%f"), TimesSpotted, TimesSpottedScore);
 	}
 
 	// ifall man dödade alla fiender
 	if (EnemyHandler->GetAreAllEnemiesDead())
 	{
 		ScoreMultiplier += 1;
+		bKilledAllOrNoEnemies = true;
+		UE_LOG(LogTemp, Warning, TEXT("All enemies dead: ScoreMultiplier +1"));
 	}
 
 	// ifall inga fiender har dött
 	if (EnemyHandler->GetAreAllEnemiesAlive())
 	{
 		ScoreMultiplier += 1;
+		bKilledAllOrNoEnemies = true;
+		UE_LOG(LogTemp, Warning, TEXT("All enemies alive: ScoreMultiplier +1"));
 	}
 
+	UE_LOG(LogTemp, Warning, TEXT("Final Score before multiplier: %f"), Score);
+	
 	FinalScore = Score *= ScoreMultiplier;
+	
+	UE_LOG(LogTemp, Warning, TEXT("Score Multiplier: %f"), ScoreMultiplier);
+	UE_LOG(LogTemp, Warning, TEXT("Final Score: %f"), FinalScore);
+	UE_LOG(LogTemp, Warning, TEXT("MISSION SCORE DEBUG END"));
 	
 	return FinalScore;
 }
@@ -139,7 +192,7 @@ int32 AMissionHandler::CalculateTimeBonus(float TimeTaken) const
 
 	// Se till att bonus aldrig går under minvärdet
 	FinalBonus = FMath::Max(FinalBonus, MinimumTimeBonus);
-
+	
 	return FinalBonus;
 }
 
@@ -152,8 +205,21 @@ void AMissionHandler::AddStealthKillScore()
 		return;
 	}
 
-	CurrentScore += StealthKillScoreValue;
-	UE_LOG(LogTemp, Log, TEXT("Stealth kill! +%d score. Current total: %d"), StealthKillScoreValue, CurrentScore);
+	StealthKills++;
+	StealthKillScore += StealthKillScoreValue;
+	UE_LOG(LogTemp, Log, TEXT("Stealth kill number %d! +%d score. Current total: %d"), StealthKills, StealthKillScoreValue, StealthKillScore);
+}
+
+void AMissionHandler::SetMissionTimerActive(bool bActive)
+{
+	if (bActive)
+	{
+		bMissionTimerActive = true;
+	}
+	else
+	{
+		bMissionTimerActive = false;
+	}
 }
 
 void AMissionHandler::RemoveObjectiveFromTotal(AActor* ThisObject)

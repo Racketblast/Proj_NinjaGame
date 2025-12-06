@@ -33,20 +33,20 @@ public:
 	
 	AEnemy* GetClosestEnemyToLocation(FVector TargetLocation);
 
-	bool GetAEnemyHasSeenPlayer() const { return bAEnemyHasSeenPlayer; }
-
 	bool GetAreAllEnemiesDead() const { return bAreAllEnemiesDead; }
 
-	bool GetAreAllEnemiesAlive() const { return bAreAllEnemiesDead; }
+	bool GetAreAllEnemiesAlive() const { return bAreAllEnemiesAlive; }
+
+	int32 GetAmountOfTimesSpottet() const { return AmountOfTimesSpottet; }
 	
 protected:
 	bool bEnemySeesPlayer = false; 	// True om minst en fiende jagar spelaren
 
-	bool bAEnemyHasSeenPlayer = false;
-
 	bool bAreAllEnemiesDead = false;
 
-	bool bAreAllEnemiesAlive = false;
+	bool bAreAllEnemiesAlive = true;
+
+	int32 AmountOfTimesSpottet = 0; 
 	
 	UPROPERTY()
 	TArray<AActor*> AllEnemies;

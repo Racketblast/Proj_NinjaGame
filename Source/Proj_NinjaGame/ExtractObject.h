@@ -25,6 +25,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interact")
 	class AEnemyHandler* EnemyHandler;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interact")
+	class AMissionHandler* MissionHandler;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
 	TSubclassOf<UUserWidget> ExitWidgetClass;
 };
