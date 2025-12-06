@@ -116,7 +116,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Objective")
 	void RemoveObjectiveFromTotal(AActor* ThisObject);
 
+	UFUNCTION(BlueprintCallable, Category="Scoring")
 	float CalculateScore(float TimeTaken);
+
+	UFUNCTION(BlueprintCallable, Category="Scoring")
 	void SetMissionTimerActive(bool bActive); 
 };
 

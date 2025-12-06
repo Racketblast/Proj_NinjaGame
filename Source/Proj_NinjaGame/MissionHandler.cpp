@@ -36,7 +36,7 @@ void AMissionHandler::Tick(float DeltaTime)
 	}
 
 	// Debug
-	if (GEngine)
+	/*if (GEngine)
 	{
 		// Tid debug, så att den är på skärmen
 		GEngine->AddOnScreenDebugMessage(
@@ -45,7 +45,7 @@ void AMissionHandler::Tick(float DeltaTime)
 			FColor::Cyan,			
 			FString::Printf(TEXT("Mission Time: %.2f"), MissionTimeElapsed)
 		);
-	}
+	}*/
 }
 
 void AMissionHandler::SetupMissionObjectives()
@@ -104,7 +104,7 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 		}
 	}
 
-	SetMissionTimerActive(false); // borde antagligen sätta precis innan CalculateScore kallas, men vet inte ännu vart jag borde göra det
+	//SetMissionTimerActive(false); 
 
 	//Lite start score för att man klara av missionet
 	Score += 5000;

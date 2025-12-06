@@ -4,7 +4,6 @@
 #include "ExtractObject.h"
 
 #include "EnemyHandler.h"
-#include "MissionHandler.h"
 #include "StealthCharacter.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
@@ -25,12 +24,6 @@ void AExtractObject::Use_Implementation(class AStealthCharacter* Player)
 	{
 		if (!EnemyHandler->GetEnemySeesPlayer())
 		{
-			if (MissionHandler) 
-			{
-				//UE_LOG(LogTemp, Error, TEXT("AExtractObject: CalculateScore!"));
-				//MissionHandler->SetMissionTimerActive(false);
-				MissionHandler->CalculateScore(MissionHandler->GetMissionTimeElapsed());
-			}
 			if (ExitWidgetClass)
 			{
 				if (UUserWidget* ExitWidget = CreateWidget<UUserWidget>(GetWorld(), ExitWidgetClass))
@@ -55,11 +48,4 @@ void AExtractObject::Use_Implementation(class AStealthCharacter* Player)
 void AExtractObject::BeginPlay()
 {
 	Super::BeginPlay();
-
-	MissionHandler = Cast<AMissionHandler>(UGameplayStatics::GetActorOfClass(GetWorld(), AMissionHandler::StaticClass()));
-
-	if (!MissionHandler)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AExtractObject: Could not find MissionHandler!"));
-	}
 }
