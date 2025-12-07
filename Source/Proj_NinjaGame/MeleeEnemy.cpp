@@ -5,6 +5,7 @@
 
 #include "AIThrowableObject.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/GameplayStaticsTypes.h"
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
 #include "StealthCharacter.h"
@@ -276,7 +277,7 @@ void AMeleeEnemy::EnemyThrow()
 	FVector AdjustedEndPos = EndPos;
 	AdjustedEndPos.Z -= 40.f; 
 	
-	bool bHasSolution = UGameplayStatics::SuggestProjectileVelocity(
+	/*bool bHasSolution = UGameplayStatics::SuggestProjectileVelocity(
 		this,
 		LaunchVelocity,
 		StartPos,
@@ -286,7 +287,23 @@ void AMeleeEnemy::EnemyThrow()
 		0.f,
 		0.f,
 		ESuggestProjVelocityTraceOption::DoNotTrace
+	);*/
+	
+	UGameplayStatics::FSuggestProjectileVelocityParameters Params(this, StartPos, AdjustedEndPos, ProjectileSpeed);
+	
+	Params.TraceOption = ESuggestProjVelocityTraceOption::DoNotTrace; 
+	Params.OverrideGravityZ = 0.f; 
+	Params.CollisionRadius = 0.f;
+	Params.bFavorHighArc = false;            
+	Params.bDrawDebug = false;
+	Params.bAcceptClosestOnNoSolutions = false;
+	// Params.ActorsToIgnore.Add(SomeActorPointer);
+	
+	bool bHasSolution = UGameplayStatics::SuggestProjectileVelocity(
+		Params,
+		LaunchVelocity
 	);
+
 
 	if (!bHasSolution)
 	{
