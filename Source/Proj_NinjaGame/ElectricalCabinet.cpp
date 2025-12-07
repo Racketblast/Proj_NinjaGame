@@ -8,7 +8,6 @@
 #include "Components/BoxComponent.h"
 #include "Components/LightComponent.h"
 #include "Engine/Light.h"
-#include "Storage/Nodes/FileEntry.h"
 
 AElectricalCabinet::AElectricalCabinet()
 {

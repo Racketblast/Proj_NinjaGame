@@ -4,7 +4,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
-#include "EditorCategoryUtils.h"
 #include "EnemyHandler.h"
 #include "MeleeAIController.h"
 #include "StealthCharacter.h"
