@@ -6,9 +6,8 @@
 #include "InteractableObject.h"
 #include "ExtractObject.generated.h"
 
-/**
- * 
- */
+class AMissionHandler;
+
 UCLASS()
 class PROJ_NINJAGAME_API AExtractObject : public AInteractableObject
 {

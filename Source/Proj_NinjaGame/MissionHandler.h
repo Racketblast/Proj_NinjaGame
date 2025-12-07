@@ -19,12 +19,12 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	float CalculateScore(float TimeTaken);
+	
 	float FinalScore;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Scoring")
-	int32 CurrentScore = 0;
+	int32 StealthKillScore = 0;
+	int32 StealthKills = 0;
 	
 	UPROPERTY()
 	AEnemyHandler* EnemyHandler;
@@ -36,7 +36,7 @@ protected:
 	int32 BaseTimeBonus = 10000;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scoring|Time")
-	int32 PenaltyPerMinute = 1000;
+	float PenaltyPerSecond = 1.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scoring|Time")
 	int32 MinimumTimeBonus = 1000;
@@ -45,6 +45,20 @@ protected:
 	int32 StealthKillScoreValue = 500;
 
 	int32 CalculateTimeBonus(float TimeTaken) const;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Mission Timer")
+	float MissionTimeElapsed = 0.0f;
+	
+	bool bMissionTimerActive = false;
+
+	float TimeScoreBonus = 0.0f;
+
+	bool bKilledAllOrNoEnemies = false;
+	
+	int32 TimesSpotted = 0;
+
+	float TimesSpottedScore = 0;
+	
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Objective")
 	TArray<AActor*> AllTargets;
@@ -66,16 +80,47 @@ protected:
 
 	void SetupMissionObjectives();
 public:	
-	// Called every frame
+	// Called every frame 
 	virtual void Tick(float DeltaTime) override;
 
+	UFUNCTION(BlueprintCallable, Category="Scoring")
 	float GetScore() const { return FinalScore; }
+
+	UFUNCTION(BlueprintCallable, Category="Scoring")
+	float GetTimeScoreBonus() const { return TimeScoreBonus; } 
+
+	UFUNCTION(BlueprintCallable, Category="Scoring")
+	float GetMissionTimeElapsed() const { return MissionTimeElapsed; }
+
+	UFUNCTION(BlueprintCallable, Category="Scoring") 
+	bool GetKilledAllOrNoEnemies() const { return bKilledAllOrNoEnemies; }
+
+	UFUNCTION(BlueprintCallable, Category="Scoring")
+	int32 GetTimesSpotted() const { return TimesSpotted; }
+	
+	UFUNCTION(BlueprintCallable, Category="Scoring")
+	float GetTimesSpottedScore() const { return TimesSpottedScore; }
+
+	UFUNCTION(BlueprintCallable, Category="Scoring")
+	int32 GetStealthKillScore() const { return StealthKillScore; }
+
+	UFUNCTION(BlueprintCallable, Category="Scoring")
+	int32 GetStealthKills() const { return StealthKills; }
+
+	UFUNCTION(BlueprintCallable, Category="Scoring")
+	FString FormatTime(float TimeTaken) const;
 
 	UFUNCTION(BlueprintCallable, Category="Scoring")
 	void AddStealthKillScore();
 
 	UFUNCTION(BlueprintCallable, Category="Objective")
 	void RemoveObjectiveFromTotal(AActor* ThisObject);
+
+	UFUNCTION(BlueprintCallable, Category="Scoring")
+	float CalculateScore(float TimeTaken);
+
+	UFUNCTION(BlueprintCallable, Category="Scoring")
+	void SetMissionTimerActive(bool bActive); 
 };
 
 

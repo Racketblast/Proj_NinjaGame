@@ -6,6 +6,7 @@
 #include "EnemyHandler.h"
 #include "StealthCharacter.h"
 #include "Blueprint/UserWidget.h"
+#include "Kismet/GameplayStatics.h"
 
 AExtractObject::AExtractObject()
 {
