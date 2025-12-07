@@ -63,6 +63,9 @@ AStealthCharacter::AStealthCharacter()
 	PlayerVoiceAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("PlayerVoiceAudioComponent"));
 	PlayerVoiceAudioComponent->SetupAttachment(RootComponent);
 	PlayerVoiceAudioComponent->SetAutoActivate(false);
+	PlayerActionAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("PlayerActionAudioComponent"));
+	PlayerActionAudioComponent->SetupAttachment(RootComponent);
+	PlayerActionAudioComponent->SetAutoActivate(false);
 	
 	PlayerMeleeBox = CreateDefaultSubobject<UBoxComponent>(TEXT("PlayerMeleeBox"));
 	PlayerMeleeBox->SetupAttachment(FirstPersonCameraComponent);
@@ -192,8 +195,11 @@ void AStealthCharacter::DoJumpStart()
 	bHoldingJump = true;
 	if (GetCharacterMovement()->MovementMode == MOVE_Walking)
 	{
-		PlayerVoiceAudioComponent->SetSound(JumpSound);
-		PlayerVoiceAudioComponent->Play();
+		if (JumpSound)
+		{
+			PlayerVoiceAudioComponent->SetSound(JumpSound);
+			PlayerVoiceAudioComponent->Play();
+		}
 	}
 	
 	/*UE_LOG(LogTemp, Warning, TEXT("CurrentMovementState: %s"), *MovementStateToString(CurrentMovementState));
@@ -222,6 +228,11 @@ void AStealthCharacter::Attack()
 			{
 				if (CurrentInteractState == EPlayerInteractState::None || CurrentInteractState == EPlayerInteractState::Throw || CurrentInteractState == EPlayerInteractState::Interact)
 				{
+					if (AttackSound)
+					{
+						PlayerActionAudioComponent->SetSound(AttackSound);
+						PlayerActionAudioComponent->Play();
+					}
 					CurrentInteractState = EPlayerInteractState::Throw;
 				}
 			}
@@ -241,6 +252,13 @@ void AStealthCharacter::Attack()
 					{
 						UGameplayStatics::PlaySoundAtLocation(GetWorld(), CurrentMeleeWeapon->SwingSound, GetActorLocation());
 					}
+					
+					if (AttackSound)
+					{
+						PlayerActionAudioComponent->SetSound(AttackSound);
+						PlayerActionAudioComponent->Play();
+					}
+					
 					UE_LOG(LogTemp, Display, TEXT("Melee attack"));
 					TArray<AActor*> HitActors;
 					PlayerMeleeBox->GetOverlappingActors(HitActors);
@@ -986,6 +1004,11 @@ void AStealthCharacter::Climb()
 						}
 						
 						UE_LOG(LogTemp, Warning, TEXT("Climbing"));
+						if (ClimbSound)
+						{
+							PlayerActionAudioComponent->SetSound(ClimbSound);
+							PlayerActionAudioComponent->Play();
+						}
 						UpdateStaminaStart(ClimbStaminaAmount);
 						GetMovementComponent()->Velocity = {};
 						CurrentMovementState = EPlayerMovementState::Climb;
@@ -1019,6 +1042,10 @@ void AStealthCharacter::ExitClimb()
 {
 	if (bIsClimbing)
 	{
+		if (ClimbSound && PlayerActionAudioComponent->GetSound() == ClimbSound)
+		{
+			PlayerActionAudioComponent->Stop();
+		}
 		bIsClimbing = false;
 		
 		ShowWeaponActors(true);

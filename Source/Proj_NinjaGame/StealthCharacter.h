@@ -159,6 +159,14 @@ protected:
 	UAudioComponent* PlayerVoiceAudioComponent;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Audio")
 	USoundBase* JumpSound;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Audio")
+	UAudioComponent* PlayerActionAudioComponent;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Audio")
+	USoundBase* ThrowSound;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Audio")
+	USoundBase* ClimbSound;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Audio")
+	USoundBase* AttackSound;
 	//Use
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void Use();
@@ -217,9 +225,7 @@ protected:
 	void OnMeleeBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 	void CheckForCanAssassinate();
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
-	USoundBase* ThrowSound;
+	
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	bool bCanThrow = true;
