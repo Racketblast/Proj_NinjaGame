@@ -921,8 +921,11 @@ void AEnemyAIController::OnHeardSound(FVector SoundLocation)
 	LastKnownPlayerLocation = GroundedLocation;
 	bIsMovingToSound = true;
 
-	DrawDebugSphere(GetWorld(), SoundLocation, 25.f, 12, FColor::Yellow, false, 5.f);  
-	DrawDebugSphere(GetWorld(), GroundedLocation, 25.f, 12, FColor::Green, false, 5.f);
+	if (ControlledEnemy->GetVisionDebug())
+	{
+		DrawDebugSphere(GetWorld(), SoundLocation, 25.f, 12, FColor::Yellow, false, 5.f);  
+		DrawDebugSphere(GetWorld(), GroundedLocation, 25.f, 12, FColor::Green, false, 5.f);
+	}
 
 	UE_LOG(LogTemp, Warning, TEXT("OnHeardSound triggered: Enemy moving toward sound at %s"), *GroundedLocation.ToString());
 
@@ -969,8 +972,11 @@ void AEnemyAIController::HandleSuspiciousLocation(FVector Location)
         UE_LOG(LogTemp, Warning, TEXT("HandleSuspiciousLocation: Moving to projected navmesh point: %s"), *NavLoc.Location.ToString());
 
         // Debug draw
-        DrawDebugSphere(GetWorld(), Location, 30.f, 12, FColor::Yellow, false, 8.f);
-        DrawDebugSphere(GetWorld(), NavLoc.Location, 30.f, 12, FColor::Green, false, 8.f);
+        if (ControlledEnemy->GetVisionDebug())
+        {
+        	DrawDebugSphere(GetWorld(), Location, 30.f, 12, FColor::Yellow, false, 8.f);
+        	DrawDebugSphere(GetWorld(), NavLoc.Location, 30.f, 12, FColor::Green, false, 8.f);
+        }
         //DrawDebugLine(GetWorld(), ControlledEnemy->GetActorLocation(), NavLoc.Location, FColor::Blue, false, 8.f, 0, 2.f);
     	
         const float AcceptanceRadius = 50.f;
@@ -1017,7 +1023,10 @@ void AEnemyAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayer
 		LastKnownPlayerLocation = LastSpottedPlayerLocation;
 		ControlledEnemy->SetLastSeenPlayerLocation(LastSpottedPlayerLocation);
 		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetRunSpeed();
-		DrawDebugSphere(GetWorld(), LastKnownPlayerLocation, 25.f, 12, FColor::Green, false, 5.f);
+		if (ControlledEnemy->GetVisionDebug())
+		{
+			DrawDebugSphere(GetWorld(), LastKnownPlayerLocation, 25.f, 12, FColor::Green, false, 5.f);
+		}
 	}
 
 	StopMovement();
@@ -1122,8 +1131,11 @@ void AEnemyAIController::AssignMission(EEnemyMission NewMission, FVector Mission
 			*CurrentMissionLocation.ToString());
 
 		// Debug
-		DrawDebugSphere(GetWorld(), MissionLocation, 25.f, 12, FColor::Yellow, false, 8.f);
-		DrawDebugSphere(GetWorld(), CurrentMissionLocation, 25.f, 12, FColor::Green, false, 8.f);
+		if (ControlledEnemy->GetVisionDebug())
+		{
+			DrawDebugSphere(GetWorld(), MissionLocation, 25.f, 12, FColor::Yellow, false, 8.f);
+			DrawDebugSphere(GetWorld(), CurrentMissionLocation, 25.f, 12, FColor::Green, false, 8.f);
+		}
 	}
 	else
 	{
@@ -1192,9 +1204,12 @@ void AEnemyAIController::StartMissionMoveTo(FVector Location)
         UE_LOG(LogTemp, Warning, TEXT("StartMissionMoveTo: Moving to projected navmesh point: %s"), *NavLoc.Location.ToString());
 
         // Debug draw
-        DrawDebugSphere(GetWorld(), Location, 30.f, 12, FColor::Yellow, false, 8.f);
-        DrawDebugSphere(GetWorld(), NavLoc.Location, 30.f, 12, FColor::Green, false, 8.f);
-        //DrawDebugLine(GetWorld(), ControlledEnemy->GetActorLocation(), NavLoc.Location, FColor::Blue, false, 8.f, 0, 2.f);
+        if (ControlledEnemy->GetVisionDebug())
+        {
+        	DrawDebugSphere(GetWorld(), Location, 30.f, 12, FColor::Yellow, false, 8.f);
+        	DrawDebugSphere(GetWorld(), NavLoc.Location, 30.f, 12, FColor::Green, false, 8.f);
+			//DrawDebugLine(GetWorld(), ControlledEnemy->GetActorLocation(), NavLoc.Location, FColor::Blue, false, 8.f, 0, 2.f);
+        }
 
     	bIsDoingMissionMoveTo = true;
     	

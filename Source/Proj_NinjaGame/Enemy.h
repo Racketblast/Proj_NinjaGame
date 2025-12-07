@@ -193,6 +193,7 @@ public:
 	FORCEINLINE float GetWalkSpeed() const { return WalkSpeed; }
 	FORCEINLINE float GetRunSpeed() const { return RunSpeed; }
 	FORCEINLINE bool GetIsDead() const { return bIsDead; }
+	FORCEINLINE bool GetVisionDebug() const { return bVisionDebug; }
 	FORCEINLINE UCapsuleComponent* GetHeadComponent() const { return HeadCapsule; }
 	FORCEINLINE AEnemyHandler* GetEnemyHandler() const { return EnemyHandler; }
 	FORCEINLINE void SetEnemyHandler(AEnemyHandler* NewEnemyHandler) { EnemyHandler = NewEnemyHandler; }

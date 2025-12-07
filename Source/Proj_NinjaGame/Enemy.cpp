@@ -339,7 +339,10 @@ void AEnemy::CheckPlayerVisibility()
 				SuspiciousTimer = 0.f;
 				UpdateLastSeenPlayerLocation();
 
-				DrawDebugLine(GetWorld(), EnemyLocation, PlayerPawn->GetActorLocation(), FColor::Green, false, 0.1f);
+				if (bVisionDebug)
+				{
+					DrawDebugLine(GetWorld(), EnemyLocation, PlayerPawn->GetActorLocation(), FColor::Green, false, 0.1f);
+				}
 				return;
 			}
 		}
