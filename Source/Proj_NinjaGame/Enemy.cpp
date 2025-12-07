@@ -25,9 +25,12 @@ AEnemy::AEnemy()
 	StateAudioComponent->SetupAttachment(RootComponent);
 	VoiceAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("VoiceAudioComponent"));
 	VoiceAudioComponent->SetupAttachment(RootComponent);
+	ActionAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("ActionAudioComponent"));
+	ActionAudioComponent->SetupAttachment(RootComponent);
 	
 	StateAudioComponent->bAutoActivate = false; 	// styr ljuden i koden, så detta ska vara false
 	VoiceAudioComponent->bAutoActivate = false;
+	ActionAudioComponent->bAutoActivate = false;
 
 	SkeletalMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComp"));
 	SkeletalMeshComp->SetupAttachment(GetCapsuleComponent());

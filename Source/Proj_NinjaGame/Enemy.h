@@ -177,6 +177,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category="Audio")
 	USoundBase* HurtSoundTwo;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Audio")
+	UAudioComponent* ActionAudioComponent;
 
 	UFUNCTION()
 	void PlayHurtSound();

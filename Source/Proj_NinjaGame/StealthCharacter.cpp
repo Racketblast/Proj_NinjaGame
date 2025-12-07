@@ -1063,8 +1063,15 @@ float AStealthCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Dama
 	Health -= ActualDamage;
 
 	UE_LOG(LogTemp, Warning, TEXT("Player took damage. Player Health: %f"), Health);
-
-	if (Health <= 0.0f)
+	if (Health > 0.0f)
+	{
+		if (TakeDamageSound)
+		{
+			PlayerVoiceAudioComponent->SetSound(TakeDamageSound);
+			PlayerVoiceAudioComponent->Play();
+		}
+	}
+	else
 	{
 		Die();
 	}

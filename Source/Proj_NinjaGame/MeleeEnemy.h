@@ -85,4 +85,7 @@ protected:
 
 	FVector PredictPlayerLocation(float ProjectileSpeed) const;
 	
+	UPROPERTY(EditAnywhere, Category="Audio")
+	USoundBase* AttackSound;
+	
 };

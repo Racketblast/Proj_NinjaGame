@@ -8,6 +8,7 @@
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
 #include "StealthCharacter.h"
+#include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -83,6 +84,12 @@ void AMeleeEnemy::StartAttack()
 	bCanAttack = false;
 	//bIsAttacking = true;
 	bHitRegisteredThisSwing = false;
+
+	if (AttackSound)
+	{
+		ActionAudioComponent->SetSound(AttackSound);
+		ActionAudioComponent->Play();
+	}
 
 	// aktiverar hitbox en kort stund 
 	EnableHitbox(0.2f);
@@ -294,6 +301,13 @@ void AMeleeEnemy::EnemyThrow()
 
 	ThrownObject->ChangeToThrowCollision(true);
 	ThrownObject->ThrowCollision->SetUseCCD(true);
+	
+
+	if (AttackSound)
+	{
+		ActionAudioComponent->SetSound(AttackSound);
+		ActionAudioComponent->Play();
+	}
 }
 
 
