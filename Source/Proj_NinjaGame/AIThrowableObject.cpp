@@ -73,3 +73,18 @@ void AAIThrowableObject::ThrowableOnComponentHit(UPrimitiveComponent* HitComp, A
 	
 		USoundUtility::ReportNoise(GetWorld(), Hit.ImpactPoint, NoiseLevel, this);*/
 }
+
+
+void AAIThrowableObject::SetRandomMesh()
+{
+	if (PossibleMeshes.Num() == 0 || !StaticMeshComponent)
+		return;
+
+	const int32 Index = FMath::RandRange(0, PossibleMeshes.Num() - 1);
+	UStaticMesh* SelectedMesh = PossibleMeshes[Index];
+
+	if (SelectedMesh)
+	{
+		StaticMeshComponent->SetStaticMesh(SelectedMesh);
+	}
+}

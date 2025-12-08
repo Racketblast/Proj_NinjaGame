@@ -21,6 +21,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
 	bool bCanBeAssassinated = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	bool bAllowedToAttack = true;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
+	bool bStunned = false;
+
 	UFUNCTION(BlueprintCallable)
 	virtual void StartAttack();
 
@@ -260,11 +266,14 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
 	UNiagaraSystem* AlertVFX;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
+	UNiagaraSystem* StunnedVFX;
+
 	UFUNCTION(BlueprintCallable, Category="VFX")
 	void UpdateStateVFX(EEnemyState NewState);
 
 	EEnemyState PreviousState = EEnemyState::Patrolling;
-
+	
 
 	// Throw:
 	virtual void EnemyThrow();

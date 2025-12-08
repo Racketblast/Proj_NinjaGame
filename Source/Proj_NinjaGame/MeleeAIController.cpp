@@ -62,7 +62,7 @@ void AMeleeAIController::HandleChasing(float DeltaSeconds)
 		bool bCannotReach = CannotReachPlayer(Player);
 
 		// Melee attack
-		if (bWithinMeleeRange && ControlledEnemy->bCanAttack && !ControlledEnemy->bIsAttacking)
+		if (bWithinMeleeRange && ControlledEnemy->bCanAttack && !ControlledEnemy->bIsAttacking && ControlledEnemy->bAllowedToAttack)
 		{
 			StopMovement();
 			UE_LOG(LogTemp, Error, TEXT("Melee Attack"))
@@ -73,7 +73,7 @@ void AMeleeAIController::HandleChasing(float DeltaSeconds)
 		}
 
 		// Ranged attack
-		if (!bWithinMeleeRange && bWithinThrowRange && bCannotReach)
+		if (!bWithinMeleeRange && bWithinThrowRange && bCannotReach && ControlledEnemy->bAllowedToAttack)
 		{
 			StopMovement();
 			// Rotation

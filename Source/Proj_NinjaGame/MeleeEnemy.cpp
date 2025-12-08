@@ -260,6 +260,7 @@ void AMeleeEnemy::EnemyThrow()
 
 	if (!ThrownObject) return;
 
+	ThrownObject->SetRandomMesh();
 
 	ThrownObject->ChangeToThrowCollision(true);
 	ThrownObject->ThrowCollision->SetUseCCD(true);

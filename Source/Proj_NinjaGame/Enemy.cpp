@@ -757,6 +757,17 @@ void AEnemy::OnAgroSpreadTriggered()
 void AEnemy::UpdateStateVFX(EEnemyState NewState)
 {
 	if (!StateVFXComponent) return;
+	
+	if (AEnemyAIController* AI = Cast<AEnemyAIController>(GetController()))
+	{
+		if (AI->GetIsStunned())
+		{
+			StateVFXComponent->SetAsset(StunnedVFX);
+			StateVFXComponent->Activate(true);
+			PreviousState = EEnemyState::Patrolling;
+			return;
+		}
+	}
 
 	if (NewState == EEnemyState::Patrolling)
 	{

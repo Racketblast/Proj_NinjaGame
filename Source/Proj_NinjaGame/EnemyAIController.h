@@ -54,6 +54,9 @@ public:
 	
 	void virtual StartBackOff(FVector BackLocation);
 
+	UFUNCTION(BlueprintCallable, Category="Combat")
+	bool GetIsStunned() const { return bIsStunned; }
+
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void Tick(float DeltaSeconds) override;

@@ -217,7 +217,7 @@ void AEnemyAIController::HandleChasing(float DeltaSeconds)
 	if (ControlledEnemy->CanSeePlayer())
 	{
 		float Dist = FVector::Dist(GetPawn()->GetActorLocation(), Player->GetActorLocation());
-		if (Dist <= ControlledEnemy->GetAttackRange())
+		if (Dist <= ControlledEnemy->GetAttackRange() && ControlledEnemy->bAllowedToAttack)
 		{
 			StopMovement();
 			if (ControlledEnemy->bCanAttack)
@@ -1238,10 +1238,16 @@ void AEnemyAIController::StunEnemy(float Duration, TOptional<EEnemyState> Wanted
 	if (bIsStunned) return; 
 
 	bIsStunned = true;
+	ControlledEnemy->bStunned = true;
 
 	UE_LOG(LogTemp, Warning, TEXT("StunEnemy"));
 
 	StateBeforeStun = CurrentState;
+
+	/*ControlledEnemy->StateVFXComponent->SetAsset(ControlledEnemy->StunnedVFX);
+	ControlledEnemy->StateVFXComponent->Activate(true);*/
+
+	ControlledEnemy->UpdateStateVFX(CurrentState);
 
 	// Stoppa all movement
 	StopMovement();
@@ -1315,6 +1321,7 @@ void AEnemyAIController::EndStun()
 	if (!ControlledEnemy || !IsValid(ControlledEnemy)) return;
 	
 	bIsStunned = false;
+	ControlledEnemy->bStunned = false;
 
 	if (StateBeforeStun == EEnemyState::Chasing && StateAfterStun != EEnemyState::Chasing)
 	{
@@ -1336,6 +1343,7 @@ void AEnemyAIController::EndStun()
 		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
 	}
 
+	//UE_LOG(LogTemp, Error, TEXT("EndStun"));
 	ControlledEnemy->bRotationLocked = false;
 	CurrentState = StateAfterStun;
 	ControlledEnemy->UpdateStateVFX(CurrentState);

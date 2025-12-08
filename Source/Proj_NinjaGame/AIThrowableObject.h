@@ -15,4 +15,10 @@ class PROJ_NINJAGAME_API AAIThrowableObject : public AThrowableObject
 	GENERATED_BODY()
 	virtual void ThrowableOnComponentHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit) override;
 
+	UPROPERTY(EditDefaultsOnly, Category="Throwable")
+	TArray<UStaticMesh*> PossibleMeshes;
+
+public:
+	UFUNCTION()
+	void SetRandomMesh();
 };
