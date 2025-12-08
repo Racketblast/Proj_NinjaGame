@@ -73,7 +73,7 @@ void AMeleeAIController::HandleChasing(float DeltaSeconds)
 		}
 
 		// Ranged attack
-		if (!bWithinMeleeRange && bWithinThrowRange && bCannotReach && ControlledEnemy->bAllowedToAttack)
+		if (!bWithinMeleeRange && bWithinThrowRange && bCannotReach && !ControlledEnemy->bIsThrowing && ControlledEnemy->bAllowedToAttack)
 		{
 			StopMovement();
 			// Rotation
@@ -84,17 +84,41 @@ void AMeleeAIController::HandleChasing(float DeltaSeconds)
 			{
 				ControlledEnemy->SetActorRotation(ToPlayer.Rotation());
 			}
-			
+
+			//UE_LOG(LogTemp, Error, TEXT("Ranged Attack"))
+			ControlledEnemy->bIsThrowing = true;
 			//ControlledEnemy->EnemyThrow();
 			if (RangedThrowCooldown > 2.0f)
 			{
 				//UE_LOG(LogTemp, Error, TEXT("Ranged Attack"))
-				ControlledEnemy->EnemyThrow();
+				//ControlledEnemy->EnemyThrow();
 				RangedThrowCooldown = 0.f; 
 			}
 			else
 			{
 				RangedThrowCooldown += DeltaSeconds;
+			}
+			return;
+		}
+		if (!bWithinMeleeRange && bWithinThrowRange && bCannotReach && ControlledEnemy->bAllowedToAttack)
+		{
+			StopMovement();
+			FVector ToPlayer = Player->GetActorLocation() - ControlledEnemy->GetActorLocation();
+			ToPlayer.Z = 0.f;
+			if (!ToPlayer.IsNearlyZero())
+			{
+				ControlledEnemy->SetActorRotation(ToPlayer.Rotation());
+			}
+			return;
+		}
+		if (ControlledEnemy->bIsThrowing)
+		{
+			StopMovement();
+			FVector ToPlayer = Player->GetActorLocation() - ControlledEnemy->GetActorLocation();
+			ToPlayer.Z = 0.f;
+			if (!ToPlayer.IsNearlyZero())
+			{
+				ControlledEnemy->SetActorRotation(ToPlayer.Rotation());
 			}
 			return;
 		}

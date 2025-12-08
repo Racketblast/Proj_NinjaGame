@@ -276,9 +276,13 @@ public:
 	
 
 	// Throw:
+	UFUNCTION(BlueprintCallable)
 	virtual void EnemyThrow();
 	virtual float GetThrowRange() const;
 	virtual float GetThrowCooldown() const;
+
+	UPROPERTY(BlueprintReadWrite, Category="Combat")
+	bool bIsThrowing = false;
 
 protected:
 	FVector LastSeenPlayerLocation;
