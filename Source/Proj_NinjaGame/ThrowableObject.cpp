@@ -205,6 +205,11 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 			ThrowCollision->SetSimulatePhysics(true);
 		}
 	}
+	else if (Cast<AStealthCharacter>(OtherActor))
+	{
+		//Quick fix so that you can hit an enemy if they are in your face
+		Thrown = true;
+	}
 	else
 	{
 		if (ImpactGroundSound)
