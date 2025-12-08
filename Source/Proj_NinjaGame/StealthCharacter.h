@@ -216,9 +216,9 @@ protected:
 	FTimerHandle AimEndTimer;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	float AimEndTimerSeconds = 0.1f;
-	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	bool bCanAssassinate;
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TArray<class AEnemy*> EnemiesInAssassinationRange;
 	UFUNCTION()
 	void OnMeleeBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,

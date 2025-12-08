@@ -44,7 +44,7 @@ void AAIThrowableObject::ThrowableOnComponentHit(UPrimitiveComponent* HitComp, A
 		SpawnFieldActor();
 		DestroyObject();
 	}
-	else if (AEnemy* Enemy = Cast<AEnemy>(OtherActor))
+	else if (Cast<AEnemy>(OtherActor))
 	{
 		
 	}

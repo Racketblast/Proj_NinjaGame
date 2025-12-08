@@ -1349,8 +1349,11 @@ void AStealthCharacter::OnMeleeBoxBeginOverlap(UPrimitiveComponent* OverlappedCo
 {
 	if (AEnemy* Enemy = Cast<AEnemy>(OtherActor))
 	{
-		EnemiesInAssassinationRange.AddUnique(Enemy);
-		CheckForCanAssassinate();
+		if (Enemy->GetCapsuleComponent() == OtherComp)
+		{
+			EnemiesInAssassinationRange.AddUnique(Enemy);
+			CheckForCanAssassinate();
+		}
 	}
 }
 
@@ -1359,8 +1362,11 @@ void AStealthCharacter::OnMeleeBoxEndOverlap(UPrimitiveComponent* OverlappedComp
 {
 	if (AEnemy* Enemy = Cast<AEnemy>(OtherActor))
 	{
-		EnemiesInAssassinationRange.Remove(Enemy);
-		CheckForCanAssassinate();
+		if (Enemy->GetCapsuleComponent() == OtherComp)
+		{
+			EnemiesInAssassinationRange.Remove(Enemy);
+			CheckForCanAssassinate();
+		}
 	}
 }
 
@@ -1371,7 +1377,7 @@ void AStealthCharacter::CheckForCanAssassinate()
 	
 	bCanAssassinate = false;
 
-	if (EnemiesInAssassinationRange.Num() == 0)
+	if (EnemiesInAssassinationRange.Num() <= 0)
 		return;
 
 	for (AEnemy* Enemy  : EnemiesInAssassinationRange)
