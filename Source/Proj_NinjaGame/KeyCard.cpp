@@ -18,9 +18,9 @@ void AKeyCard::Use_Implementation(class AStealthCharacter* Player)
 	
 	if (!Player) return;
 
-	if (!Player->KeyCards.Contains(this))
+	if (!Player->KeyCards.Contains(this->SpecificKeyCardType))
 	{
-		Player->KeyCards.Add(this);
+		Player->KeyCards.Add(this->SpecificKeyCardType);
 	}
 	
 	for (auto Door : DoorsToUnlock)
