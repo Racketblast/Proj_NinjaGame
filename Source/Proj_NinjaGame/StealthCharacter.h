@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+//Same as in gameinstance should make an enum file for this
+#include "KeyCard.h"
 #include "StealthCharacter.generated.h"
 
 class AMeleeWeapon;
@@ -216,9 +218,9 @@ protected:
 	FTimerHandle AimEndTimer;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	float AimEndTimerSeconds = 0.1f;
-	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	bool bCanAssassinate;
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TArray<class AEnemy*> EnemiesInAssassinationRange;
 	UFUNCTION()
 	void OnMeleeBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -284,7 +286,7 @@ public:
 	class UBoxComponent* PlayerMeleeBox;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-	TArray<class AKeyCard*> KeyCards;
+	TArray<SpecificKeyCard> KeyCards;
 protected:
 	
 	// Sneak

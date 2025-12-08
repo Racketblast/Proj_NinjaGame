@@ -31,6 +31,7 @@ public:
 
 	bool ContainsDoor(class ADoor* Door);
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
 	SpecificKeyCard SpecificKeyCardType = SpecificKeyCard::None;
 protected:
 	// Called when the game starts or when spawned
