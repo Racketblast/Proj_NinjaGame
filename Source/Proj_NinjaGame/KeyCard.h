@@ -4,20 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "InteractableObject.h"
+#include "EnumSpecificKeycard.h"
 #include "KeyCard.generated.h"
 
 /**
  * 
  */
-UENUM(BlueprintType)
-enum class SpecificKeyCard : uint8
-{
-	None    UMETA(DisplayName = "None"),
-	Blue     UMETA(DisplayName = "Blue"),
-	Green  UMETA(DisplayName = "Green"),
-	Yellow  UMETA(DisplayName = "Yellow"),
-	Wrench  UMETA(DisplayName = "Wrench"),
-};
 
 UCLASS()
 class PROJ_NINJAGAME_API AKeyCard : public AInteractableObject
@@ -32,7 +24,7 @@ public:
 	bool ContainsDoor(class ADoor* Door);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
-	SpecificKeyCard SpecificKeyCardType = SpecificKeyCard::None;
+	SpecificKeycard SpecificKeyCardType = SpecificKeycard::None;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

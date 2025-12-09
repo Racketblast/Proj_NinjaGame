@@ -4,29 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "EnumSavedProperties.h"
 #include "StealthGameInstance.generated.h"
 
 /**
  * 
  */
-
-UENUM(BlueprintType)
-enum class EMission : uint8
-{
-	None				UMETA(DisplayName = "None"),
-	FirstMission		UMETA(DisplayName = "FirstMission"),
-	SecondMission		UMETA(DisplayName = "SecondMission"),
-	ThirdMission		UMETA(DisplayName = "ThirdMission"),
-	FourthMission		UMETA(DisplayName = "FourthMission"),
-};
-
-UENUM(BlueprintType)
-enum class EPlayerOwnThrowWeapon : uint8
-{
-	None    UMETA(DisplayName = "None"),
-	Kunai     UMETA(DisplayName = "Kunai"),
-	SmokeBomb  UMETA(DisplayName = "SmokeBomb"),
-};
 
 UCLASS()
 class PROJ_NINJAGAME_API UStealthGameInstance : public UGameInstance
