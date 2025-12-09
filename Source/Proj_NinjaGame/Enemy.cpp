@@ -6,6 +6,7 @@
 #include "DrawDebugHelpers.h"
 #include "EnemyHandler.h"
 #include "MeleeAIController.h"
+#include "SmokeBombObject.h"
 #include "StealthCharacter.h"
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -472,10 +473,13 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 			}
 			if (DamageCauser && !DamageCauser->IsA(AStealthCharacter::StaticClass()))
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Enemy hit by throwing object and survived, Enemy spotted player!"));
-				if (AEnemyAIController* AI = Cast<AEnemyAIController>(GetController()))
+				if (!DamageCauser->IsA(ASmokeBombObject::StaticClass()))
 				{
-					AI->StartChasingFromExternalOrder(PlayerPawn->GetActorLocation());
+					UE_LOG(LogTemp, Warning, TEXT("Enemy hit by throwing object and survived, Enemy spotted player!"));
+					if (AEnemyAIController* AI = Cast<AEnemyAIController>(GetController()))
+					{
+						AI->StartChasingFromExternalOrder(PlayerPawn->GetActorLocation());
+					}
 				}
 			}
 		}
@@ -863,6 +867,8 @@ void AEnemy::PlayStateSound(USoundBase* NewSound)
 {
 	if (!StateAudioComponent) return;
 
+	if (!NewSound)
+		return;
 	// Gör inget om samma ljud redan spelar 
 	if (StateAudioComponent->Sound == NewSound)
 		return;
