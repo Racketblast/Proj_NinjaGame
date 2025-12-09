@@ -561,7 +561,7 @@ void AEnemyAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 				if (PatrolPoint->bUseCustomRotation)
 				{
 					//ControlledEnemy->SetActorRotation(PatrolPoint->CustomRotation);
-					DesiredLookRotation = PatrolPoint->CustomRotation;
+					DesiredLookRotation = PatrolPoint->GetActorRotation();
 
 					// Tvinga pitch och roll till 0 
 					DesiredLookRotation.Pitch = 0.f;
