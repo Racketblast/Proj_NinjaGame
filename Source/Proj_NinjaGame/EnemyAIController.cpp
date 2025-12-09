@@ -52,22 +52,34 @@ void AEnemyAIController::Tick(float DeltaSeconds)
 	}
 
 	// Rotation
-	if (bIsRotating)
+	if (!ControlledEnemy->CanSeePlayer() || !ControlledEnemy->bPlayerInAlertCone)
 	{
-		FRotator Current = ControlledEnemy->GetActorRotation();
-		FRotator Interp = FMath::RInterpTo(Current, DesiredRotation, DeltaSeconds, CurrentRotationSpeed);
+		if (bIsRotating)
+		{
+			FRotator Current = ControlledEnemy->GetActorRotation();
+			FRotator Interp = FMath::RInterpTo(Current, DesiredRotation, DeltaSeconds, CurrentRotationSpeed);
 
-		Interp.Pitch = 0.f;
-		Interp.Roll = 0.f;
+			Interp.Pitch = 0.f;
+			Interp.Roll = 0.f;
 
-		ControlledEnemy->SetActorRotation(Interp);
+			ControlledEnemy->SetActorRotation(Interp);
 
-		if (Interp.Equals(DesiredRotation, 2.0f)) 
+			if (Interp.Equals(DesiredRotation, 2.0f)) 
+			{
+				bIsRotating = false;
+			}
+
+			UE_LOG(LogTemp, Warning, TEXT("Rotating: %s"), *DesiredRotation.ToString());
+			UE_LOG(LogTemp, Warning, TEXT("current Rotation: %s"), *ControlledEnemy->GetActorRotation().ToString());
+			return; // Under rotation gör fienden inget annat
+		}
+	}
+	else
+	{
+		if (bIsRotating)
 		{
 			bIsRotating = false;
 		}
-
-		return; // Under rotation gör fienden inget annat
 	}
 
 	switch (CurrentState)
