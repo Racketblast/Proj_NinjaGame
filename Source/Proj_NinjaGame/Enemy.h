@@ -30,6 +30,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void StartAttack();
 
+	virtual bool IsLocationStillSeeingPlayer(const FVector& TestLoc) const; 
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;

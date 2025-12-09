@@ -33,6 +33,8 @@ public:
 
 	// Fiende throw
 	virtual void EnemyThrow() override;
+
+	virtual bool IsLocationStillSeeingPlayer(const FVector& TestLoc) const override;
 	
 protected:
 	virtual void BeginPlay() override;
