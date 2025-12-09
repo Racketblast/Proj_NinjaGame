@@ -949,3 +949,8 @@ float AEnemy::GetThrowCooldown() const
 {
 	return 0;
 }
+
+bool AEnemy::IsLocationStillSeeingPlayer(const FVector& Location) const
+{
+	return true;
+}

@@ -242,6 +242,7 @@ void AMeleeEnemy::EnemyThrow()
 		// Back off, fungerar inte just nu!
 		UE_LOG(LogTemp, Warning, TEXT("EnemyThrow: bBlocked är true"));
 		FVector BackLoc = GetActorLocation() - GetActorForwardVector() * 250.f;
+		
 		AMeleeAIController* AICon = Cast<AMeleeAIController>(GetController());
 		if (AICon)
 		{
@@ -371,4 +372,23 @@ FVector AMeleeEnemy::PredictPlayerLocation(float ProjectileSpeed) const
 	float TravelTime = Distance / ProjectileSpeed;
 
 	return PlayerLocation + PlayerVelocity * TravelTime;
+}
+
+bool AMeleeEnemy::IsLocationStillSeeingPlayer(const FVector& TestLoc) const
+{
+	if (!PlayerPawn) return false;
+
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(
+		Hit,
+		TestLoc,
+		PlayerPawn->GetActorLocation(),
+		ECC_Visibility,
+		Params
+	);
+	
+	return !bHit;
 }

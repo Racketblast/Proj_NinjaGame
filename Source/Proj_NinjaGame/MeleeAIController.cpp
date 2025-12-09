@@ -231,11 +231,55 @@ bool AMeleeAIController::CannotReachPlayer(APawn* Player)
 
 void AMeleeAIController::StartBackOff(FVector BackLocation)
 {
+	APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(),0);
+	if (!Player) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("StartBackOff: bBackingOff"))
+	
+	UNavigationSystemV1* Nav = UNavigationSystemV1::GetCurrent(GetWorld());
+	if (!Nav)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("StartBackOff: No NavigationSystem found!"));
+		return;
+	}
+
+	// Project to navmesh
+	FNavLocation ProjectedLoc;
+	bool bValid = Nav->ProjectPointToNavigation(
+		BackLocation,
+		ProjectedLoc,
+		FVector(200.f, 200.f, 300.f) 
+	);
+
+	if (!bValid)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("StartBackOff: Location not valid on NavMesh, cancelling backoff."));
+		return;
+	}
+
+	FVector FinalLocation = ProjectedLoc.Location;
+
+	UE_LOG(LogTemp, Warning, TEXT("StartBackOff: Moving to projected location: %s"),
+		*FinalLocation.ToString()
+	);
+
+	float NewDist = FVector::Dist(FinalLocation, Player->GetActorLocation());
+
+	if (NewDist > ControlledEnemy->GetThrowRange() || NewDist < ControlledEnemy->GetAttackRange())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Backoff cancelled: Out of allowed range"));
+		return;
+	}
+
+	if (!ControlledEnemy->IsLocationStillSeeingPlayer(FinalLocation))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Backoff cancelled: Would lose line of sight"));
+		return; 
+	}
+	
 	bBackingOff = true;
 
-	//UE_LOG(LogTemp, Error, TEXT("StartBackOff: bBackingOff"))
-
-	MoveToLocation(BackLocation, 5.f);
+	MoveToLocation(FinalLocation, 5.f);
 	
 	GetWorldTimerManager().SetTimer(
 		BackOffTimerHandle,
@@ -254,5 +298,3 @@ void AMeleeAIController::StopBackOff()
 	if (!Player) return;
 	StartSmoothRotationTowards(Player->GetActorLocation(), 2.0f);
 }
-
-

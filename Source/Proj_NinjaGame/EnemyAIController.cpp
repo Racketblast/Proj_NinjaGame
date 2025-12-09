@@ -69,8 +69,8 @@ void AEnemyAIController::Tick(float DeltaSeconds)
 				bIsRotating = false;
 			}
 
-			UE_LOG(LogTemp, Warning, TEXT("Rotating: %s"), *DesiredRotation.ToString());
-			UE_LOG(LogTemp, Warning, TEXT("current Rotation: %s"), *ControlledEnemy->GetActorRotation().ToString());
+			//UE_LOG(LogTemp, Warning, TEXT("Rotating: %s"), *DesiredRotation.ToString());
+			//UE_LOG(LogTemp, Warning, TEXT("current Rotation: %s"), *ControlledEnemy->GetActorRotation().ToString());
 			return; // Under rotation gör fienden inget annat
 		}
 	}
