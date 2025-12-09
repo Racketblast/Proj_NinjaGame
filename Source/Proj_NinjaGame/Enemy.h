@@ -173,8 +173,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Audio")
 	USoundBase* ChasingSound;
 
+public:
+	UPROPERTY(EditAnywhere, Category="Audio")
+	USoundBase* StunnedSound;
+	
 	void PlayStateSound(USoundBase* NewSound);
-
+protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Audio")
 	UAudioComponent* VoiceAudioComponent;
 

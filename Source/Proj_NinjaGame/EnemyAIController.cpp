@@ -1244,6 +1244,7 @@ void AEnemyAIController::StunEnemy(float Duration, TOptional<EEnemyState> Wanted
 
 	StateBeforeStun = CurrentState;
 
+	ControlledEnemy->PlayStateSound(ControlledEnemy->StunnedSound);
 	/*ControlledEnemy->StateVFXComponent->SetAsset(ControlledEnemy->StunnedVFX);
 	ControlledEnemy->StateVFXComponent->Activate(true);*/
 
