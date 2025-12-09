@@ -6,6 +6,7 @@
 #include "BreakableObject.h"
 #include "MeleeEnemy.h"
 #include "SecurityCamera.h"
+#include "SmokeBombObject.h"
 #include "StealthCharacter.h"
 #include "StealthGameInstance.h"
 #include "ThrowableWeapon.h"
@@ -132,14 +133,17 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 				// Stun
 				if (ShouldApplyDefaultStun())
 				{
-					if (Enemy)
+					if (!Cast<ASmokeBombObject>(this))
 					{
-						AMeleeAIController* EnemyController = Cast<AMeleeAIController>(Enemy->GetController());
-
-						if (EnemyController)
+						if (Enemy)
 						{
-							// Stunna fienden i 1 sekunder 
-							EnemyController->StunEnemy(1.0f, EEnemyState::Chasing); 
+							AMeleeAIController* EnemyController = Cast<AMeleeAIController>(Enemy->GetController());
+
+							if (EnemyController)
+							{
+								// Stunna fienden i 1 sekunder 
+								EnemyController->StunEnemy(1.0f, EEnemyState::Chasing); 
+							}
 						}
 					}
 				}
