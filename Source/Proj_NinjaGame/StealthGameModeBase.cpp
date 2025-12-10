@@ -15,7 +15,12 @@ AStealthGameModeBase::AStealthGameModeBase()
 void AStealthGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	//Pushes the sound override when the level has loaded
+	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance()))
+	{
+		GI->SetAllSoundClassOverride();
+	}
 }
 
 AActor* AStealthGameModeBase::ChoosePlayerStart_Implementation(AController* Player)

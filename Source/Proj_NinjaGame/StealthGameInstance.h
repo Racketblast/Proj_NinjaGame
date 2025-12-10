@@ -18,7 +18,7 @@ class PROJ_NINJAGAME_API UStealthGameInstance : public UGameInstance
 public:
 	virtual void Init() override;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	bool bUsingGamepad = false;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int CurrentGameFlag;
@@ -38,16 +38,30 @@ public:
 	EMission CurrentMission;
 	
 	//Sound
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Sound")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Options | Sound | Mix")
 	USoundMix* SoundMix;
 	
 	//Sound Options
-	UPROPERTY(BlueprintReadWrite, Category="Options")
+	UPROPERTY(BlueprintReadWrite, Category="Options | Sound | Scales")
 	float MasterVolumeScale = 1.0f;
+	UPROPERTY(BlueprintReadWrite, Category="Options | Sound | Scales")
+	float SFXVolumeScale = 1.0f;
+	UPROPERTY(BlueprintReadWrite, Category="Options | Sound | Scales")
+	float MusicVolumeScale = 1.0f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Options | Sound | SoundClasses")
+	USoundClass* MasterSoundClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Options | Sound | SoundClasses")
+	USoundClass* SFXSoundClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Options | Sound | SoundClasses")
+	USoundClass* MusicSoundClass;
+	UFUNCTION(BlueprintCallable)
+	void SetAllSoundClassOverride();
 	
 	//Player Options
 	UPROPERTY(BlueprintReadWrite, Category="Options")
 	float SensitivityScale = 1.0f;
+	UPROPERTY(BlueprintReadWrite, Category="Options")
+	int CurrentScalabilitySetting;
 	
 	//SaveGame
 	UPROPERTY(EditDefaultsOnly)
@@ -62,11 +76,15 @@ public:
 	
 	void FillSaveGame();
 	void FillSaveOptions();
+	void FillLoadGame();
+	void FillLoadOptions();
 	
 	UFUNCTION(BlueprintCallable)
 	void LoadGame();
 	UFUNCTION(BlueprintCallable)
 	void LoadOptions();
+	UFUNCTION(BlueprintCallable)
+	void SetOptions();
 	UFUNCTION(BlueprintCallable)
 	void RestartGame();
 	UFUNCTION(BlueprintCallable)

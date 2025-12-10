@@ -15,13 +15,6 @@ void UStealthGameInstance::Init()
 {
 	Super::Init();
 	
-	/*UGameUserSettings* Settings = GEngine->GetGameUserSettings();
-	if (Settings)
-	{
-		Settings->SetOverallScalabilityLevel(0);
-		Settings->ApplySettings(false);
-	}*/
-	
 	//Loads the saved game
 	LoadGame();
 }
@@ -40,6 +33,8 @@ void UStealthGameInstance::SaveGame()
 		{
 			FillSaveGame();
 			UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
+			
+			SetOptions();
 		}
 	}
 }
@@ -51,6 +46,8 @@ void UStealthGameInstance::SaveOptions()
 	{
 		FillSaveOptions();
 		UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
+			
+		SetOptions();
 	}
 }
 
@@ -62,14 +59,44 @@ void UStealthGameInstance::FillSaveGame()
 	Save->SavedOwnThrowWeapon = CurrentOwnThrowWeapon;
 	Save->SavedOwnThrowWeaponEnum = CurrentOwnThrowWeaponEnum;
 	
-	//Saves options data
+	//Saves Options data
 	FillSaveOptions();
 }
 
 void UStealthGameInstance::FillSaveOptions()
 {
+	//Sound
 	Save->SavedMasterVolumeScale = MasterVolumeScale;
+	Save->SavedSFXVolumeScale = SFXVolumeScale;
+	Save->SavedMusicVolumeScale = MusicVolumeScale;
+	
+	//Other
 	Save->SavedSensitivityScale = SensitivityScale;
+	Save->SavedCurrentScalabilitySetting = CurrentScalabilitySetting;
+}
+
+void UStealthGameInstance::FillLoadGame()
+{
+	//Loads Gameplay data
+	CurrentGameFlag = Save->SavedCurrentGameFlag;
+	MissionsCleared = Save->SavedMissionsCleared;
+	CurrentOwnThrowWeapon = Save->SavedOwnThrowWeapon;
+	CurrentOwnThrowWeaponEnum = Save->SavedOwnThrowWeaponEnum;
+
+	//Loads Options data
+	FillLoadOptions();
+}
+
+void UStealthGameInstance::FillLoadOptions()
+{
+	//Sound
+	MasterVolumeScale = Save->SavedMasterVolumeScale;
+	SFXVolumeScale = Save->SavedSFXVolumeScale;
+	MusicVolumeScale = Save->SavedMusicVolumeScale;
+
+	//Other
+	SensitivityScale = Save->SavedSensitivityScale;
+	CurrentScalabilitySetting = Save->SavedCurrentScalabilitySetting;
 }
 
 void UStealthGameInstance::LoadGame()
@@ -80,18 +107,14 @@ void UStealthGameInstance::LoadGame()
 		Save = Cast<UStealthSaveGame>(UGameplayStatics::LoadGameFromSlot("Save1",0));
 		if (Save)
 		{
-			CurrentGameFlag = Save->SavedCurrentGameFlag;
-			MissionsCleared = Save->SavedMissionsCleared;
-			CurrentOwnThrowWeapon = Save->SavedOwnThrowWeapon;
-			CurrentOwnThrowWeaponEnum = Save->SavedOwnThrowWeaponEnum;
+			FillLoadGame();
 			
-			SensitivityScale = Save->SavedSensitivityScale;
-			MasterVolumeScale = Save->SavedMasterVolumeScale;
+			SetOptions();
 		}
 	}
+	//For Graphics Hardware Check if we want it
 	/*else
 	{
-		//For Graphics Hardware Check
 		UGameUserSettings::GetGameUserSettings()->RunHardwareBenchmark();
 		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
 	}*/
@@ -104,11 +127,49 @@ void UStealthGameInstance::LoadOptions()
 		Save = Cast<UStealthSaveGame>(UGameplayStatics::LoadGameFromSlot("Save1",0));
 		if (Save)
 		{
-			SensitivityScale = Save->SavedSensitivityScale;
-			MasterVolumeScale = Save->SavedMasterVolumeScale;
+			FillLoadOptions();
+			
+			SetOptions();
 		}
 	}
 }
+
+void UStealthGameInstance::SetOptions()
+{
+	if (UGameUserSettings::GetGameUserSettings()->GetOverallScalabilityLevel() != CurrentScalabilitySetting && CurrentScalabilitySetting >= 0 && CurrentScalabilitySetting <= 4)
+	{
+		UGameUserSettings::GetGameUserSettings()->SetOverallScalabilityLevel(CurrentScalabilitySetting);
+		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
+	}
+	
+	SetAllSoundClassOverride();
+}
+
+void UStealthGameInstance::SetAllSoundClassOverride()
+{
+
+	//These all fire each time the game loads
+	if (SoundMix && MasterSoundClass)
+	{
+		UGameplayStatics::SetSoundMixClassOverride(GetWorld(), SoundMix, MasterSoundClass, MasterVolumeScale, 1, 0, true);
+	}
+	
+	if (SoundMix && SFXSoundClass)
+	{
+		UGameplayStatics::SetSoundMixClassOverride(GetWorld(), SoundMix, SFXSoundClass, SFXVolumeScale, 1, 0, true);
+	}
+	
+	if (SoundMix && MusicSoundClass)
+	{
+		UGameplayStatics::SetSoundMixClassOverride(GetWorld(), SoundMix, MusicSoundClass, MusicVolumeScale, 1, 0, true);
+	}
+
+	if (SoundMix)
+	{
+		UGameplayStatics::PushSoundMixModifier(GetWorld(), SoundMix);
+	}
+}
+
 
 void UStealthGameInstance::RestartGame()
 {
@@ -136,7 +197,13 @@ bool UStealthGameInstance::HasGameChanged()
 			
 			if (SensitivityScale != Save->SavedSensitivityScale)
 				return true;
+			if (CurrentScalabilitySetting != Save->SavedCurrentScalabilitySetting)
+				return true;
 			if (MasterVolumeScale != Save->SavedMasterVolumeScale)
+				return true;
+			if (SFXVolumeScale != Save->SavedSFXVolumeScale)
+				return true;
+			if (MusicVolumeScale != Save->SavedMusicVolumeScale)
 				return true;
 		}
 		return false;
