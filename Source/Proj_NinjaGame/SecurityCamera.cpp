@@ -5,6 +5,7 @@
 
 #include "EnemyHandler.h"
 #include "NavigationSystem.h"
+#include "StealthCharacter.h"
 #include "Components/AudioComponent.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -136,6 +137,18 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 
 	if (bIsCameraDisabled)
 		return;
+
+	
+	AStealthCharacter* StealthPlayer = Cast<AStealthCharacter>(PlayerPawn);
+	if (!StealthPlayer) return;
+
+	// För hide object
+	if (StealthPlayer->bIsHiddenFromEnemy)
+	{
+		SetVFXState(ECameraVFXState::None);
+		bPlayerInCone = false;
+		return;
+	}
 	
 	// Hämta position och forward från socket "Vision" i SKM
 	const FName VisionSocket = FName("Vision");
