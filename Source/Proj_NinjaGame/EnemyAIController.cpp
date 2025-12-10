@@ -168,10 +168,25 @@ void AEnemyAIController::HandlePatrolling(float DeltaSeconds)
 		{
 			bIsRotatingTowardPatrolPoint = false;
 
+			const TArray<AActor*>& PatrolPoints = ControlledEnemy->GetPatrolPoints();
+			AActor* TargetPoint = PatrolPoints[CurrentPatrolIndex];
+
+			if (TargetPoint)
+			{
+				const float DistToTarget = FVector::Dist(ControlledEnemy->GetActorLocation(), TargetPoint->GetActorLocation());
+
+				// Om fienden redan är vid denna patrol point, gör ingenting
+				if (DistToTarget < 200.f)  
+				{
+
+					//UE_LOG(LogTemp, Warning, TEXT("Skipping patrol point because enemy is already there. New index: %d"), CurrentPatrolIndex);
+					return;
+				}
+			}
+
 			// När klar så börjar fienden gå
-			MoveToActor(
-				ControlledEnemy->GetPatrolPoints()[CurrentPatrolIndex]
-			);
+			MoveToActor(TargetPoint);
+			//MoveToActor(ControlledEnemy->GetPatrolPoints()[CurrentPatrolIndex]);
 		}
 	}
 }
@@ -290,6 +305,7 @@ void AEnemyAIController::HandleSearching(float DeltaSeconds)
 		if (!bIsRotating)
 		{
 			bIsDoingMissionMoveTo = false;
+			//StopMovement();
 			MoveToLocation(InvestigateTarget, -1.f, true, true, false, false, 0, true);
 		}
 	}
