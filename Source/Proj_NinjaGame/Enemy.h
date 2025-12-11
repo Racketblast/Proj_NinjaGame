@@ -6,6 +6,7 @@
 #include "MeleeAIController.h" // Byt ut till riktiga controller senare 
 #include "GameFramework/Character.h"
 #include "NiagaraComponent.h"
+#include "GeometryCollection/GeometryCollectionObject.h"
 #include "Enemy.generated.h"
 
 class UBoxComponent;
@@ -30,7 +31,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void StartAttack();
 
-	virtual bool IsLocationStillSeeingPlayer(const FVector& TestLoc) const; 
+	virtual bool IsLocationStillSeeingPlayer(const FVector& TestLoc) const;
+
+	bool DoesHaveHelmet() const { return bHasHelmet; }
+
+	UFUNCTION()
+	void RemoveHelmet();
 
 protected:
 	virtual void BeginPlay() override;
@@ -38,6 +44,17 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void FaceRotation(FRotator NewRotation, float DeltaTime) override;
+
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Equipment")
+	bool bHasHelmet = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|Equipment")
+	UStaticMeshComponent* HelmetMesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Equipment")
+	UGeometryCollection* HelmetBreakGeoCollection;
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	TArray<AActor*> PatrolPoints;
