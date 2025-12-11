@@ -299,6 +299,9 @@ public:
 
 	EEnemyState PreviousState = EEnemyState::Patrolling;
 	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="EEnemyState")
+	EEnemyState State = EEnemyState::Patrolling; 	// Används just nu bara för debug
+	
 
 	// Throw:
 	UFUNCTION(BlueprintCallable)

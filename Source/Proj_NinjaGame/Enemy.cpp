@@ -118,6 +118,12 @@ void AEnemy::Tick(float DeltaTime)
 	CheckCloseDetection();
 
 	SpreadAgroToNearbyEnemies();
+
+	// Används just nu bara för debug
+	if (AEnemyAIController* AI = Cast<AEnemyAIController>(GetController()))
+	{
+		State = AI->GetCurrentState();
+	}
 }
 
 void AEnemy::CheckChaseProximityDetection()
