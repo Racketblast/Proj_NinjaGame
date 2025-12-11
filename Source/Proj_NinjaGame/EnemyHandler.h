@@ -23,6 +23,8 @@ public:
 	UFUNCTION(BlueprintPure)
 	bool GetEnemySeesPlayer() const { return bEnemySeesPlayer; }
 	UFUNCTION(BlueprintPure)
+	bool GetEnemyAnyAlert() const { return bAnyAlert; }
+	UFUNCTION(BlueprintPure)
 	TArray<AActor*> GetAllEnemies() const { return AllEnemies; }
 	UFUNCTION(BlueprintCallable)
 	void RemoveEnemy(AActor* EnemyRemoved);
