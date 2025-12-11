@@ -105,6 +105,21 @@ void AThrowingMarker::SetEnemyMaterial()
 	}
 }
 
+void AThrowingMarker::SetHelmetMaterial()
+{
+	if (HelmetHitMaterial && MarkerMesh->GetMaterial(0) != HelmetHitMaterial)
+	{
+		for (int i = 0; i < MarkerMesh->GetNumMaterials(); ++i)
+		{
+			MarkerMesh->SetMaterial(i,HelmetHitMaterial);
+		}
+	}
+	if (HelmetHitVFX && MarkerVFX->GetAsset() != HelmetHitVFX)
+	{
+		MarkerVFX->SetAsset(HelmetHitVFX);
+	}
+}
+
 void AThrowingMarker::SetHeadMaterial()
 {
 	if (HeadHitMaterial && MarkerMesh->GetMaterial(0) != HeadHitMaterial)
