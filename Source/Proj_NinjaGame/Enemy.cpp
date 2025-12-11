@@ -12,6 +12,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Engine/OverlapResult.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GeometryCollection/GeometryCollectionComponent.h"
 
 
 AEnemy::AEnemy()
@@ -54,6 +55,11 @@ AEnemy::AEnemy()
 	// För bättre rotation
 	GetCharacterMovement()->bUseControllerDesiredRotation = false;
 	GetCharacterMovement()->bOrientRotationToMovement = false;
+
+	// Helmet
+	HelmetMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HelmetMesh"));
+	HelmetMesh->SetupAttachment(SkeletalMeshComp, TEXT("Head")); 
+	HelmetMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 
@@ -75,6 +81,12 @@ void AEnemy::BeginPlay()
 	OriginalVisionRange = VisionRange;
 	
 	OriginalHearingRange = HearingRange;
+
+	//Helmet
+	if (HelmetMesh)
+	{
+		HelmetMesh->SetVisibility(bHasHelmet);
+	}
 }
 
 void AEnemy::FaceRotation(FRotator NewRotation, float DeltaTime)
@@ -924,6 +936,43 @@ void AEnemy::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		StateVFXComponent->Deactivate();
 	}
 }
+
+//Helmet
+void AEnemy::RemoveHelmet()
+{
+	if (!bHasHelmet) return;
+
+	bHasHelmet = false;
+
+	if (HelmetMesh)
+	{
+		FTransform HelmetTransform = HelmetMesh->GetComponentTransform();
+
+		// Dölj hjälm
+		HelmetMesh->SetVisibility(false);
+		HelmetMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		
+		if (HelmetBreakGeoCollection)
+		{
+			UGeometryCollectionComponent* GeoComp =
+				NewObject<UGeometryCollectionComponent>(this, UGeometryCollectionComponent::StaticClass());
+
+			if (GeoComp)
+			{
+				GeoComp->SetupAttachment(GetMesh()); 
+				GeoComp->SetWorldTransform(HelmetTransform);
+				GeoComp->RegisterComponent();
+
+				GeoComp->SetRelativeTransform(FTransform::Identity);
+
+				GeoComp->SetRestCollection(HelmetBreakGeoCollection);
+				GeoComp->SetPerLevelCollisionProfileNames({ "Debris","Debris","Debris"} );
+				GeoComp->SetCanEverAffectNavigation(false);
+			}
+		}
+	}
+}
+
 
 // Time handle Funktioner:
 void AEnemy::ForgetHeardSound()
