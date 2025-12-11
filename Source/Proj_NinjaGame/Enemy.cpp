@@ -944,6 +944,11 @@ void AEnemy::RemoveHelmet()
 
 	bHasHelmet = false;
 
+	if (AEnemyAIController* AI = Cast<AEnemyAIController>(GetController()))
+	{
+		AI->StartChasingFromExternalOrder(PlayerPawn->GetActorLocation());
+	}
+
 	if (HelmetMesh)
 	{
 		FTransform HelmetTransform = HelmetMesh->GetComponentTransform();
