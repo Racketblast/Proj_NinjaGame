@@ -519,11 +519,25 @@ void AStealthCharacter::UpdateProjectilePrediction()
         	{
         		if (PredictedHit.GetComponent() == Enemy->GetHeadComponent())
         		{
-        			SpawnedMarker->SetHeadMaterial();
+			        if (Enemy->DoesHaveHelmet())
+			        {
+        				SpawnedMarker->SetHelmetMaterial();
+			        }
+			        else
+			        {
+        				SpawnedMarker->SetHeadMaterial();
+			        }
         		}
         		else
         		{
-        			SpawnedMarker->SetEnemyMaterial();
+			        if (Enemy->GetHealth() <= HeldThrowableWeapon->ThrowDamage)
+			        {
+        				SpawnedMarker->SetHeadMaterial();
+			        }
+			        else
+			        {
+			        	SpawnedMarker->SetEnemyMaterial();
+			        }
         		}
         	}
 	        else if (Cast<ASecurityCamera>(PredictedHit.GetActor()))
