@@ -10,6 +10,7 @@
 #include "NavigationSystem.h"
 #include "SecurityCamera.h"
 #include "TargetEnemy.h"
+#include "Algo/RandomShuffle.h"
 
 
 AEnemyHandler::AEnemyHandler()
@@ -25,13 +26,64 @@ void AEnemyHandler::BeginPlay()
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemy::StaticClass(), AllEnemies);
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASecurityCamera::StaticClass(), AllSecurityCameras);
 
-	for (auto Enemy : AllEnemies)
+
+	/*for (auto Enemy : AllEnemies)
 	{
 		if (AEnemy* MeleeEnemy = Cast<AEnemy>(Enemy))
 		{
 			MeleeEnemy->SetEnemyHandler(this);
 		}
+	}*/
+	
+	TArray<AEnemy*> EnemyList;
+	for (AActor* Actor : AllEnemies)
+	{
+		if (AEnemy* Enemy = Cast<AEnemy>(Actor))
+		{
+			EnemyList.Add(Enemy);
+			Enemy->SetEnemyHandler(this);
+		}
 	}
+
+	int32 TotalEnemies = EnemyList.Num();
+
+	if (TotalEnemies == 0)
+		return;
+
+	// Hur många fiender som ska ha hjälm
+	int32 TargetHelmetCount = FMath::RoundToInt((HelmetChancePercent / 100.f) * TotalEnemies);
+
+	UE_LOG(LogTemp, Warning, TEXT(" %d fiender ska få en hjälm"), TargetHelmetCount );
+
+	// Räkna hur många som redan har hjälm 
+	TArray<AEnemy*> WithoutHelmetEnemies;
+
+	for (AEnemy* Enemy : EnemyList)
+	{
+		if (!Enemy->DoesHaveHelmet())
+		{
+			WithoutHelmetEnemies.Add(Enemy);
+		}
+	}
+
+	// Om vi behöver lägga till hjälmar
+	if (TargetHelmetCount > 0)
+	{
+		// shuffle den WithoutHelmetEnemies listan för att slumpa vilka som får hjälm
+		Algo::RandomShuffle(WithoutHelmetEnemies);
+
+		int32 AssignCount = FMath::Min(TargetHelmetCount, WithoutHelmetEnemies.Num());
+
+		for (int32 i = 0; i < AssignCount; i++)
+		{
+			WithoutHelmetEnemies[i]->SetHaveHelmet(true);
+			UE_LOG(LogTemp, Warning, TEXT(" %d fiender har fått hjälm"), i + 1 );
+		}
+	}
+
+
+	
+	
 	
 	for (auto Camera : AllSecurityCameras)
 	{

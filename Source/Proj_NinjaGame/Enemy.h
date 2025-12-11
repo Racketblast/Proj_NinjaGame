@@ -35,6 +35,8 @@ public:
 
 	bool DoesHaveHelmet() const { return bHasHelmet; }
 
+	void SetHaveHelmet(bool bHelmet); 
+
 	UFUNCTION()
 	void RemoveHelmet();
 

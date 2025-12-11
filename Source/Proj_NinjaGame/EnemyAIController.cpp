@@ -650,10 +650,13 @@ void AEnemyAIController::StartChasing()
 {
 	CurrentState = EEnemyState::Chasing;
 
+	// Clear timers
 	GetWorldTimerManager().ClearTimer(LoseSightTimerHandle);
 	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
 	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
 	GetWorldTimerManager().ClearTimer(AlertTimerHandle);
+
+
 	
 	if (ControlledEnemy)
 	{
@@ -1048,10 +1051,13 @@ void AEnemyAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayer
 {
 	CurrentState = EEnemyState::Chasing;
 	
+	// Clear timers
 	GetWorldTimerManager().ClearTimer(LoseSightTimerHandle);
 	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
 	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
 	GetWorldTimerManager().ClearTimer(AlertTimerHandle);
+
+
 	
 	bChasingFromExternalOrder = true; 
 

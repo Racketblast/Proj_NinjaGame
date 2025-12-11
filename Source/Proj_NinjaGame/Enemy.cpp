@@ -978,6 +978,17 @@ void AEnemy::RemoveHelmet()
 	}
 }
 
+void AEnemy::SetHaveHelmet(bool bHelmet)
+{
+	bHasHelmet = bHelmet;
+
+	if (HelmetMesh)
+	{
+		HelmetMesh->SetVisibility(bHasHelmet);
+		//HelmetMesh->SetCollisionEnabled(bHasHelmet ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
+	}
+}
+
 
 // Time handle Funktioner:
 void AEnemy::ForgetHeardSound()
