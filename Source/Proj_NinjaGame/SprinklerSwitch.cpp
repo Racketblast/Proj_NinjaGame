@@ -141,9 +141,14 @@ void ASprinklerSwitch::EnemyBeginOverlap(UPrimitiveComponent* OverlappedComponen
 			LastSentEnemy = nullptr;
 			if (AI->GetCurrentMission() == EEnemyMission::Sprinkler)
 			{
-				if (!bPowerOn)
+				if (bPowerOn)
+				{
+					AI->CompleteMission();
+				}
+				else
 				{
 					TurnPowerOnOff();
+					AI->CompleteMission();
 				}
 			}
 		}

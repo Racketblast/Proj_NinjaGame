@@ -17,6 +17,9 @@ class PROJ_NINJAGAME_API ATargetAIController : public AEnemyAIController
 	virtual void BeginPlay() override;
 protected:
 	virtual void HandleChasing(float DeltaSeconds) override;
+	virtual void HandleSearching(float DeltaSeconds) override;
+	virtual void HandleAlert(float DeltaSeconds) override;
+	virtual void HandlePatrolling(float DeltaSeconds) override;
 	virtual void StartChasing() override;
 	virtual void StopChasing() override;
 
@@ -25,4 +28,6 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class ATargetEnemy* TargetEnemy;
+
+	bool bIsRunningAway = false;
 };

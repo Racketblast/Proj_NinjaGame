@@ -551,6 +551,7 @@ void AEnemyAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 	(int)Result.Code, (int)Result.Flags);*/
 
 	// För mission
+	/*
 	if (Result.IsSuccess() && bHasMission && bIsDoingMissionMoveTo)
 	{
 		if (CurrentMission != EEnemyMission::Patrol) //  && FVector::Dist(ControlledEnemy->GetActorLocation(), CurrentMissionLocation) < 350.f
@@ -649,6 +650,11 @@ void AEnemyAIController::StartChasing()
 {
 	CurrentState = EEnemyState::Chasing;
 
+	GetWorldTimerManager().ClearTimer(LoseSightTimerHandle);
+	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
+	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
+	GetWorldTimerManager().ClearTimer(AlertTimerHandle);
+	
 	if (ControlledEnemy)
 	{
 		ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
@@ -1041,6 +1047,11 @@ void AEnemyAIController::StartSmoothRotationTowards(const FVector& TargetLocatio
 void AEnemyAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation)
 {
 	CurrentState = EEnemyState::Chasing;
+	
+	GetWorldTimerManager().ClearTimer(LoseSightTimerHandle);
+	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
+	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
+	GetWorldTimerManager().ClearTimer(AlertTimerHandle);
 	
 	bChasingFromExternalOrder = true; 
 
