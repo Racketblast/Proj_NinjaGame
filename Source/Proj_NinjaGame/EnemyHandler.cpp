@@ -66,7 +66,13 @@ void AEnemyHandler::RemoveEnemy(AActor* EnemyRemoved)
 	if (AllEnemies.Contains(EnemyRemoved))
 	{
 		AllEnemies.Remove(EnemyRemoved);
-		bAreAllEnemiesAlive = false;
+		
+		if (!Cast<ATargetEnemy>(EnemyRemoved))
+		{
+			// Endast sätt false om den inte är en target enemy
+			bAreAllEnemiesAlive = false;
+		}
+		
 		bAreAllEnemiesDead = (AllEnemies.Num() == 0);
 
 		if (!bEnemySeesPlayer && !bAnyAlert)
