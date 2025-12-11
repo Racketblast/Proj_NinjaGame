@@ -118,9 +118,11 @@ protected:
 	bool bHasMission = false;
 
 	bool bIsDoingMissionMoveTo = false;
-	
-	void CompleteMission();
 
+public:
+	void CompleteMission();
+	
+protected:
 	UFUNCTION()
 	void StartMissionMoveTo(FVector Location);
 	
@@ -170,7 +172,6 @@ protected:
 	void OnAlertTimerExpired();
 	void RetryMoveToNextPatrolPoint();
 
-private:
 	FTimerHandle StartPatrolTimerHandle;
 	FTimerHandle LookAroundTimerHandle;
 	FTimerHandle EndSearchTimerHandle;
@@ -181,6 +182,7 @@ private:
 	bool bIsMovingToSound = false;
 
 	
+private:
 	int32 LookAroundCount = 0;
 	int32 LookAroundMax = 3;
 };

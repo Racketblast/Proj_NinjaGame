@@ -30,6 +30,7 @@ public:
 	void UpdateSpawnMarkerMesh(TSubclassOf<class AThrowableObject> ObjectClass);
 	void SetGroundMaterial();
 	void SetEnemyMaterial();
+	void SetHelmetMaterial();
 	void SetHeadMaterial();
 	UMaterialInterface* GetMeshMaterial() const;
 	
@@ -46,6 +47,8 @@ protected:
 	class UNiagaraSystem* EnemyHitVFX;
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	class UNiagaraSystem* HeadHitVFX;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	class UNiagaraSystem* HelmetHitVFX;
 
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
@@ -54,6 +57,8 @@ protected:
 	UMaterial* EnemyHitMaterial;
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	UMaterial* HeadHitMaterial;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	UMaterial* HelmetHitMaterial;
 };
 
 

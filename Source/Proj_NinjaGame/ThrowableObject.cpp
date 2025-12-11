@@ -106,7 +106,7 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 	{
 		if (!Enemy->GetIsDead())
 		{
-			if (Hit.Component == Enemy->GetHeadComponent())
+			/*if (Hit.Component == Enemy->GetHeadComponent())
 			{
 				UGameplayStatics::ApplyPointDamage(
 					Enemy,
@@ -117,6 +117,25 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 					this,
 					UDamageType::StaticClass()
 				);
+			}*/
+			if (Hit.Component == Enemy->GetHeadComponent())
+			{
+				if (Enemy->DoesHaveHelmet())        
+				{
+					Enemy->RemoveHelmet();          
+				}
+				else
+				{
+					UGameplayStatics::ApplyPointDamage(
+						Enemy,
+						Enemy->GetHealth(),         
+						GetVelocity().GetSafeNormal(),
+						Hit,
+						UGameplayStatics::GetPlayerController(this,0),
+						this,
+						UDamageType::StaticClass()
+					);
+				}
 			}
 			else
 			{

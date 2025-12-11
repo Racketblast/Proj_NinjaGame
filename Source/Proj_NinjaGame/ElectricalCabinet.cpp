@@ -150,10 +150,12 @@ void AElectricalCabinet::EnemyBeginOverlap(UPrimitiveComponent* OverlappedCompon
 				if (bPowerOn)
 				{
 					//AI->SetCurrentMission(EEnemyMission::Patrol);
+					AI->CompleteMission();
 				}
 				else
 				{
 					//AI->SetCurrentMission(EEnemyMission::Patrol);
+					AI->CompleteMission();
 					TurnPowerOnOff();
 				}
 			}
