@@ -1448,3 +1448,25 @@ void AStealthCharacter::OnInteractSphereEndOverlap(UPrimitiveComponent* Overlapp
 		Object->TurnOnVFX(false);
 	}
 }
+
+
+
+
+// För fienden
+FVector AStealthCharacter::GetLeftArmVisionPoint() const
+{
+	if (FirstPersonMesh)
+	{
+		return FirstPersonMesh->GetBoneLocation("L_MetaShoulder");
+	}
+	return GetActorLocation(); // fallback
+}
+
+FVector AStealthCharacter::GetRightArmVisionPoint() const
+{
+	if (FirstPersonMesh)
+	{
+		return FirstPersonMesh->GetBoneLocation("R_MetaShoulder");
+	}
+	return GetActorLocation();
+}

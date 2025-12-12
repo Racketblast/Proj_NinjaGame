@@ -445,4 +445,10 @@ public:
 	float HideMaxYaw;
 
 	FRotator HideBaseRotation;
+
+	// För fienden
+	FVector GetLeftArmVisionPoint() const;
+
+	FVector GetRightArmVisionPoint() const; 
+
 };

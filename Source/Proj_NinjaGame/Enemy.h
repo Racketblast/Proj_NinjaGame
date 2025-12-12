@@ -109,6 +109,8 @@ protected:
 
 	virtual void CheckCloseDetection();
 
+	virtual bool HasLineOfSightToPlayer();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
 	bool bVisionDebug = true;
 
