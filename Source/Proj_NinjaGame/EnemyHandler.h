@@ -61,6 +61,9 @@ protected:
 
 	UPROPERTY()
 	AMissionHandler* MissionHandler = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy Helmet Settings")
+	float HelmetChancePercent = 30.f;
 	
 	void UpdateEnemyStates();
 };

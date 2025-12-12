@@ -118,6 +118,12 @@ void AEnemy::Tick(float DeltaTime)
 	CheckCloseDetection();
 
 	SpreadAgroToNearbyEnemies();
+
+	// Används just nu bara för debug
+	if (AEnemyAIController* AI = Cast<AEnemyAIController>(GetController()))
+	{
+		State = AI->GetCurrentState();
+	}
 }
 
 void AEnemy::CheckChaseProximityDetection()
@@ -944,6 +950,11 @@ void AEnemy::RemoveHelmet()
 
 	bHasHelmet = false;
 
+	if (AEnemyAIController* AI = Cast<AEnemyAIController>(GetController()))
+	{
+		AI->StartChasingFromExternalOrder(PlayerPawn->GetActorLocation());
+	}
+
 	if (HelmetMesh)
 	{
 		FTransform HelmetTransform = HelmetMesh->GetComponentTransform();
@@ -970,6 +981,17 @@ void AEnemy::RemoveHelmet()
 				GeoComp->SetCanEverAffectNavigation(false);
 			}
 		}
+	}
+}
+
+void AEnemy::SetHaveHelmet(bool bHelmet)
+{
+	bHasHelmet = bHelmet;
+
+	if (HelmetMesh)
+	{
+		HelmetMesh->SetVisibility(bHasHelmet);
+		//HelmetMesh->SetCollisionEnabled(bHasHelmet ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
 	}
 }
 

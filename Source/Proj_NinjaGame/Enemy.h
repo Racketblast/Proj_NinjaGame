@@ -35,6 +35,8 @@ public:
 
 	bool DoesHaveHelmet() const { return bHasHelmet; }
 
+	void SetHaveHelmet(bool bHelmet); 
+
 	UFUNCTION()
 	void RemoveHelmet();
 
@@ -296,6 +298,9 @@ public:
 	void UpdateStateVFX(EEnemyState NewState);
 
 	EEnemyState PreviousState = EEnemyState::Patrolling;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="EEnemyState")
+	EEnemyState State = EEnemyState::Patrolling; 	// Används just nu bara för debug
 	
 
 	// Throw:
