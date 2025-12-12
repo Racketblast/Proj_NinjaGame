@@ -76,6 +76,12 @@ void AMeleeEnemy::CheckPlayerVisibility()
 	Super::CheckPlayerVisibility();
 }
 
+/*bool AMeleeEnemy::HasLineOfSightToPlayer() 
+{
+	Super::HasLineOfSightToPlayer();
+}*/
+
+
 void AMeleeEnemy::StartAttack()
 {
 	if (!bCanAttack) return;
@@ -278,18 +284,6 @@ void AMeleeEnemy::EnemyThrow()
 
 	FVector AdjustedEndPos = EndPos;
 	AdjustedEndPos.Z -= 40.f; 
-	
-	/*bool bHasSolution = UGameplayStatics::SuggestProjectileVelocity(
-		this,
-		LaunchVelocity,
-		StartPos,
-		AdjustedEndPos,
-		1100.f,
-		false,
-		0.f,
-		0.f,
-		ESuggestProjVelocityTraceOption::DoNotTrace
-	);*/
 	
 	UGameplayStatics::FSuggestProjectileVelocityParameters Params(this, StartPos, AdjustedEndPos, ProjectileSpeed);
 	

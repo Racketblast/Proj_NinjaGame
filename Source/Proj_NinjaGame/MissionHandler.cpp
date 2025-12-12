@@ -104,10 +104,8 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 		}
 	}
 
-	//SetMissionTimerActive(false); 
-
 	//Lite start score för att man klara av missionet
-	Score += 5000;
+	Score += MissionCompleteBonus;
 	
 	float ScoreMultiplier = 1.0f;
 

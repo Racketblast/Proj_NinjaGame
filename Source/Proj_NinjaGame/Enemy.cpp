@@ -8,6 +8,7 @@
 #include "MeleeAIController.h"
 #include "SmokeBombObject.h"
 #include "StealthCharacter.h"
+#include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/OverlapResult.h"
@@ -207,7 +208,7 @@ void AEnemy::CheckCloseDetection()
 	{
 		// kontrollera att spelaren faktiskt är i boxen
 		TArray<FOverlapResult> Results;
-		bool bOverlap = GetWorld()->OverlapMultiByObjectType(
+		GetWorld()->OverlapMultiByObjectType(
 			Results,
 			BoxCenter,
 			BoxRotation,
@@ -219,7 +220,7 @@ void AEnemy::CheckCloseDetection()
 		{
 			if (R.GetActor() == PlayerPawn)
 			{
-				FVector Start = GetActorLocation() + FVector(0, 0, 65.f);
+				/*FVector Start = GetActorLocation() + FVector(0, 0, 65.f);
 				FVector End = PlayerPawn->GetActorLocation() + FVector(0, 0, 50.f);
 
 				FHitResult Hit;
@@ -241,6 +242,13 @@ void AEnemy::CheckCloseDetection()
 
 				// Kålla om linetracen träffar spelaren 
 				if (!bLineHit || Hit.GetActor() == PlayerPawn)
+				{
+					bCanSeePlayer = true;
+					UpdateLastSeenPlayerLocation();
+				}*/
+
+				// Kålla om linetracen träffar spelaren 
+				if (HasLineOfSightToPlayer())
 				{
 					bCanSeePlayer = true;
 					UpdateLastSeenPlayerLocation();
@@ -342,7 +350,7 @@ void AEnemy::CheckPlayerVisibility()
 			FCollisionQueryParams Params;
 			Params.AddIgnoredActor(this);
 
-			bool bHit = GetWorld()->LineTraceSingleByChannel(
+			/*bool bHit = GetWorld()->LineTraceSingleByChannel(
 				Hit,
 				EnemyLocation,
 				PlayerPawn->GetActorLocation(),
@@ -362,7 +370,17 @@ void AEnemy::CheckPlayerVisibility()
 					DrawDebugLine(GetWorld(), EnemyLocation, PlayerPawn->GetActorLocation(), FColor::Green, false, 0.1f);
 				}
 				return;
+			}*/
+
+			if (HasLineOfSightToPlayer())
+			{
+				bCanSeePlayer = true;
+				bIsSuspicious = false;
+				SuspiciousTimer = 0.f;
+				UpdateLastSeenPlayerLocation();
+				return;
 			}
+
 		}
 	}
 
@@ -381,15 +399,15 @@ void AEnemy::CheckPlayerVisibility()
 			FCollisionQueryParams Params;
 			Params.AddIgnoredActor(this);
 
-			bool bHit = GetWorld()->LineTraceSingleByChannel(
+			/*bool bHit = GetWorld()->LineTraceSingleByChannel(
 				Hit,
 				EnemyLocation,
 				PlayerPawn->GetActorLocation(),
 				ECC_Visibility,
 				Params
-			);
+			);*/
 
-			if (!bHit || Hit.GetActor() == PlayerPawn)
+			if (HasLineOfSightToPlayer()) // !bHit || Hit.GetActor() == PlayerPawn
 			{
 				bPlayerInSuspiciousZone = true;
 				bIsSuspicious = true;
@@ -450,6 +468,65 @@ void AEnemy::CheckPlayerVisibility()
 	bPlayerInSuspiciousZone = false;
 	bPlayerInAlertCone = false;
 }
+
+
+bool AEnemy::HasLineOfSightToPlayer()
+{
+	if (!PlayerPawn) return false;
+	AStealthCharacter* StealthPlayer = Cast<AStealthCharacter>(PlayerPawn);
+	if (!StealthPlayer) return false;
+
+	FVector EnemyEyes = GetActorLocation() + FVector(0,0,75);
+
+	TArray<FVector> TargetPoints;
+
+	// Mitten av spelaren
+	TargetPoints.Add(PlayerPawn->GetActorLocation());
+	
+	// kamera = huvud
+	TargetPoints.Add(StealthPlayer->GetFirstPersonCameraComponent()->GetComponentLocation());
+	
+	// vänster arm
+	TargetPoints.Add(StealthPlayer->GetLeftArmVisionPoint());
+
+	// höger arm
+	TargetPoints.Add(StealthPlayer->GetRightArmVisionPoint());
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	Params.AddIgnoredActor(PlayerPawn);
+
+	for (const FVector& Point : TargetPoints)
+	{
+		FHitResult Hit;
+
+		bool bHit = GetWorld()->LineTraceSingleByChannel(
+			Hit,
+			EnemyEyes,
+			Point,
+			ECC_Visibility,
+			Params
+		);
+
+		// Om det inte träffade något, eller träffade player först
+		if (!bHit || Hit.GetActor() == PlayerPawn)
+		{
+			if (bVisionDebug)
+			{
+				DrawDebugLine(GetWorld(), EnemyEyes, Point, FColor::Green, false, 0.1f);
+			}
+			return true;
+		}
+
+		if (bVisionDebug)
+		{
+			DrawDebugLine(GetWorld(), EnemyEyes, Point, FColor::Red, false, 0.1f);
+		}
+	}
+
+	return false;
+}
+
 
 
 void AEnemy::OnSuspiciousLocationDetected()
