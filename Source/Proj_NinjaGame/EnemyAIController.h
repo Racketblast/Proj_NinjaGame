@@ -176,6 +176,7 @@ protected:
 	FTimerHandle LookAroundTimerHandle;
 	FTimerHandle EndSearchTimerHandle;
 	FTimerHandle ResetSoundFlagHandle;
+	FTimerHandle RetryPatrolPointHandle;
 	FVector LastKnownPlayerLocation;
 	bool bIsLookingAround = false;
 	bool bIsInvestigatingSound = false;

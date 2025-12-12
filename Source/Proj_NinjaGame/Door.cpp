@@ -66,7 +66,8 @@ void ADoor::Use_Implementation(class AStealthCharacter* Player)
 			}
 			bNeedsToBeUnlocked = false;
 
-			//UpdateDoorVFX(); 
+			UpdateDoorMaterial();
+			UpdateDoorVFX(); 
 			
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.Owner = this;
@@ -111,6 +112,7 @@ void ADoor::BeginPlay()
     ClosedDoorRotation = StaticMeshComponent->GetRelativeRotation();
 	
 	UpdateDoorVFX();
+	UpdateDoorMaterial();
 
 	if (GetWorld())
 	{
@@ -199,16 +201,6 @@ void ADoor::UnlockDoor()
 	bOverrideInteractText = false;
 	InteractText = DoorUnlockText;
 	PlayerCanUnlock = true;
-
-	if (!StateVFXComponent && !StateVFXComponentTwo) return;
-	if (!UnlockedVFX) return;
-
-	// VFX
-	StateVFXComponent->SetAsset(UnlockedVFX);
-	StateVFXComponent->Activate(true);
-	
-	StateVFXComponentTwo->SetAsset(UnlockedVFX);
-	StateVFXComponentTwo->Activate(true);
 }
 
 bool ADoor::CanPushCharacter(ACharacter* Character, FVector PushDir, float PushDistance)
@@ -344,5 +336,23 @@ void ADoor::UpdateDoorVFX()
 	
 	StateVFXComponentTwo->SetAsset(NewSystem);
 	StateVFXComponentTwo->Activate(true);
+}
+
+void ADoor::UpdateDoorMaterial()
+{
+	if (!bNeedsToBeUnlocked)
+	{
+		if (DoorUnlockedMaterial)
+		{
+			DoorMesh->SetMaterial(4, DoorUnlockedMaterial);
+		}
+	}
+	else
+	{
+		if (DoorLockedMaterial)
+		{
+			DoorMesh->SetMaterial(4, DoorLockedMaterial);
+		}
+	}
 }
 

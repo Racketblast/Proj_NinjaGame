@@ -443,7 +443,7 @@ void AEnemy::CheckPlayerVisibility()
 		SuspiciousTimer = 0.f;
 	}
 
-	if (!bPlayerWithinChaseProximity)
+	if (!bPlayerWithinChaseProximity && State == EEnemyState::Chasing)
 	{
 		bCanSeePlayer = false;
 	}
@@ -771,7 +771,6 @@ void AEnemy::SpreadAgroToNearbyEnemies()
 void AEnemy::OnAgroSpreadTriggered()
 {
 	bCanSeePlayer = true;
-
 	//UE_LOG(LogTemp, Warning, TEXT("%s is now agro and is chasing!"), *GetName());
 }
 

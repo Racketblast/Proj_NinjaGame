@@ -3,9 +3,11 @@
 
 #include "AIThrowableObject.h"
 
+#include "BreakableObject.h"
 #include "Enemy.h"
 #include "SoundUtility.h"
 #include "StealthCharacter.h"
+#include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 void AAIThrowableObject::ThrowableOnComponentHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
@@ -47,6 +49,22 @@ void AAIThrowableObject::ThrowableOnComponentHit(UPrimitiveComponent* HitComp, A
 	else if (Cast<AEnemy>(OtherActor))
 	{
 		
+	}
+	else if (ABreakableObject* Breakable = Cast<ABreakableObject>(OtherActor))
+	{
+		Breakable->BreakObject();
+		if (ImpactGroundSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation(), 1, 1,0, ThrowableAttenuation);
+		}
+		if (bBreaksOnImpact)
+		{
+			DestroyObject();
+		}
+		else
+		{
+			ThrowCollision->SetSimulatePhysics(true);
+		}
 	}
 	else
 	{

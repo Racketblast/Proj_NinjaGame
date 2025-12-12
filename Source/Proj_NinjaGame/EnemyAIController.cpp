@@ -620,8 +620,7 @@ void AEnemyAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 				CurrentPatrolIndex,
 				*PatrolPoints[CurrentPatrolIndex]->GetName());
 			
-			FTimerHandle RetryHandle;
-			GetWorldTimerManager().SetTimer(RetryHandle, this, &AEnemyAIController::RetryMoveToNextPatrolPoint, 1.0f, false);
+			GetWorldTimerManager().SetTimer(RetryPatrolPointHandle, this, &AEnemyAIController::RetryMoveToNextPatrolPoint, 1.0f, false);
 		}
 	}
 
@@ -707,6 +706,7 @@ void AEnemyAIController::StartChasing()
 	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
 	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
 	GetWorldTimerManager().ClearTimer(AlertTimerHandle);
+	GetWorldTimerManager().ClearTimer(RetryPatrolPointHandle);
 
 
 	
@@ -1112,6 +1112,7 @@ void AEnemyAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayer
 	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
 	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
 	GetWorldTimerManager().ClearTimer(AlertTimerHandle);
+	GetWorldTimerManager().ClearTimer(RetryPatrolPointHandle);
 
 
 	
@@ -1160,6 +1161,7 @@ void AEnemyAIController::OnUnPossess()
 	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
 	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
 	GetWorldTimerManager().ClearTimer(AlertTimerHandle);
+	GetWorldTimerManager().ClearTimer(RetryPatrolPointHandle);
 	GetWorldTimerManager().ClearTimer(StunTimerHandle);
 }
 

@@ -20,6 +20,7 @@ protected:
 	virtual void HandleSearching(float DeltaSeconds) override;
 	virtual void HandleAlert(float DeltaSeconds) override;
 	virtual void HandlePatrolling(float DeltaSeconds) override;
+	virtual void StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation) override;
 	virtual void StartChasing() override;
 	virtual void StopChasing() override;
 
