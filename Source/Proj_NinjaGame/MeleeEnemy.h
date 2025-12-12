@@ -44,6 +44,7 @@ protected:
 	virtual void CheckPlayerVisibility() override;
 	virtual void CheckChaseProximityDetection() override;
 	virtual void CheckCloseDetection() override;
+	//virtual bool HasLineOfSightToPlayer() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
 	float AttackCooldown = 1.2f;
