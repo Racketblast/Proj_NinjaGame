@@ -109,4 +109,10 @@ protected:
 	
 	void UpdateDoorVFX();
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="VFX")
+	UMaterial* DoorLockedMaterial;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="VFX")
+	UMaterial* DoorUnlockedMaterial;
+	
+	void UpdateDoorMaterial();
 };

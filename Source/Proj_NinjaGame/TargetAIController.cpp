@@ -48,9 +48,13 @@ void ATargetAIController::HandlePatrolling(float DeltaSeconds)
 		Super::HandlePatrolling(DeltaSeconds);
 }
 
+void ATargetAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation)
+{
+	StartChasing();
+}
+
 void ATargetAIController::StartChasing()
 {
-	
 	GetWorldTimerManager().ClearTimer(LoseSightTimerHandle);
 	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
 	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
