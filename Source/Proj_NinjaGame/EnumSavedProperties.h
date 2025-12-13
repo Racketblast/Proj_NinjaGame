@@ -11,6 +11,7 @@ UENUM(BlueprintType)
 enum class EMission : uint8
 {
 	None				UMETA(DisplayName = "None"),
+	TutorialMission		UMETA(DisplayName = "TutorialMission"),
 	FirstMission		UMETA(DisplayName = "FirstMission"),
 	SecondMission		UMETA(DisplayName = "SecondMission"),
 	ThirdMission		UMETA(DisplayName = "ThirdMission"),
