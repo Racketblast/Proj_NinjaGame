@@ -44,6 +44,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Scoring|Stealth")
 	int32 StealthKillScoreValue = 500;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Scoring")
+	int32 MissionCompleteBonus = 5000;
+
 	int32 CalculateTimeBonus(float TimeTaken) const;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Mission Timer")
@@ -106,6 +109,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Scoring")
 	int32 GetStealthKills() const { return StealthKills; }
+
+	UFUNCTION(BlueprintCallable, Category="Scoring")
+	int32 GetMissionCompleteBonus() const { return MissionCompleteBonus; }
 
 	UFUNCTION(BlueprintCallable, Category="Scoring")
 	FString FormatTime(float TimeTaken) const;
