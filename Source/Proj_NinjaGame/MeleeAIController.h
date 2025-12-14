@@ -40,7 +40,8 @@ protected:
 	bool CannotReachPlayer(APawn* Player);
 
 	bool bBackingOff = false;
-	float BackOffDuration = 0.7f;
+	float BackOffDuration = 5.0f;
+	FVector BackOffLocation;
 
 private:
 	FTimerHandle StartPatrolTimerHandle;

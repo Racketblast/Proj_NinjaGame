@@ -207,6 +207,7 @@ void AMeleeEnemy::ResetAttackCooldown()
 	}
 }*/
 
+/*
 void AMeleeEnemy::EnemyThrow()
 {
 	if (!ProjectileSpawnPoint || !ThrowableObject) return;
@@ -220,7 +221,7 @@ void AMeleeEnemy::EnemyThrow()
 	/*if (Distance < 300.f)
 	{
 		PredictedLocation = PlayerLocation; // ingen prediction på nära håll
-	}*/
+	}#1#
 
 	// Ändrar hur högt fienden vill kasta, tycker inte riktigt att detta fungerar för tillfället
 	float ArcHeight = 0.f;
@@ -241,7 +242,7 @@ void AMeleeEnemy::EnemyThrow()
 
 			ArcHeight += 150.f; 
 		}
-	}*/
+	}#1#
 
 	if (bBlocked)
 	{
@@ -322,6 +323,156 @@ void AMeleeEnemy::EnemyThrow()
 		ActionAudioComponent->Play();
 	}
 }
+*/
+
+void AMeleeEnemy::EnemyThrow()
+{
+	if (!ProjectileSpawnPoint || !ThrowableObject || !PlayerPawn) return;
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	const FVector SpawnLocation = ProjectileSpawnPoint->GetComponentLocation();
+	
+	float BaseProjectileSpeed = 1100.f;
+	float ChosenProjectileSpeed = BaseProjectileSpeed;
+
+	FVector PredictedLocation = PredictPlayerLocation(BaseProjectileSpeed);
+	FVector BestTargetLocation = PredictedLocation;
+	float ChosenArcHeight = 0.f;
+
+	bool bFoundValidThrow = false;
+	
+	// Testkombinationer
+	const TArray<float> SpeedMultipliers = { 1.0f, 1.15f, 1.3f };
+	const TArray<float> ArcHeights = { 0.f, 150.f, 300.f, 450.f, 600.f };
+	const TArray<float> TargetZOffsets = { 0.f, 50.f, 100.f };
+	
+	// ARC sökning
+	for (float SpeedMul : SpeedMultipliers)
+	{
+		float TestSpeed = BaseProjectileSpeed * SpeedMul;
+
+		for (float ZOffset : TargetZOffsets)
+		{
+			FVector TestTarget = PredictedLocation;
+			TestTarget.Z += ZOffset;
+
+			for (float Arc : ArcHeights)
+			{
+				if (!IsThrowPathBlocked(SpawnLocation, TestTarget, Arc))
+				{
+					// Giltig bana hittad
+					bFoundValidThrow = true;
+					ChosenProjectileSpeed = TestSpeed;
+					BestTargetLocation = TestTarget;
+					ChosenArcHeight = Arc;
+
+					UE_LOG(LogTemp, Warning,
+						TEXT("EnemyThrow: Valid arc found | Speed %.0f | Arc %.0f | ZOffset %.0f"),
+						TestSpeed, Arc, ZOffset);
+
+					goto FOUND_THROW;
+				}
+			}
+		}
+	}
+
+FOUND_THROW:
+	
+	// Ingen giltig bana, kör backoff
+	if (!bFoundValidThrow)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("EnemyThrow: No valid throw found, attempting backoff"));
+
+		FVector BackLoc = GetActorLocation() - GetActorForwardVector() * 250.f;
+
+		if (AMeleeAIController* AICon = Cast<AMeleeAIController>(GetController()))
+		{
+			AICon->StartBackOff(BackLoc);
+		}
+		return;
+	}
+	
+	// Debug 
+	const int DebugSamples = 20;
+	FVector PrevPoint = SpawnLocation;
+
+	for (int i = 1; i <= DebugSamples; i++)
+	{
+		float T = (float)i / DebugSamples;
+		FVector Point = FMath::Lerp(SpawnLocation, BestTargetLocation, T);
+		Point.Z += ChosenArcHeight * FMath::Sin(T * PI);
+
+		DrawDebugLine(
+			World,
+			PrevPoint,
+			Point,
+			FColor::Blue,
+			false,
+			2.0f,
+			0,
+			2.5f
+		);
+
+		PrevPoint = Point;
+	}
+
+	DrawDebugSphere(World, BestTargetLocation, 20.f, 12, FColor::Yellow, false, 2.f);
+	
+	// Spawna Projektil
+	AAIThrowableObject* ThrownObject = World->SpawnActor<AAIThrowableObject>(
+		ThrowableObject,
+		SpawnLocation,
+		(BestTargetLocation - SpawnLocation).Rotation()
+	);
+
+	if (!ThrownObject) return;
+
+	ThrownObject->SetRandomMesh();
+	ThrownObject->Thrown = true;
+	ThrownObject->SetShowVFX(false);
+	ThrownObject->bBreaksOnImpact = true;
+	ThrownObject->DealtDamage = AttackDamage;
+	ThrownObject->GravityZ = World->GetGravityZ();
+	ThrownObject->ChangeToThrowCollision(true);
+	ThrownObject->ThrowCollision->SetUseCCD(true);
+	
+	// Beräkna kasthastighet
+	FVector LaunchVelocity;
+	FVector AdjustedTarget = BestTargetLocation;
+	AdjustedTarget.Z -= 40.f;
+
+	UGameplayStatics::FSuggestProjectileVelocityParameters Params(
+		this,
+		SpawnLocation,
+		AdjustedTarget,
+		ChosenProjectileSpeed
+	);
+
+	Params.TraceOption = ESuggestProjVelocityTraceOption::DoNotTrace;
+	Params.OverrideGravityZ = 0.f;
+	Params.CollisionRadius = 0.f;
+	Params.bFavorHighArc = ChosenArcHeight > 200.f;
+	Params.bDrawDebug = false;
+	Params.bAcceptClosestOnNoSolutions = false;
+
+	bool bHasVelocity = UGameplayStatics::SuggestProjectileVelocity(Params, LaunchVelocity);
+
+	if (!bHasVelocity)
+	{
+		LaunchVelocity = (AdjustedTarget - SpawnLocation).GetSafeNormal() * ChosenProjectileSpeed;
+	}
+
+	ThrownObject->ThrowVelocity = LaunchVelocity;
+	
+	// Ljud
+	if (AttackSound)
+	{
+		ActionAudioComponent->SetSound(AttackSound);
+		ActionAudioComponent->Play();
+	}
+}
 
 
 
@@ -343,7 +494,7 @@ bool AMeleeEnemy::IsThrowPathBlocked(const FVector& SpawnLocation, const FVector
 
 		if (GetWorld()->LineTraceSingleByChannel(Hit, SpawnLocation, SamplePoint, ECC_Visibility, Params))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("IsThrowPathBlocked: Något blockerar kastet"));
+			//UE_LOG(LogTemp, Warning, TEXT("IsThrowPathBlocked: Något blockerar kastet"));
 			return true; 
 		}
 	}
