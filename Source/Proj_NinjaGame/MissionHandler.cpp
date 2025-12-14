@@ -177,7 +177,9 @@ int32 AMissionHandler::CalculateTimeBonus(float TimeTaken) const
 		return BaseTimeBonus;
 	}
 
-	float SecondsOver = TimeTaken - TimeThresholdSeconds;
+	float SecondsOverFloat  = TimeTaken - TimeThresholdSeconds;
+
+	int32 SecondsOver = FMath::FloorToInt(SecondsOverFloat);
 
 	// penalty per sekund 
 	int32 Penalty = SecondsOver * PenaltyPerSecond;
