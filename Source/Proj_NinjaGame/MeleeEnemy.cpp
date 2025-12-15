@@ -150,6 +150,7 @@ void AMeleeEnemy::ResetAttackCooldown()
 	bCanAttack = true;
 }
 
+
 void AMeleeEnemy::EnemyThrow()
 {
 	if (!ProjectileSpawnPoint || !ThrowableObject || !PlayerPawn) return;
@@ -193,9 +194,7 @@ void AMeleeEnemy::EnemyThrow()
 					BestTargetLocation = TestTarget;
 					ChosenArcHeight = Arc;
 
-					UE_LOG(LogTemp, Warning,
-						TEXT("EnemyThrow: Valid arc found | Speed %.0f | Arc %.0f | ZOffset %.0f"),
-						TestSpeed, Arc, ZOffset);
+					//UE_LOG(LogTemp, Warning, TEXT("EnemyThrow: Valid arc found | Speed %.0f | Arc %.0f | ZOffset %.0f"), TestSpeed, Arc, ZOffset);
 
 					goto FOUND_THROW;
 				}

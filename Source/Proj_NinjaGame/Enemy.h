@@ -102,6 +102,8 @@ protected:
 	APawn* PlayerPawn;
 
 	bool bCanSeePlayer = false;
+	
+	bool bHasDirectVisualOnPlayer = false; 	// Endast true när fienden faktiskt ser spelaren
 
 	virtual void CheckPlayerVisibility();
 

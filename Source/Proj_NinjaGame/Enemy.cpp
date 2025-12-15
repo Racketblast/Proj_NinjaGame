@@ -375,6 +375,7 @@ void AEnemy::CheckPlayerVisibility()
 			if (HasLineOfSightToPlayer())
 			{
 				bCanSeePlayer = true;
+				bHasDirectVisualOnPlayer = true;
 				bIsSuspicious = false;
 				SuspiciousTimer = 0.f;
 				UpdateLastSeenPlayerLocation();
@@ -410,6 +411,7 @@ void AEnemy::CheckPlayerVisibility()
 			if (HasLineOfSightToPlayer()) // !bHit || Hit.GetActor() == PlayerPawn
 			{
 				bPlayerInSuspiciousZone = true;
+				bHasDirectVisualOnPlayer = true;
 				bIsSuspicious = true;
 				SuspiciousTimer += GetWorld()->GetDeltaSeconds();
 				bPlayerInAlertCone = true;
@@ -465,6 +467,7 @@ void AEnemy::CheckPlayerVisibility()
 	{
 		bCanSeePlayer = false;
 	}
+	bHasDirectVisualOnPlayer = false;
 	bPlayerInSuspiciousZone = false;
 	bPlayerInAlertCone = false;
 }
@@ -745,7 +748,7 @@ void AEnemy::SpreadAgroToNearbyEnemies()
     if (!MyAI) return;
 
     // Endast sprida agro om denna fiende faktiskt jagar
-    if (MyAI->GetCurrentState() != EEnemyState::Chasing)
+    if (MyAI->GetCurrentState() != EEnemyState::Chasing || !bHasDirectVisualOnPlayer)
         return;
 
     UWorld* World = GetWorld();
