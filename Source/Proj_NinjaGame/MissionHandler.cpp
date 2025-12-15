@@ -153,7 +153,7 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 	// ifall inga fiender har dött
 	if (EnemyHandler->GetAreAllEnemiesAlive())
 	{
-		ScoreMultiplier += 2;
+		ScoreMultiplier += 1;
 		bKilledAllOrNoEnemies = true;
 		UE_LOG(LogTemp, Warning, TEXT("All enemies alive: ScoreMultiplier +1"));
 	}
