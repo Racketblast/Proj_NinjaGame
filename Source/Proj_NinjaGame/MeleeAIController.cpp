@@ -163,10 +163,10 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 		StopBackOff();
 		return;
 	}
-	if (bBackingOff && !bReachedBackOff)
+	/*if (bBackingOff && !bReachedBackOff)
 	{
 		MoveToLocation(BackOffLocation);
-	}
+	}*/
 
 	Super::OnMoveCompleted(RequestID, Result);
 }

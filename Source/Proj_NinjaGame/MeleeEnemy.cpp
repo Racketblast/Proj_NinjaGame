@@ -49,6 +49,14 @@ void AMeleeEnemy::BeginPlay()
 void AMeleeEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	SmoothedPlayerVelocity = FMath::VInterpTo(
+		SmoothedPlayerVelocity,
+		PlayerPawn->GetVelocity(),
+		DeltaTime,
+		5.f
+	);
+
 }
 
 void AMeleeEnemy::CheckChaseProximityDetection()
@@ -302,8 +310,7 @@ FOUND_THROW:
 }
 
 
-
-bool AMeleeEnemy::IsThrowPathBlocked(const FVector& SpawnLocation, const FVector& TargetLocation, float TestArcHeight)
+/*bool AMeleeEnemy::IsThrowPathBlocked(const FVector& SpawnLocation, const FVector& TargetLocation, float TestArcHeight)
 {
 	const int Samples = 10;
 
@@ -327,6 +334,85 @@ bool AMeleeEnemy::IsThrowPathBlocked(const FVector& SpawnLocation, const FVector
 	}
 
 	return false; 
+}*/
+
+bool AMeleeEnemy::IsThrowPathBlocked(
+	const FVector& SpawnLocation,
+	const FVector& TargetLocation,
+	float TestArcHeight
+)
+{
+	UWorld* World = GetWorld();
+	if (!World) return true;
+
+	const int Samples = 14;                 
+
+	FVector PreviousPoint = SpawnLocation;
+
+	for (int i = 1; i <= Samples; i++)
+	{
+		float T = (float)i / Samples;
+
+		FVector CurrentPoint = FMath::Lerp(SpawnLocation, TargetLocation, T);
+		CurrentPoint.Z += TestArcHeight * FMath::Sin(T * PI);
+
+		FHitResult Hit;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+		Params.AddIgnoredActor(PlayerPawn); 
+
+		FCollisionShape Sphere = FCollisionShape::MakeSphere(ProjectileRadius);
+
+		bool bHit = World->SweepSingleByChannel(
+			Hit,
+			PreviousPoint,
+			CurrentPoint,
+			FQuat::Identity,
+			ECC_Visibility,
+			Sphere,
+			Params
+		);
+
+		// Debug
+		if (bHit)
+		{
+			/*DrawDebugSphere(
+				World,
+				Hit.ImpactPoint,
+				ProjectileRadius,
+				12,
+				FColor::Red,
+				false,
+				1.5f
+			);
+
+			DrawDebugLine(
+				World,
+				PreviousPoint,
+				CurrentPoint,
+				FColor::Red,
+				false,
+				1.5f,
+				0,
+				2.f
+			);*/
+
+			return true;
+		}
+		/*DrawDebugLine(
+			World,
+			PreviousPoint,
+			CurrentPoint,
+			FColor::Green,
+			false,
+			0.5f,
+			0,
+			1.5f
+		);*/
+		PreviousPoint = CurrentPoint;
+	}
+
+	return false;
 }
 
 
@@ -345,6 +431,58 @@ FVector AMeleeEnemy::PredictPlayerLocation(float ProjectileSpeed) const
 
 	return PlayerLocation + PlayerVelocity * TravelTime;
 }
+
+/*FVector AMeleeEnemy::PredictPlayerLocation(float ProjectileSpeed) const
+{
+	if (!PlayerPawn || !ProjectileSpawnPoint)
+		return FVector::ZeroVector;
+
+	const FVector Origin = ProjectileSpawnPoint->GetComponentLocation();
+	const FVector PlayerPos = PlayerPawn->GetActorLocation();
+	const FVector PlayerVel = SmoothedPlayerVelocity;
+
+	// Om spelaren nästan står still
+	if (PlayerVel.SizeSquared() < 25.f)
+	{
+		return PlayerPos;
+	}
+
+	const float GravityZ = GetWorld()->GetGravityZ(); 
+	const float MaxLeadTime = 0.8f;
+
+	FVector PredictedPos = PlayerPos;
+	float Time = 0.f;
+
+	for (int i = 0; i < 4; ++i)
+	{
+		const float Distance = FVector::Dist(Origin, PredictedPos);
+		Time = Distance / ProjectileSpeed;
+		Time = FMath::Min(Time, MaxLeadTime);
+
+		// Horisontell prediktion
+		PredictedPos = PlayerPos + PlayerVel * Time;
+		
+		/*const float GravityCompensation = 0.5f * FMath::Abs(GravityZ) * Time * Time;
+		PredictedPos.Z += GravityCompensation;#1#
+	}
+
+	if (bVisionDebug)
+	{
+		DrawDebugSphere(
+			GetWorld(),
+			PredictedPos,
+			20.f,
+			12,
+			FColor::Green,
+			false,
+			1.f
+		);
+	}
+
+
+	return PredictedPos;
+}*/
+
 
 bool AMeleeEnemy::IsLocationStillSeeingPlayer(const FVector& TestLoc) const
 {

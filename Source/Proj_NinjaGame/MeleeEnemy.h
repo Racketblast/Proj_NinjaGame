@@ -90,5 +90,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category="Audio")
 	USoundBase* AttackSound;
-	
+
+	FVector SmoothedPlayerVelocity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Throwable")
+	float ProjectileRadius = 58.f;    
 };
