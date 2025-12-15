@@ -25,6 +25,10 @@ void AMeleeAIController::OnPossess(APawn* InPawn)
 
 void AMeleeAIController::Tick(float DeltaSeconds)
 {
+	if (bBackingOff)
+	{
+		return;
+	}
 	Super::Tick(DeltaSeconds);
 }
 
@@ -35,6 +39,7 @@ void AMeleeAIController::HandleChasing(float DeltaSeconds)
 
 	if (bBackingOff)
 	{
+		//MoveToLocation(BackOffLocation, 1.f);
 		//UE_LOG(LogTemp, Error, TEXT("HandleChasing: bBackingOff"))
 		return;
 	}
@@ -124,7 +129,11 @@ void AMeleeAIController::HandleChasing(float DeltaSeconds)
 		}
 
 		// Annars fortsätt springa efter spelaren
-		MoveToActor(Player);
+		if (!bBackingOff)
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("MoveToActor(Player)"));
+			MoveToActor(Player);
+		}
 		GetWorldTimerManager().ClearTimer(LoseSightTimerHandle);
 	}
 	else if (!GetWorldTimerManager().IsTimerActive(LoseSightTimerHandle))
@@ -140,7 +149,25 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 		return;
 	if (GetWorld()->bIsTearingDown)
 		return;
-	
+
+	bool bReachedBackOff = FVector::DistSquared(GetPawn()->GetActorLocation(), BackOffLocation) < FMath::Square(100.f); 
+
+	if (bBackingOff && bReachedBackOff)
+	{
+		UE_LOG(LogTemp, Warning, TEXT(
+		"OnMoveCompleted for BackOff: Result=%s"),
+		*UEnum::GetValueAsString(Result.Code)
+		);
+		
+		//UE_LOG(LogTemp, Warning, TEXT("BackOff move completed"));
+		StopBackOff();
+		return;
+	}
+	if (bBackingOff && !bReachedBackOff)
+	{
+		MoveToLocation(BackOffLocation);
+	}
+
 	Super::OnMoveCompleted(RequestID, Result);
 }
 
@@ -157,6 +184,10 @@ void AMeleeAIController::StopChasing()
 
 void AMeleeAIController::RefreshChaseTarget()
 {
+	if (bBackingOff)
+	{
+		return;
+	}
 	Super::RefreshChaseTarget();
 }
 
@@ -234,6 +265,12 @@ void AMeleeAIController::StartBackOff(FVector BackLocation)
 	APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(),0);
 	if (!Player) return;
 
+	if (bBackingOff)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Already backing off, ignoring"));
+		return;
+	}
+
 	UE_LOG(LogTemp, Warning, TEXT("StartBackOff: bBackingOff"))
 	
 	UNavigationSystemV1* Nav = UNavigationSystemV1::GetCurrent(GetWorld());
@@ -271,15 +308,31 @@ void AMeleeAIController::StartBackOff(FVector BackLocation)
 		return;
 	}
 
-	if (!ControlledEnemy->IsLocationStillSeeingPlayer(FinalLocation))
+	/*if (!ControlledEnemy->IsLocationStillSeeingPlayer(FinalLocation))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Backoff cancelled: Would lose line of sight"));
 		return; 
+	}*/
+
+	if (ControlledEnemy->GetVisionDebug())
+	{
+		DrawDebugSphere(
+			GetWorld(),
+			FinalLocation,
+			50.f,
+			12,
+			FColor::Red,
+			false,
+			2.f
+		);
 	}
+
 	
 	bBackingOff = true;
 
-	MoveToLocation(FinalLocation, 5.f);
+	StopMovement();
+	BackOffLocation = FinalLocation;
+	MoveToLocation(FinalLocation, 1.f);
 	
 	GetWorldTimerManager().SetTimer(
 		BackOffTimerHandle,
@@ -293,6 +346,8 @@ void AMeleeAIController::StartBackOff(FVector BackLocation)
 void AMeleeAIController::StopBackOff()
 {
 	bBackingOff = false;
+	
+	UE_LOG(LogTemp, Warning, TEXT("StopBackOff."));
 	
 	APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(),0);
 	if (!Player) return;

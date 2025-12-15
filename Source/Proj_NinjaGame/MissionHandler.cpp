@@ -153,7 +153,7 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 	// ifall inga fiender har dött
 	if (EnemyHandler->GetAreAllEnemiesAlive())
 	{
-		ScoreMultiplier += 1;
+		ScoreMultiplier += 2;
 		bKilledAllOrNoEnemies = true;
 		UE_LOG(LogTemp, Warning, TEXT("All enemies alive: ScoreMultiplier +1"));
 	}
@@ -177,7 +177,9 @@ int32 AMissionHandler::CalculateTimeBonus(float TimeTaken) const
 		return BaseTimeBonus;
 	}
 
-	float SecondsOver = TimeTaken - TimeThresholdSeconds;
+	float SecondsOverFloat  = TimeTaken - TimeThresholdSeconds;
+
+	int32 SecondsOver = FMath::FloorToInt(SecondsOverFloat);
 
 	// penalty per sekund 
 	int32 Penalty = SecondsOver * PenaltyPerSecond;
