@@ -19,7 +19,7 @@ public:
 	virtual void Init() override;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	bool bUsingGamepad = false;
+	bool bUsingGamepad = true;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int CurrentGameFlag;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
