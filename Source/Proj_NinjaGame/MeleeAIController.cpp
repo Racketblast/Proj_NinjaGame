@@ -131,6 +131,7 @@ void AMeleeAIController::HandleChasing(float DeltaSeconds)
 		// Annars fortsätt springa efter spelaren
 		if (!bBackingOff)
 		{
+			//UE_LOG(LogTemp, Warning, TEXT("MoveToActor(Player)"));
 			MoveToActor(Player);
 		}
 		GetWorldTimerManager().ClearTimer(LoseSightTimerHandle);
@@ -183,6 +184,10 @@ void AMeleeAIController::StopChasing()
 
 void AMeleeAIController::RefreshChaseTarget()
 {
+	if (bBackingOff)
+	{
+		return;
+	}
 	Super::RefreshChaseTarget();
 }
 
