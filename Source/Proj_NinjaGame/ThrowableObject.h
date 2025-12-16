@@ -53,10 +53,13 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TSubclassOf<class AFieldSystemActor> FieldActorClass;
 	UPROPERTY(BlueprintReadWrite)
 	AFieldSystemActor* FieldActor;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
+	UNiagaraComponent* BreakVFXComponent;
+
 	
 	UFUNCTION(BlueprintCallable)
 	void SpawnFieldActor();
