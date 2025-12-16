@@ -27,6 +27,11 @@ AThrowableObject::AThrowableObject()
 	ThrowCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
 	StaticMeshComponent->SetupAttachment(ThrowCollision);
 	StaticMeshComponent->SetGenerateOverlapEvents(true);
+
+	
+	BreakVFXComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("BreakVFX"));
+	BreakVFXComponent->SetupAttachment(RootComponent);
+	BreakVFXComponent->bAutoActivate = false;
 }
 
 void AThrowableObject::Use_Implementation(class AStealthCharacter* Player)
@@ -366,6 +371,11 @@ void AThrowableObject::DestroyObject()
 
 			GeoComp->SetPerLevelCollisionProfileNames({"Debris","Debris","Debris"});
 			GeoComp->SetCanEverAffectNavigation(false);
+		}
+		
+		if (BreakVFXComponent && BreakVFXComponent->GetAsset())
+		{
+			BreakVFXComponent->Activate();
 		}
 	}
 }
