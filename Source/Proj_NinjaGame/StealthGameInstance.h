@@ -90,6 +90,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool HasGameChanged();
 	
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category="Dialogue")
+	TMap<EMission, int> ScoreMap;
+	UFUNCTION(BlueprintCallable)
+	bool ScoreMapEquals(const TMap<EMission, int> ScoreMap1, const TMap<EMission, int> ScoreMap2);
 	//Dialogue
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category="Dialogue")
 	UDataTable* EventDialogueInfo;
