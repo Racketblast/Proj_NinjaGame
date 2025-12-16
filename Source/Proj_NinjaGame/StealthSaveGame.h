@@ -24,6 +24,8 @@ public:
 	TSubclassOf<class AThrowableWeapon> SavedOwnThrowWeapon;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	EPlayerOwnThrowWeapon SavedOwnThrowWeaponEnum;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TMap<EMission, int> SavedScoreMap;
 	
 	//Options saved
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
