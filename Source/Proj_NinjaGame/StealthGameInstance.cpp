@@ -58,6 +58,7 @@ void UStealthGameInstance::FillSaveGame()
 	Save->SavedMissionsCleared = MissionsCleared;
 	Save->SavedOwnThrowWeapon = CurrentOwnThrowWeapon;
 	Save->SavedOwnThrowWeaponEnum = CurrentOwnThrowWeaponEnum;
+	Save->SavedScoreMap = ScoreMap;
 	
 	//Saves Options data
 	FillSaveOptions();
@@ -82,6 +83,7 @@ void UStealthGameInstance::FillLoadGame()
 	MissionsCleared = Save->SavedMissionsCleared;
 	CurrentOwnThrowWeapon = Save->SavedOwnThrowWeapon;
 	CurrentOwnThrowWeaponEnum = Save->SavedOwnThrowWeaponEnum;
+	ScoreMap = Save->SavedScoreMap;
 
 	//Loads Options data
 	FillLoadOptions();
@@ -177,6 +179,7 @@ void UStealthGameInstance::RestartGame()
 	MissionsCleared = {};
 	CurrentOwnThrowWeapon = nullptr;
 	CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::None;
+	ScoreMap.Empty();
 }
 
 bool UStealthGameInstance::HasGameChanged()
@@ -194,6 +197,8 @@ bool UStealthGameInstance::HasGameChanged()
 				return true;
 			if (CurrentOwnThrowWeaponEnum != Save->SavedOwnThrowWeaponEnum)
 				return true;
+			if (!ScoreMapEquals(ScoreMap, Save->SavedScoreMap))
+				return true;
 			
 			if (SensitivityScale != Save->SavedSensitivityScale)
 				return true;
@@ -209,6 +214,21 @@ bool UStealthGameInstance::HasGameChanged()
 		return false;
 	}
 	
+	return true;
+}
+
+bool UStealthGameInstance::ScoreMapEquals(const TMap<EMission, int> ScoreMap1, const TMap<EMission, int> ScoreMap2)
+{
+	if (ScoreMap1.Num() != ScoreMap2.Num())
+		return false;
+
+	for (const TPair<EMission, int>& Pair : ScoreMap1)
+	{
+		int OtherValue = *ScoreMap2.Find(Pair.Key);
+		if (!OtherValue || OtherValue != Pair.Value)
+			return false;
+	}
+
 	return true;
 }
 
