@@ -206,6 +206,9 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Audio")
 	UAudioComponent* VoiceAudioComponent;
+	
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category="Dialogue")
+	UDataTable* EnemyVoiceInfo;
 
 	UPROPERTY(EditAnywhere, Category="Audio")
 	USoundBase* HurtSoundOne;
