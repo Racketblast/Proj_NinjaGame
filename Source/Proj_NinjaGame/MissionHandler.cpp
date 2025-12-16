@@ -274,18 +274,18 @@ void AMissionHandler::RemoveObjectiveFromTotal(AActor* ThisObject)
 
 void AMissionHandler::CheckMissionAchievements()
 {
-	AStealthCharacter* Player = Cast<AStealthCharacter>(
-		UGameplayStatics::GetPlayerCharacter(this, 0)
-	);
+	AStealthCharacter* Player = Cast<AStealthCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
 
 	if (!Player)
 		return;
 
-	UAchievementSubsystem* Achievements =
-		GetGameInstance()->GetSubsystem<UAchievementSubsystem>();
+	UAchievementSubsystem* Achievements = GetGameInstance()->GetSubsystem<UAchievementSubsystem>();
 
 	if (!Achievements)
 		return;
+
+	UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance());
+	if (!GI) return;
 
 	//UE_LOG(LogTemp, Warning, TEXT("MissionHandler: CheckMissionAchievements"));
 	

@@ -35,6 +35,8 @@ const TMap<FName, bool>& UAchievementSubsystem::GetAllAchievements() const
 
 void UAchievementSubsystem::LoadFromSave(UStealthSaveGame* Save)
 {
+	AchievementStates.Empty();
+	
 	if (!Save)
 		return;
 
