@@ -202,6 +202,11 @@ protected:
 	bool bIsDead = false;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Stats")
 	TSubclassOf<UUserWidget> DeathScreenWidget;
+public:
+	float GetHealth() const { return Health; }
+	float GetMaxHealth() const { return MaxHealth; }
+	
+protected:
 
 	//Use Variables
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")

@@ -3,6 +3,7 @@
 
 #include "MissionHandler.h"
 
+#include "AchievementSubsystem.h"
 #include "CollectableMissionObject.h"
 #include "StealthCharacter.h"
 #include "StealthGameInstance.h"
@@ -104,6 +105,8 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 			return Score;
 		}
 	}
+	
+	CheckMissionAchievements(); // För Achievements
 
 	//Lite start score för att man klara av missionet
 	Score += MissionCompleteBonus;
@@ -266,4 +269,33 @@ void AMissionHandler::RemoveObjectiveFromTotal(AActor* ThisObject)
 			Player->bHasCompletedTheMission = true;
 		}
 	}
+}
+
+
+void AMissionHandler::CheckMissionAchievements()
+{
+	AStealthCharacter* Player = Cast<AStealthCharacter>(
+		UGameplayStatics::GetPlayerCharacter(this, 0)
+	);
+
+	if (!Player)
+		return;
+
+	UAchievementSubsystem* Achievements =
+		GetGameInstance()->GetSubsystem<UAchievementSubsystem>();
+
+	if (!Achievements)
+		return;
+
+	//UE_LOG(LogTemp, Warning, TEXT("MissionHandler: CheckMissionAchievements"));
+	
+	// Achievement: Spelaren klarade missionet utan att ta skada
+	const bool bFullHealth = Player->GetHealth() >= Player->GetMaxHealth();
+
+	if (bFullHealth)
+	{
+		Achievements->UnlockAchievement("ACH_NO_DAMAGE_MISSION");
+	}
+
+	// Achievement: 
 }

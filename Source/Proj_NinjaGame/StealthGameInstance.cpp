@@ -62,6 +62,12 @@ void UStealthGameInstance::FillSaveGame()
 	
 	//Saves Options data
 	FillSaveOptions();
+
+	/*if (UAchievementSubsystem* Achievements = GetSubsystem<UAchievementSubsystem>())
+	{
+		Achievements->SaveToSave(Save);
+	}*/
+
 }
 
 void UStealthGameInstance::FillSaveOptions()
@@ -87,6 +93,11 @@ void UStealthGameInstance::FillLoadGame()
 
 	//Loads Options data
 	FillLoadOptions();
+
+	/*if (UAchievementSubsystem* Achievements = GetSubsystem<UAchievementSubsystem>())
+	{
+		Achievements->LoadFromSave(Save);
+	}*/
 }
 
 void UStealthGameInstance::FillLoadOptions()

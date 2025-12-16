@@ -82,6 +82,8 @@ protected:
 	int ObjectsStolen = 0;
 
 	void SetupMissionObjectives();
+
+	void CheckMissionAchievements();
 public:	
 	// Called every frame 
 	virtual void Tick(float DeltaTime) override;
