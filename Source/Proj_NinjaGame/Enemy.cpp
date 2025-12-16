@@ -1032,6 +1032,7 @@ void AEnemy::RemoveHelmet()
 	if (AEnemyAIController* AI = Cast<AEnemyAIController>(GetController()))
 	{
 		AI->StartChasingFromExternalOrder(PlayerPawn->GetActorLocation());
+		AI->StunEnemy(1.0f, EEnemyState::Chasing); 
 	}
 
 	if (HelmetMesh)

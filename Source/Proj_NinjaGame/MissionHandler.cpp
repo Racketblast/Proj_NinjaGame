@@ -5,6 +5,7 @@
 
 #include "CollectableMissionObject.h"
 #include "StealthCharacter.h"
+#include "StealthGameInstance.h"
 #include "TargetEnemy.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -165,6 +166,11 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 	UE_LOG(LogTemp, Warning, TEXT("Score Multiplier: %f"), ScoreMultiplier);
 	UE_LOG(LogTemp, Warning, TEXT("Final Score: %f"), FinalScore);
 	UE_LOG(LogTemp, Warning, TEXT("MISSION SCORE DEBUG END"));
+
+	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance()))
+	{
+		GI->TrySetMissionScore(GI->GetCurrentMission(), FMath::RoundToInt(FinalScore));
+	}
 	
 	return FinalScore;
 }

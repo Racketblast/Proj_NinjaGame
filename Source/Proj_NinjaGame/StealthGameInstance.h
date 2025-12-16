@@ -36,6 +36,8 @@ public:
 	FName StartLocation;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	EMission CurrentMission;
+
+	EMission GetCurrentMission() const {return CurrentMission;}
 	
 	//Sound
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Options | Sound | Mix")
@@ -94,6 +96,10 @@ public:
 	TMap<EMission, int> ScoreMap;
 	UFUNCTION(BlueprintCallable)
 	bool ScoreMapEquals(const TMap<EMission, int> ScoreMap1, const TMap<EMission, int> ScoreMap2);
+	UFUNCTION(BlueprintCallable)
+	void TrySetMissionScore(EMission Mission, int32 NewScore); 
+
+	
 	//Dialogue
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category="Dialogue")
 	UDataTable* EventDialogueInfo;

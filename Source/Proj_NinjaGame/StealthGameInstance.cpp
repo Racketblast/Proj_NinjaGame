@@ -367,3 +367,24 @@ void UStealthGameInstance::SwitchOwnWeapon(EPlayerOwnThrowWeapon WeaponToSwitchT
 		Player->EquipThrowWeapon(Player->CurrentOwnThrowWeapon);
 	}
 }
+
+
+void UStealthGameInstance::TrySetMissionScore(EMission Mission, int32 NewScore)
+{
+	// Finns inget score ännu 
+	if (!ScoreMap.Contains(Mission))
+	{
+		ScoreMap.Add(Mission, NewScore);
+		UE_LOG(LogTemp, Warning, TEXT("TrySetMissionScore: Saved Score for the first time, score value: %i"), NewScore);
+		SaveGame();
+		return;
+	}
+
+	// Finns redan score 
+	if (NewScore > ScoreMap[Mission])
+	{
+		ScoreMap[Mission] = NewScore;
+		UE_LOG(LogTemp, Warning, TEXT("TrySetMissionScore: Saved a better Score, new score value: %i"), NewScore);
+		SaveGame();
+	}
+}
