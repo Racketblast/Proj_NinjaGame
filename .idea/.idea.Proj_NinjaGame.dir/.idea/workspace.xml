@@ -8,101 +8,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2d01b711-ee5e-48d8-970b-ca19847a7d1b" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Objects/InteractableObjects/HideSpots/BP_HideSpot_Box.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Objects/InteractableObjects/HideSpots/BP_HideSpot_Box.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Objects/InteractableObjects/HideSpots/BP_HideSpot_Cabinet.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Objects/InteractableObjects/HideSpots/BP_HideSpot_Cabinet.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Objects/InteractableObjects/HideSpots/BP_HideSpot_Stall.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Objects/InteractableObjects/HideSpots/BP_HideSpot_Stall.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/BP_PlayerHud.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/BP_PlayerHud.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_BrickWeapon.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_BrickWeapon.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_BucketWeapon.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_BucketWeapon.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_ChairWeapon.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_ChairWeapon.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_PlateWeapon.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_PlateWeapon.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_ShieldWeapon.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_ShieldWeapon.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_StoneTabletWeapon.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_StoneTabletWeapon.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_ThrowableWeapon.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_ThrowableWeapon.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_TrashCanWeapon.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_TrashCanWeapon.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_WetFloorWeapon.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_WetFloorWeapon.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_BreakableGlass_typ1_2_3.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_BreakableGlass_typ1_2_3.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_BreakableGlass_typ4.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_BreakableGlass_typ4.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_BreakableGlass_typ5.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_BreakableGlass_typ5.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_BreakableGlass_typ6.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_BreakableGlass_typ6.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_BreakableGlass_typ7.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_BreakableGlass_typ7.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_Brick1.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_Brick1.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_Bucket1.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_Bucket1.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_Chair1.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_Chair1.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_Plate1.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_Plate1.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_Shield1.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_Shield1.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_StoneTablet1.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_StoneTablet1.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_TrashCan1.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_TrashCan1.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_WetFloor1.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/BreakableMeshes/StaticBreakableMeshes/SM_WetFloor1.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MiscMeshes/SM_KeyCard.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MiscMeshes/SM_KeyCard.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MiscMeshes/SM_Wrench.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MiscMeshes/SM_Wrench.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_BoxOpean_1x_1x_1x_.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_BoxOpean_1x_1x_1x_.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Box_1x_1x_1x_.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Box_1x_1x_1x_.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Box_2x_1x_1x_.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Box_2x_1x_1x_.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_DisPlay_Typ7_.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_DisPlay_Typ7_.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_DisPlay_typ6_.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_DisPlay_typ6_.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Display_Larged_typ1_.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Display_Larged_typ1_.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Display_Larged_typ2_.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Display_Larged_typ2_.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Display_Larged_typ3_.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Display_Larged_typ3_.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Display_Typ4_.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Display_Typ4_.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Display_Typ5_.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Display_Typ5_.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Glass_typ1_2_3_.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Glass_typ1_2_3_.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Glass_typ4_.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Glass_typ4_.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Glass_typ5_.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Glass_typ5_.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Glass_typ6_.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Glass_typ6_.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Glass_typ7_.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_Glass_typ7_.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_SecurityCam_.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/MuseumProps/SM_SecurityCam_.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_AboutDisplay.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_AboutDisplay.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Bench.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Bench.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Box_1x1x1.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Box_1x1x1.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Box_2x1x1.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Box_2x1x1.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Brick.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Brick.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Broschyr_Stand.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Broschyr_Stand.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Bucket.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Bucket.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Chair.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Chair.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_CoffeThermos.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_CoffeThermos.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Cubord.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Cubord.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Cubord_Nodoor.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Cubord_Nodoor.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_DisplayStanding.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_DisplayStanding.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_DisplayWall.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_DisplayWall.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Display_low.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Display_low.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Electrical_cupboard_Closed.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Electrical_cupboard_Closed.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Electrical_cupboard_OPean.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Electrical_cupboard_OPean.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Facuit.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Facuit.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Lamp_RoofMounted.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Lamp_RoofMounted.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Light_WallMounted.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Light_WallMounted.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Mop.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Mop.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Plate.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Plate.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Shield.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Shield.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_SmallLamp.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_SmallLamp.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_StoneTablet.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_StoneTablet.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Table.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Table.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_TolietStall.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_TolietStall.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_TrashCan.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_TrashCan.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Vase.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_Vase.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_VaseDestructable.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_VaseDestructable.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_VaseThrowable.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_VaseThrowable.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_VendingMachine.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_VendingMachine.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_WetFloor.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/LevelPrototyping/Meshes/WhiteBox_Meshes/SM_WetFloor.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/UI_Elements/UI_Widgets/Menus/Backstory_Widget.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/UI_Elements/UI_Widgets/Menus/Backstory_Widget.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/UI_Elements/UI_Widgets/Player/Player_HUD.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/UI_Elements/UI_Widgets/Player/Player_HUD.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/0/GC/2YTE76D7EOHTA171Y9BSYM.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/0/GC/2YTE76D7EOHTA171Y9BSYM.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/1/MD/70U8K59ZJBVLXEJIDYV0IJ.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/1/MD/70U8K59ZJBVLXEJIDYV0IJ.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/3/9M/2HIQ6I1KI9BC85V60HW4T8.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/3/9M/2HIQ6I1KI9BC85V60HW4T8.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/3/DM/QZ3NAJNYWY5UFICTKAGG38.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/3/DM/QZ3NAJNYWY5UFICTKAGG38.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/3/T4/LAYV9YXW992QX006OS1RSJ.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/3/T4/LAYV9YXW992QX006OS1RSJ.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/4/8O/ED63O7KK8EU8B8JY4QI993.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/4/8O/ED63O7KK8EU8B8JY4QI993.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/4/BU/25S7KFKFD3KIPQVC8V4ZXU.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/4/BU/25S7KFKFD3KIPQVC8V4ZXU.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/4/ZL/VUGRO34ANR5B14EPGIS7BB.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/4/ZL/VUGRO34ANR5B14EPGIS7BB.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/5/9H/PKEO1ZQ6YS4IC5QGD9Z637.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/5/9H/PKEO1ZQ6YS4IC5QGD9Z637.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/5/JM/BCZFQ3YRCYDSVBN7U5N1KZ.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/5/JM/BCZFQ3YRCYDSVBN7U5N1KZ.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/6/OQ/VU4NMGSJ6O7577GLWZFY8T.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/6/OQ/VU4NMGSJ6O7577GLWZFY8T.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/8/QF/3GM6JMZOXXYYZIMS5BP9BI.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/8/QF/3GM6JMZOXXYYZIMS5BP9BI.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/A/ZB/APHD679FR6BVHICH5Y1MQY.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/A/ZB/APHD679FR6BVHICH5Y1MQY.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/B/03/5CY2YATZGR9TUXXMYN1GR8.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/B/03/5CY2YATZGR9TUXXMYN1GR8.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/E/27/MYQ95J2O52B3JH1KTJI8BM.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/E/27/MYQ95J2O52B3JH1KTJI8BM.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/E/7K/XI2TVKQ2K9SZ161S86RGC0.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/E/7K/XI2TVKQ2K9SZ161S86RGC0.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/E/WG/ODHPDBBQRS1J7ZJHRQYEU7.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/__ExternalActors__/Levels/HubLevel/E/WG/ODHPDBBQRS1J7ZJHRQYEU7.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_CoffeMakerObject.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_CoffeMakerObject.uasset" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -124,20 +30,20 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "Uproject.Proj_NinjaGame.executor": "Run",
-    "git-widget-placeholder": "Malte",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;Uproject.Proj_NinjaGame.executor&quot;: &quot;Run&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Malte&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="Proj_NinjaGame" type="Uproject" factoryName="rider.uproject">
       <configuration_1 setup="1">
@@ -223,6 +129,7 @@
       <updated>1764150610045</updated>
       <workItem from="1764150612382" duration="73000" />
       <workItem from="1764347295036" duration="680000" />
+      <workItem from="1765875702851" duration="698000" />
     </task>
     <servers />
   </component>
