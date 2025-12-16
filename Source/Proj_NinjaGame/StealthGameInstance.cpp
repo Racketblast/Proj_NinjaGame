@@ -3,6 +3,7 @@
 
 #include "StealthGameInstance.h"
 
+#include "AchievementSubsystem.h"
 #include "DialogueInfo.h"
 #include "StealthCharacter.h"
 #include "Kismet/GameplayStatics.h"
@@ -63,10 +64,10 @@ void UStealthGameInstance::FillSaveGame()
 	//Saves Options data
 	FillSaveOptions();
 
-	/*if (UAchievementSubsystem* Achievements = GetSubsystem<UAchievementSubsystem>())
+	if (UAchievementSubsystem* Achievements = GetSubsystem<UAchievementSubsystem>())
 	{
 		Achievements->SaveToSave(Save);
-	}*/
+	}
 
 }
 
@@ -94,10 +95,10 @@ void UStealthGameInstance::FillLoadGame()
 	//Loads Options data
 	FillLoadOptions();
 
-	/*if (UAchievementSubsystem* Achievements = GetSubsystem<UAchievementSubsystem>())
+	if (UAchievementSubsystem* Achievements = GetSubsystem<UAchievementSubsystem>())
 	{
 		Achievements->LoadFromSave(Save);
-	}*/
+	}
 }
 
 void UStealthGameInstance::FillLoadOptions()
