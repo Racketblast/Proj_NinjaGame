@@ -25,6 +25,8 @@ public:
 	void SaveToSave(class UStealthSaveGame* Save);
 
 protected:
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override; 
+	
 	UPROPERTY(EditDefaultsOnly)
 	UDataTable* AchievementTable;
 

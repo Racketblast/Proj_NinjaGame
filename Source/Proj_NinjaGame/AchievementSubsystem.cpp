@@ -6,6 +6,12 @@
 #include "Kismet/GameplayStatics.h"
 
 
+void UAchievementSubsystem::Initialize(FSubsystemCollectionBase& Collection) 
+{
+	Super::Initialize(Collection);
+	UE_LOG(LogTemp, Warning, TEXT("AchievementSubsystem Initialized"));
+}
+
 void UAchievementSubsystem::UnlockAchievement(EAchievementId Id)
 {
 	bool& bUnlocked = AchievementStates.FindOrAdd(Id);
