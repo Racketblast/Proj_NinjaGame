@@ -3,6 +3,7 @@
 
 #include "InteractableVFXObject.h"
 #include "NiagaraComponent.h"
+#include "SoundUtility.h"
 #include "Components/AudioComponent.h"
 
 
@@ -28,6 +29,7 @@ void AInteractableVFXObject::BeginPlay()
 	if (LoopingSound)
 	{
 		AudioComponent->SetSound(LoopingSound);
+		USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel); 
 	}
 
 	if (LoopingVFX)

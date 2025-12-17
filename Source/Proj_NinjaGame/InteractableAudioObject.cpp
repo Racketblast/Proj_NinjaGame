@@ -2,6 +2,8 @@
 
 
 #include "InteractableAudioObject.h"
+
+#include "SoundUtility.h"
 #include "Components/AudioComponent.h"
 
 
@@ -21,6 +23,7 @@ void AInteractableAudioObject::BeginPlay()
 	if (OneShotSound)
 	{
 		AudioComponent->SetSound(OneShotSound);
+		USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel); 
 	}
 
 	AudioComponent->OnAudioFinished.AddDynamic(this, &AInteractableAudioObject::OnAudioFinished);
@@ -33,7 +36,7 @@ void AInteractableAudioObject::Use_Implementation(AStealthCharacter* Player)
 		return;
 	}
 
-	Super::Use_Implementation(Player);
+	//Super::Use_Implementation(Player);
 
 	if (!AudioComponent || !OneShotSound)
 	{
