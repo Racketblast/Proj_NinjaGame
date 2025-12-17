@@ -16,6 +16,9 @@ void UStealthGameInstance::Init()
 {
 	Super::Init();
 	CurrentScalabilitySetting = UGameUserSettings::GetGameUserSettings()->GetOverallScalabilityLevel();
+
+	GetSubsystem<UAchievementSubsystem>();
+	
 	//Loads the saved game
 	LoadGame();
 }

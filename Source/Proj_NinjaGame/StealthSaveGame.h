@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "EnumSavedProperties.h"
+#include "AchievementId.h"
 #include "GameFramework/SaveGame.h"
 #include "StealthSaveGame.generated.h"
 
@@ -28,7 +29,7 @@ public:
 	TMap<EMission, int> SavedScoreMap;
 
 	UPROPERTY(SaveGame)
-	TMap<FName, bool> SavedAchievements;
+	TMap<EAchievementId, bool> SavedAchievements; 
 	
 	//Options saved
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
