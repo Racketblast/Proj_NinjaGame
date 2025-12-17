@@ -112,6 +112,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
 	UNiagaraSystem* CameraOfVFX;
 
+	UPROPERTY(EditDefaultsOnly, Category = "VFX")
+	UNiagaraSystem* DeathVFX;
+
 	// Audio
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Audio")
 	UAudioComponent* StateAudioComponent;

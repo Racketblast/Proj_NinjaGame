@@ -3,6 +3,7 @@
 
 #include "StealthGameInstance.h"
 
+#include "AchievementSubsystem.h"
 #include "DialogueInfo.h"
 #include "StealthCharacter.h"
 #include "Kismet/GameplayStatics.h"
@@ -62,6 +63,12 @@ void UStealthGameInstance::FillSaveGame()
 	
 	//Saves Options data
 	FillSaveOptions();
+
+	if (UAchievementSubsystem* Achievements = GetSubsystem<UAchievementSubsystem>())
+	{
+		Achievements->SaveToSave(Save);
+	}
+
 }
 
 void UStealthGameInstance::FillSaveOptions()
@@ -87,6 +94,11 @@ void UStealthGameInstance::FillLoadGame()
 
 	//Loads Options data
 	FillLoadOptions();
+
+	if (UAchievementSubsystem* Achievements = GetSubsystem<UAchievementSubsystem>())
+	{
+		Achievements->LoadFromSave(Save);
+	}
 }
 
 void UStealthGameInstance::FillLoadOptions()
@@ -369,5 +381,26 @@ void UStealthGameInstance::SwitchOwnWeapon(EPlayerOwnThrowWeapon WeaponToSwitchT
 		Player->AmountOfOwnWeapon = Player->MaxAmountOfOwnWeapon;
 		Player->CurrentOwnThrowWeapon = CurrentOwnThrowWeapon;
 		Player->EquipThrowWeapon(Player->CurrentOwnThrowWeapon);
+	}
+}
+
+
+void UStealthGameInstance::TrySetMissionScore(EMission Mission, int32 NewScore)
+{
+	// Finns inget score ännu 
+	if (!ScoreMap.Contains(Mission))
+	{
+		ScoreMap.Add(Mission, NewScore);
+		UE_LOG(LogTemp, Warning, TEXT("TrySetMissionScore: Saved Score for the first time, score value: %i"), NewScore);
+		SaveGame();
+		return;
+	}
+
+	// Finns redan score 
+	if (NewScore > ScoreMap[Mission])
+	{
+		ScoreMap[Mission] = NewScore;
+		UE_LOG(LogTemp, Warning, TEXT("TrySetMissionScore: Saved a better Score, new score value: %i"), NewScore);
+		SaveGame();
 	}
 }

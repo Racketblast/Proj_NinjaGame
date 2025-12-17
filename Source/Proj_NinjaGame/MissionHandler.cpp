@@ -3,8 +3,10 @@
 
 #include "MissionHandler.h"
 
+#include "AchievementSubsystem.h"
 #include "CollectableMissionObject.h"
 #include "StealthCharacter.h"
+#include "StealthGameInstance.h"
 #include "TargetEnemy.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -103,6 +105,8 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 			return Score;
 		}
 	}
+	
+	CheckMissionAchievements(); // För Achievements
 
 	//Lite start score för att man klara av missionet
 	Score += MissionCompleteBonus;
@@ -165,6 +169,11 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 	UE_LOG(LogTemp, Warning, TEXT("Score Multiplier: %f"), ScoreMultiplier);
 	UE_LOG(LogTemp, Warning, TEXT("Final Score: %f"), FinalScore);
 	UE_LOG(LogTemp, Warning, TEXT("MISSION SCORE DEBUG END"));
+
+	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance()))
+	{
+		GI->TrySetMissionScore(GI->GetCurrentMission(), FMath::RoundToInt(FinalScore));
+	}
 	
 	return FinalScore;
 }
@@ -260,4 +269,68 @@ void AMissionHandler::RemoveObjectiveFromTotal(AActor* ThisObject)
 			Player->bHasCompletedTheMission = true;
 		}
 	}
+}
+
+
+void AMissionHandler::CheckMissionAchievements()
+{
+	AStealthCharacter* Player = Cast<AStealthCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
+
+	if (!Player)
+		return;
+
+	UAchievementSubsystem* Achievements = GetGameInstance()->GetSubsystem<UAchievementSubsystem>();
+
+	if (!Achievements)
+		return;
+
+	UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance());
+	if (!GI) return;
+
+	// Debug
+	const TMap<FName, bool>& AllAchievements = Achievements->GetAllAchievements();
+
+	UE_LOG(LogTemp, Warning, TEXT("CURRENT ACHIEVEMENTS"));
+
+	if (AllAchievements.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No achievements unlocked yet"));
+	}
+	else
+	{
+		for (const TPair<FName, bool>& Pair : AllAchievements)
+		{
+			if (Pair.Value)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Unlocked: %s"), *Pair.Key.ToString());
+			}
+		}
+	}
+	
+	// Achievement: Spelaren klarade missionet utan att ta skada
+	/*const bool bFullHealth = Player->GetHealth() >= Player->GetMaxHealth();
+
+	if (bFullHealth)
+	{
+		Achievements->UnlockAchievement("ACH_NO_DAMAGE_MISSION");
+	}*/
+	const bool bFullHealth = Player->GetHealth() >= Player->GetMaxHealth();
+
+	if (bFullHealth)
+	{
+		const EMission CurrentMission = GI->GetCurrentMission();
+
+		const FString AchievementIdString = FString::Printf(TEXT("ACH_NO_DAMAGE_%s"), *UEnum::GetValueAsString(CurrentMission));
+
+		FString MissionName = UEnum::GetValueAsString(CurrentMission);
+		MissionName.RemoveFromStart(TEXT("EMission::"));
+
+		const FName AchievementId(*FString::Printf(TEXT("ACH_NO_DAMAGE_%s"), *MissionName));
+
+		//const FName AchievementId(*AchievementIdString);
+
+		Achievements->UnlockAchievement(AchievementId);
+	}
+
+	// Achievement: 
 }

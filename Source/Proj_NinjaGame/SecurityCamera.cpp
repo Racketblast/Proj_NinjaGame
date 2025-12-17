@@ -5,6 +5,7 @@
 
 #include "EnemyHandler.h"
 #include "NavigationSystem.h"
+#include "NiagaraFunctionLibrary.h"
 #include "StealthCharacter.h"
 #include "Components/AudioComponent.h"
 #include "Components/SphereComponent.h"
@@ -449,10 +450,30 @@ void ASecurityCamera::Die()
 	// VFX
 	if (OnOfVFXComponent)
 	{
+		/*if (DeathVFX)
+		{
+			OnOfVFXComponent->SetAsset(DeathVFX);
+			OnOfVFXComponent->Activate(true);
+		}
+		else
+		{
+			OnOfVFXComponent->SetAsset(nullptr);
+			OnOfVFXComponent->Activate(false);
+		}*/
+
 		OnOfVFXComponent->SetAsset(nullptr);
 		OnOfVFXComponent->Activate(false);
 	}
 
+	if (DeathVFX)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			DeathVFX,
+			GetActorLocation() + FVector(0.f, 0.f, -35.f),
+			GetActorRotation()
+		);
+	}
 
 	// Hämta EnemyHandler
 	AEnemyHandler* Handler = Cast<AEnemyHandler>(

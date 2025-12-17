@@ -26,6 +26,9 @@ public:
 	EPlayerOwnThrowWeapon SavedOwnThrowWeaponEnum;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TMap<EMission, int> SavedScoreMap;
+
+	UPROPERTY(SaveGame)
+	TMap<FName, bool> SavedAchievements;
 	
 	//Options saved
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
