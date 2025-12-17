@@ -5,6 +5,7 @@
 
 #include "AchievementSubsystem.h"
 #include "CollectableMissionObject.h"
+#include "ExtractObject.h"
 #include "StealthCharacter.h"
 #include "StealthGameInstance.h"
 #include "TargetEnemy.h"
@@ -267,6 +268,17 @@ void AMissionHandler::RemoveObjectiveFromTotal(AActor* ThisObject)
 		if (AStealthCharacter* Player = Cast<AStealthCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
 		{
 			Player->bHasCompletedTheMission = true;
+		}
+
+		TArray<AActor*> AllExtractions;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AExtractObject::StaticClass(), AllExtractions);
+		for (AActor* Extractor : AllExtractions)
+		{
+			if (AExtractObject* ExtractionObject = Cast<AExtractObject>(Extractor))
+			{
+				ExtractionObject->FadeMarkerWidget(true);
+				ExtractionObject->SetMarkerWidgetVisibility(true);
+			}
 		}
 	}
 }
