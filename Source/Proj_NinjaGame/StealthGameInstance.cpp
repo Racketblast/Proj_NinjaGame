@@ -59,6 +59,7 @@ void UStealthGameInstance::FillSaveGame()
 {
 	//Saves Gameplay data
 	Save->SavedCurrentGameFlag = CurrentGameFlag;
+	Save->bSavedFinishedTheGame = bFinishedTheGame;
 	Save->SavedMissionsCleared = MissionsCleared;
 	Save->SavedOwnThrowWeapon = CurrentOwnThrowWeapon;
 	Save->SavedOwnThrowWeaponEnum = CurrentOwnThrowWeaponEnum;
@@ -90,6 +91,7 @@ void UStealthGameInstance::FillLoadGame()
 {
 	//Loads Gameplay data
 	CurrentGameFlag = Save->SavedCurrentGameFlag;
+	bFinishedTheGame = Save->bSavedFinishedTheGame;
 	MissionsCleared = Save->SavedMissionsCleared;
 	CurrentOwnThrowWeapon = Save->SavedOwnThrowWeapon;
 	CurrentOwnThrowWeaponEnum = Save->SavedOwnThrowWeaponEnum;
@@ -191,6 +193,7 @@ void UStealthGameInstance::SetAllSoundClassOverride()
 void UStealthGameInstance::RestartGame()
 {
 	CurrentGameFlag = 0;
+	bFinishedTheGame = false;
 	MissionsCleared = {};
 	CurrentOwnThrowWeapon = nullptr;
 	CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::None;
@@ -205,6 +208,8 @@ bool UStealthGameInstance::HasGameChanged()
 		if (Save)
 		{
 			if (CurrentGameFlag != Save->SavedCurrentGameFlag)
+				return true;
+			if (bFinishedTheGame != Save->bSavedFinishedTheGame)
 				return true;
 			if (MissionsCleared != Save->SavedMissionsCleared)
 				return true;

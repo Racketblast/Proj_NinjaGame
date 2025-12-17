@@ -23,6 +23,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int CurrentGameFlag;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	bool bFinishedTheGame = false;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TSubclassOf<class AThrowableWeapon> CurrentOwnThrowWeapon;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	EPlayerOwnThrowWeapon CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::None;
