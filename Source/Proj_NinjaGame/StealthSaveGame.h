@@ -20,6 +20,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int SavedCurrentGameFlag;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	bool bSavedFinishedTheGame;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TArray<EMission> SavedMissionsCleared;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TSubclassOf<class AThrowableWeapon> SavedOwnThrowWeapon;

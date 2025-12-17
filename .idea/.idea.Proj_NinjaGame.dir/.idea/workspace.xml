@@ -8,7 +8,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2d01b711-ee5e-48d8-970b-ca19847a7d1b" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_CoffeMakerObject.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Blueprints/Player/Weapons/ThrowingWeapons/ThrowableObject/BP_CoffeMakerObject.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/Audio/Themes/THEME_Backstory_StoryTheme2.uasset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/UI_Elements/UI_Widgets/Menus/Backstory_Widget.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/UI_Elements/UI_Widgets/Menus/Backstory_Widget.uasset" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
