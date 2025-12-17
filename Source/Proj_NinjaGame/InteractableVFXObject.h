@@ -32,6 +32,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	UAudioComponent* AudioComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	float NoiseLevel = 2.0f; 
+
 	// VFX 
 	UPROPERTY(EditDefaultsOnly, Category="VFX")
 	UNiagaraSystem* LoopingVFX;

@@ -29,6 +29,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Audio")
 	UAudioComponent* AudioComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	float NoiseLevel = 2.0f; 
+
 	// State 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Audio")
 	bool bIsPlaying = false;
