@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AchievementId.h"
+#include "AchievementRow.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "AchievementSubsystem.generated.h"
 
@@ -13,16 +15,21 @@ class PROJ_NINJAGAME_API UAchievementSubsystem : public UGameInstanceSubsystem
 	GENERATED_BODY()
 
 public:
-	void UnlockAchievement(FName AchievementId);
-	bool IsAchievementUnlocked(FName AchievementId) const;
+	void UnlockAchievement(EAchievementId Id);
+	bool IsAchievementUnlocked(EAchievementId Id) const;
 
-	const TMap<FName, bool>& GetAllAchievements() const;
+	const TMap<EAchievementId, bool>& GetAllAchievements() const; 
+	void GetAllAchievementData(TArray<FAchievementRow>& OutRows) const;
 
 	void LoadFromSave(class UStealthSaveGame* Save);
 	void SaveToSave(class UStealthSaveGame* Save);
 
+protected:
+	UPROPERTY(EditDefaultsOnly)
+	UDataTable* AchievementTable;
+
 private:
 	UPROPERTY()
-	TMap<FName, bool> AchievementStates;
+	TMap<EAchievementId, bool> AchievementStates;
 	
 };

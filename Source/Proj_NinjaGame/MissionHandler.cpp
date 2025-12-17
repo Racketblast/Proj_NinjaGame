@@ -274,63 +274,88 @@ void AMissionHandler::RemoveObjectiveFromTotal(AActor* ThisObject)
 
 void AMissionHandler::CheckMissionAchievements()
 {
-	AStealthCharacter* Player = Cast<AStealthCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
-
+	AStealthCharacter* Player =
+		Cast<AStealthCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
 	if (!Player)
 		return;
 
-	UAchievementSubsystem* Achievements = GetGameInstance()->GetSubsystem<UAchievementSubsystem>();
-
+	UAchievementSubsystem* Achievements =
+		GetGameInstance()->GetSubsystem<UAchievementSubsystem>();
 	if (!Achievements)
 		return;
 
-	UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance());
-	if (!GI) return;
+	UStealthGameInstance* GI =
+		Cast<UStealthGameInstance>(GetGameInstance());
+	if (!GI)
+		return;
 
 	// Debug
-	const TMap<FName, bool>& AllAchievements = Achievements->GetAllAchievements();
-
 	UE_LOG(LogTemp, Warning, TEXT("CURRENT ACHIEVEMENTS"));
 
+	const auto& AllAchievements = Achievements->GetAllAchievements();
 	if (AllAchievements.Num() == 0)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("No achievements unlocked yet"));
 	}
 	else
 	{
-		for (const TPair<FName, bool>& Pair : AllAchievements)
+		for (const auto& Pair : AllAchievements)
 		{
 			if (Pair.Value)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Unlocked: %s"), *Pair.Key.ToString());
+				UE_LOG(LogTemp, Warning, TEXT("Unlocked: %s"),
+					*UEnum::GetValueAsString(Pair.Key));
 			}
 		}
 	}
+
+
+	// Achievement: Tog ingen skada
+	const bool bFullHealth =
+		Player->GetHealth() >= Player->GetMaxHealth();
+
+	if (!bFullHealth)
+		return;
+
+	const EMission CurrentMission = GI->GetCurrentMission();
 	
-	// Achievement: Spelaren klarade missionet utan att ta skada
-	/*const bool bFullHealth = Player->GetHealth() >= Player->GetMaxHealth();
+	/*UE_LOG(LogTemp, Warning, TEXT("CheckMissionAchievements: CurrentMission enum = %s"),
+		*UEnum::GetValueAsString(CurrentMission));
 
-	if (bFullHealth)
+	UE_LOG(LogTemp, Warning, TEXT("CheckMissionAchievements: CurrentMission raw value = %d"),
+		static_cast<int32>(CurrentMission));*/
+	
+	switch (CurrentMission)
 	{
-		Achievements->UnlockAchievement("ACH_NO_DAMAGE_MISSION");
-	}*/
-	const bool bFullHealth = Player->GetHealth() >= Player->GetMaxHealth();
+	case EMission::TutorialMission:
+		Achievements->UnlockAchievement(EAchievementId::NoDamage_Mission1);
+		break;
 
-	if (bFullHealth)
-	{
-		const EMission CurrentMission = GI->GetCurrentMission();
+	case EMission::FirstMission:
+		Achievements->UnlockAchievement(EAchievementId::NoDamage_Mission2);
+		break;
 
-		const FString AchievementIdString = FString::Printf(TEXT("ACH_NO_DAMAGE_%s"), *UEnum::GetValueAsString(CurrentMission));
+	case EMission::SecondMission:
+		Achievements->UnlockAchievement(EAchievementId::NoDamage_Mission3);
+		break;
 
-		FString MissionName = UEnum::GetValueAsString(CurrentMission);
-		MissionName.RemoveFromStart(TEXT("EMission::"));
+	case EMission::ThirdMission:
+		Achievements->UnlockAchievement(EAchievementId::NoDamage_Mission4);
+		break;
 
-		const FName AchievementId(*FString::Printf(TEXT("ACH_NO_DAMAGE_%s"), *MissionName));
-
-		//const FName AchievementId(*AchievementIdString);
-
-		Achievements->UnlockAchievement(AchievementId);
+	default:
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("No achievement unlocked. Unsupported mission: %s"),
+			*UEnum::GetValueAsString(CurrentMission)
+		);
+		break; 
 	}
 
-	// Achievement: 
+	// Achievement: Klarade leveln för första gången
+	
 }
+
+
+
