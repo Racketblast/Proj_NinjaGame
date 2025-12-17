@@ -16,9 +16,13 @@ class PROJ_NINJAGAME_API UAchievementSubsystem : public UGameInstanceSubsystem
 
 public:
 	void UnlockAchievement(EAchievementId Id);
+
+	UFUNCTION(BlueprintCallable)
 	bool IsAchievementUnlocked(EAchievementId Id) const;
 
-	const TMap<EAchievementId, bool>& GetAllAchievements() const; 
+	const TMap<EAchievementId, bool>& GetAllAchievements() const;
+
+	UFUNCTION(BlueprintCallable)
 	void GetAllAchievementData(TArray<FAchievementRow>& OutRows) const;
 
 	void LoadFromSave(class UStealthSaveGame* Save);
