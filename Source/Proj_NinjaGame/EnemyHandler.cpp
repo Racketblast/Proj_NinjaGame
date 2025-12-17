@@ -161,21 +161,21 @@ UDataTable* AEnemyHandler::GetRandomEnemyVoice(TArray<UDataTable*> SelectableVoi
 	if (SelectableVoices.Num() <= 0)
 		return nullptr;
 	
-	int RandomNumber;
-	if (SelectableVoices.Num() <= 1)
+	if (SelectableVoices.Num() == 1)
 	{
-		RandomNumber = FMath::RandRange(0, SelectableVoices.Num()-1);
-		return SelectableVoices[RandomNumber];
+		return SelectableVoices[0];
 	}
 	
-	do
+	int RandomNumber = FMath::RandRange(0, SelectableVoices.Num() - 1);
+
+	if (RandomNumber == PreviousVoiceIndex)
 	{
-		RandomNumber = FMath::RandRange(0, SelectableVoices.Num()-1);
+		//Wraps back to 0 if to high number, works better than a while loop
+		RandomNumber = (RandomNumber + 1) % SelectableVoices.Num();
 	}
-	while (SelectableVoices[RandomNumber] == PreviousVoice);
 	
-	PreviousVoice = SelectableVoices[RandomNumber];
-	UE_LOG(LogTemp, Warning, TEXT("Voice: %s, was Selected"), *SelectableVoices[RandomNumber]->GetName());
+	PreviousVoiceIndex = RandomNumber;
+	//UE_LOG(LogTemp, Warning, TEXT("Voice number: %d"), RandomNumber);
 	return SelectableVoices[RandomNumber];
 }
 
@@ -190,8 +190,11 @@ TArray<UDataTable*> AEnemyHandler::GetAllSelectableVoices()
 	{
 		if (VoiceTable && VoiceTable->GetRowStruct() == FDialogueInfo::StaticStruct())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Voice exists: %s"), *VoiceTable->GetName());
-			SelectableVoices.Add(VoiceTable);
+			if (!SelectableVoices.Contains(VoiceTable))
+			{
+				//UE_LOG(LogTemp, Warning, TEXT("Voice that can be selected: %s"), *VoiceTable->GetName());
+				SelectableVoices.Add(VoiceTable);
+			}
 		}
 	}
 	

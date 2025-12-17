@@ -72,8 +72,9 @@ protected:
 	
 	TArray<UDataTable*> GetAllSelectableVoices();
 
+	// PreviousVoiceIndex = -1, because it is always 0 if empty which means that the first random voice is never chosen
 	UPROPERTY()
-	UDataTable* PreviousVoice;
+	int PreviousVoiceIndex = -1;
 	
 	void UpdateEnemyStates();
 };
