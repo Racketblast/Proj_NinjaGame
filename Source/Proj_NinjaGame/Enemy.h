@@ -209,7 +209,30 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category="Dialogue")
 	UDataTable* EnemyVoiceInfo;
+	UPROPERTY(BlueprintReadOnly, Category="Dialogue")
+	FName CurrentDialogueRowName;
+	UPROPERTY(BlueprintReadWrite, Category="Dialogue")
+	FName StartDialogueRowName;
+	FName NextDialogueRowName;
+	UPROPERTY(BlueprintReadWrite, Category="Dialogue")
+	bool bCanPlayDialogue = true;
+	FTimerHandle DialogueTimerHandle;
+	
+public:
+	void SetVoiceDataTable(UDataTable* DataTable){EnemyVoiceInfo = DataTable;}
+	UDataTable* GetVoiceDataTable() const {return EnemyVoiceInfo;}
+	void SetStartDialogueRowName(FName RowName){StartDialogueRowName = RowName;}
+	UFUNCTION(BlueprintCallable, Category="Dialogue")
+	void StartDialogue();
+	UFUNCTION(BlueprintCallable, Category="Dialogue")
+	void StopDialogue();
 
+protected:
+	UFUNCTION()
+	void NextDialogue();
+	UFUNCTION(BlueprintPure, Category="Dialogue")
+	float GetDialogueDuration();
+	
 	UPROPERTY(EditAnywhere, Category="Audio")
 	USoundBase* HurtSoundOne;
 

@@ -233,7 +233,8 @@ bool UStealthGameInstance::ScoreMapEquals(const TMap<EMission, int> ScoreMap1, c
 }
 
 void UStealthGameInstance::StartDialogue()
-{if (!EventDialogueInfo)
+{
+	if (!EventDialogueInfo || EventDialogueInfo->GetRowStruct() != FDialogueInfo::StaticStruct())
 	return;
 
 	if (!bCanPlayDialogue)
@@ -276,7 +277,7 @@ void UStealthGameInstance::StartDialogue()
 
 void UStealthGameInstance::PlayNextDialogue()
 {
-	if (!EventDialogueInfo)
+	if (!EventDialogueInfo || EventDialogueInfo->GetRowStruct() != FDialogueInfo::StaticStruct())
 	return;
 	if (NextDialogueRowName != "")
 	{
@@ -329,6 +330,9 @@ float UStealthGameInstance::GetDialogueDuration()
 {
 	//Plays the dialogue for the amount of time the sound plays
 	float TimeUntilNextDialogue = 0.0f;
+	
+	if (!EventDialogueInfo || EventDialogueInfo->GetRowStruct() != FDialogueInfo::StaticStruct())
+		return TimeUntilNextDialogue;
 	
 	if (CurrentDialogueRowName != "")
 	{

@@ -2,6 +2,8 @@
 
 
 #include "EnemyHandler.h"
+
+#include "DialogueInfo.h"
 #include "MeleeEnemy.h"
 #include "MissionHandler.h"
 #include "Kismet/GameplayStatics.h"
@@ -34,7 +36,8 @@ void AEnemyHandler::BeginPlay()
 			MeleeEnemy->SetEnemyHandler(this);
 		}
 	}*/
-	
+
+	TArray<UDataTable*> SelectableVoices = GetAllSelectableVoices();
 	TArray<AEnemy*> EnemyList;
 	for (AActor* Actor : AllEnemies)
 	{
@@ -42,6 +45,11 @@ void AEnemyHandler::BeginPlay()
 		{
 			EnemyList.Add(Enemy);
 			Enemy->SetEnemyHandler(this);
+
+			if (!Enemy->GetVoiceDataTable())
+			{
+				Enemy->SetVoiceDataTable(GetRandomEnemyVoice(SelectableVoices));
+			}
 		}
 	}
 
@@ -147,6 +155,48 @@ void AEnemyHandler::RemoveCamera(AActor* CameraRemoved)
 	}
 }
 
+
+UDataTable* AEnemyHandler::GetRandomEnemyVoice(TArray<UDataTable*> SelectableVoices)
+{
+	if (SelectableVoices.Num() <= 0)
+		return nullptr;
+	
+	int RandomNumber;
+	if (SelectableVoices.Num() <= 1)
+	{
+		RandomNumber = FMath::RandRange(0, SelectableVoices.Num()-1);
+		return SelectableVoices[RandomNumber];
+	}
+	
+	do
+	{
+		RandomNumber = FMath::RandRange(0, SelectableVoices.Num()-1);
+	}
+	while (SelectableVoices[RandomNumber] == PreviousVoice);
+	
+	PreviousVoice = SelectableVoices[RandomNumber];
+	UE_LOG(LogTemp, Warning, TEXT("Voice: %s, was Selected"), *SelectableVoices[RandomNumber]->GetName());
+	return SelectableVoices[RandomNumber];
+}
+
+TArray<UDataTable*> AEnemyHandler::GetAllSelectableVoices()
+{
+	TArray<UDataTable*> SelectableVoices;
+	
+	if (EnemyVoiceTables.Num() <= 0)
+		return TArray<UDataTable*>();
+	
+	for (auto VoiceTable : EnemyVoiceTables)
+	{
+		if (VoiceTable && VoiceTable->GetRowStruct() == FDialogueInfo::StaticStruct())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Voice exists: %s"), *VoiceTable->GetName());
+			SelectableVoices.Add(VoiceTable);
+		}
+	}
+	
+	return SelectableVoices;
+}
 
 void AEnemyHandler::UpdateEnemyStates()
 {

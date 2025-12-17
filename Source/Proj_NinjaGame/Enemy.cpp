@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "Enemy.h"
 
+#include "DialogueInfo.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
@@ -591,12 +592,13 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 		if (Health <= 0.0f)
 		{
 			Die();
-			
+
+			//For Ragdoll velocity
 			if (DamageCauser)
 			{
 				FVector Direction = GetCapsuleComponent()->GetComponentLocation() - DamageCauser->GetActorLocation();
 				Direction.Normalize();
-				UE_LOG(LogTemp, Warning, TEXT("Direction: %s"), *Direction.ToString());
+				//UE_LOG(LogTemp, Warning, TEXT("Direction: %s"), *Direction.ToString());
 				float ImpulseStrength = 1000.0f;
 				SkeletalMeshComp->AddImpulse(Direction * ImpulseStrength, NAME_None, true);
 			}
@@ -610,6 +612,7 @@ void AEnemy::Die()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Enemy died!"));
 	bIsDead = true;
+	bCanPlayDialogue = false;
 	
 	SetActorTickEnabled(false);
 
@@ -908,13 +911,19 @@ void AEnemy::UpdateStateVFX(EEnemyState NewState)
 		switch (NewState)
 		{
 		case EEnemyState::Alert:
-			PlayStateSound(AlertSound);
+			StartDialogueRowName = "Alert";
+			StartDialogue();
+			//PlayStateSound(AlertSound);
 			break;
 		case EEnemyState::Chasing:
+			StartDialogueRowName = "Chasing";
+			StartDialogue();
 			PlayStateSound(ChasingSound);
 			break;
 		case EEnemyState::Searching:
-			PlayStateSound(SearchingSound);
+			StartDialogueRowName = "Searching";
+			StartDialogue();
+			//PlayStateSound(SearchingSound);
 			break;
 		default:
 			// Stoppa ljud 
@@ -1103,4 +1112,106 @@ float AEnemy::GetThrowCooldown() const
 bool AEnemy::IsLocationStillSeeingPlayer(const FVector& Location) const
 {
 	return true;
+}
+
+//Enemy Voice
+void AEnemy::StartDialogue()
+{
+	if (!bCanPlayDialogue)
+		return;
+	
+	if (!EnemyVoiceInfo || EnemyVoiceInfo->GetRowStruct() != FDialogueInfo::StaticStruct())
+		return;
+	
+	if (StartDialogueRowName == "")
+		return;
+	
+	CurrentDialogueRowName = StartDialogueRowName;
+
+	if (FDialogueInfo* Row = EnemyVoiceInfo->FindRow<FDialogueInfo>(StartDialogueRowName, TEXT("")))
+	{
+		NextDialogueRowName = Row->NextDialogue;
+
+		//Plays the dialogue for the amount of time the sound plays
+		float TimeUntilNextDialogue = 0.0f;
+		if (Row->DialogueSound)
+		{
+			if (VoiceAudioComponent)
+			{
+				VoiceAudioComponent->SetSound(Row->DialogueSound);
+				VoiceAudioComponent->Play();
+			}
+			
+			TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
+		}
+		//Goes to next dialogue
+		//This is the reason why the dialogue is broken into two functions, because it needs a delay between each dialog
+		GetWorld()->GetTimerManager().SetTimer(DialogueTimerHandle, this, &AEnemy::NextDialogue, TimeUntilNextDialogue, false);
+	}
+}
+
+void AEnemy::NextDialogue()
+{
+	if (!bCanPlayDialogue)
+		return;
+	
+	if (!EnemyVoiceInfo || EnemyVoiceInfo->GetRowStruct() != FDialogueInfo::StaticStruct())
+		return;
+	
+	if (NextDialogueRowName != "")
+	{
+		CurrentDialogueRowName = NextDialogueRowName;
+		if (FDialogueInfo* Row = EnemyVoiceInfo->FindRow<FDialogueInfo>(NextDialogueRowName, TEXT("")))
+		{
+			NextDialogueRowName = Row->NextDialogue;
+			//Plays the dialogue for the amount of time the sound plays
+			float TimeUntilNextDialogue = 0.0f;
+			if (Row->DialogueSound)
+			{
+				if (VoiceAudioComponent)
+				{
+					VoiceAudioComponent->SetSound(Row->DialogueSound);
+					VoiceAudioComponent->Play();
+				}
+				TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
+			}
+			
+			//Goes to next dialogue
+			GetWorld()->GetTimerManager().SetTimer(DialogueTimerHandle, this, &AEnemy::NextDialogue, TimeUntilNextDialogue, false);
+		}
+	}
+}
+
+void AEnemy::StopDialogue()
+{
+	GetWorld()->GetTimerManager().ClearTimer(DialogueTimerHandle);
+
+	if (VoiceAudioComponent && VoiceAudioComponent->IsPlaying())
+	{
+		VoiceAudioComponent->Stop();
+	}
+
+	StartDialogueRowName = "";
+	CurrentDialogueRowName = "";
+	NextDialogueRowName = "";
+}
+
+float AEnemy::GetDialogueDuration()
+{
+	float TimeUntilNextDialogue = 0.0f;
+	
+	if (!EnemyVoiceInfo || EnemyVoiceInfo->GetRowStruct() != FDialogueInfo::StaticStruct())
+		return TimeUntilNextDialogue;
+	
+	if (CurrentDialogueRowName != "")
+	{
+		if (FDialogueInfo* Row = EnemyVoiceInfo->FindRow<FDialogueInfo>(CurrentDialogueRowName, TEXT("")))
+		{
+			if (Row->DialogueSound)
+			{
+				TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
+			}
+		}
+	}
+	return TimeUntilNextDialogue;
 }
