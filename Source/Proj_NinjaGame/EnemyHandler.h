@@ -64,6 +64,17 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy Helmet Settings")
 	float HelmetChancePercent = 30.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Sound")
+	TArray<UDataTable*> EnemyVoiceTables;
+	
+	UDataTable* GetRandomEnemyVoice(TArray<UDataTable*> SelectableVoices);
+	
+	TArray<UDataTable*> GetAllSelectableVoices();
+
+	// PreviousVoiceIndex = -1, because it is always 0 if empty which means that the first random voice is never chosen
+	UPROPERTY()
+	int PreviousVoiceIndex = -1;
 	
 	void UpdateEnemyStates();
 };
