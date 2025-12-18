@@ -29,6 +29,9 @@ public:
 	void SaveToSave(class UStealthSaveGame* Save);
 	void RestartAchievements();
 
+	void OnEnemyKilled();
+	void OnHelmetRemoved();
+
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override; 
 	
@@ -38,5 +41,11 @@ protected:
 private:
 	UPROPERTY()
 	TMap<EAchievementId, bool> AchievementStates;
+
+	UPROPERTY()
+	int32 TotalEnemiesKilled = 0;
+
+	UPROPERTY()
+	int32 TotalHelmetsRemoved = 0;
 	
 };

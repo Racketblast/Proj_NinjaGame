@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "Enemy.h"
 
+#include "AchievementSubsystem.h"
 #include "DialogueInfo.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
@@ -654,6 +655,15 @@ void AEnemy::Die()
 			EnemyHandler->RemoveEnemy(this);
 		}
 	}
+
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (UAchievementSubsystem* Achievements = GI->GetSubsystem<UAchievementSubsystem>())
+		{
+			Achievements->OnEnemyKilled();
+		}
+	}
+
 	
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	HeadCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -1047,6 +1057,14 @@ void AEnemy::RemoveHelmet()
 	{
 		AI->StartChasingFromExternalOrder(PlayerPawn->GetActorLocation());
 		AI->StunEnemy(1.0f, EEnemyState::Chasing); 
+	}
+
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (UAchievementSubsystem* Achievements = GI->GetSubsystem<UAchievementSubsystem>())
+		{
+			Achievements->OnHelmetRemoved();
+		}
 	}
 
 	if (HelmetMesh)
