@@ -365,3 +365,21 @@ void AMeleeAIController::StopBackOff()
 	if (!Player) return;
 	StartSmoothRotationTowards(Player->GetActorLocation(), 2.0f);
 }
+
+
+// Används ännu inte
+void AMeleeAIController::MoveCloserToPlayer(APawn* Player)
+{
+	if (!Player) return;
+
+	FVector ToPlayer = Player->GetActorLocation() - GetPawn()->GetActorLocation();
+	ToPlayer.Z = 0.f;
+
+	if (ToPlayer.IsNearlyZero()) return;
+
+	ToPlayer.Normalize();
+
+	FVector TargetLoc = Player->GetActorLocation() - ToPlayer * 300.f;
+
+	MoveToLocation(TargetLoc, 5.f);
+}

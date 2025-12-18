@@ -30,6 +30,9 @@ enum class EAchievementId : uint8
 	UnSeen_Mission4,
 
 	Killed_OneHundred_Enemies,
-	Remove_Twenty_Helmets_From_Enemies
+	Remove_Twenty_Helmets_From_Enemies,
+	Headshot_Fifty_Enemies,
+	Backstab_Fifty_Enemies,
+	Use_The_Toilet
 };
 
