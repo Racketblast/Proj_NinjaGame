@@ -27,6 +27,7 @@ public:
 
 	void LoadFromSave(class UStealthSaveGame* Save);
 	void SaveToSave(class UStealthSaveGame* Save);
+	void RestartAchievements();
 
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override; 

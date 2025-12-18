@@ -16,8 +16,6 @@ void UStealthGameInstance::Init()
 {
 	Super::Init();
 	CurrentScalabilitySetting = UGameUserSettings::GetGameUserSettings()->GetOverallScalabilityLevel();
-
-	GetSubsystem<UAchievementSubsystem>();
 	
 	//Loads the saved game
 	LoadGame();
@@ -198,6 +196,10 @@ void UStealthGameInstance::RestartGame()
 	CurrentOwnThrowWeapon = nullptr;
 	CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::None;
 	ScoreMap.Empty();
+	if (UAchievementSubsystem* Achievements = GetSubsystem<UAchievementSubsystem>())
+	{
+		Achievements->RestartAchievements();
+	}
 }
 
 bool UStealthGameInstance::HasGameChanged()
