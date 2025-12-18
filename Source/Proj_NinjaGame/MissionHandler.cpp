@@ -171,7 +171,7 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 
 	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance()))
 	{
-		GI->TrySetMissionScore(GI->GetCurrentMission(), FMath::RoundToInt(FinalScore));
+		bIsNewHighScore = GI->TrySetMissionScore(GI->GetCurrentMission(), FMath::RoundToInt(FinalScore));
 	}
 
 	CheckMissionAchievements(); // För Achievements
