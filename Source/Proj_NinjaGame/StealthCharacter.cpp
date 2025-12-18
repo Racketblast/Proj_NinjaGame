@@ -601,10 +601,17 @@ void AStealthCharacter::UpdateStaminaLoop()
 
 	if (CurrentStamina == 0)
 	{
+		if (OutOfStaminaSound)
+		{
+			PlayerVoiceAudioComponent->SetSound(OutOfStaminaSound);
+			PlayerVoiceAudioComponent->Play();
+		}
+		
 		if (CurrentMovementState == EPlayerMovementState::Run)
 		{
 			StopSprint();
 		}
+		
 		UpdateStaminaStart(RegainStaminaAmount);
 	}
 	else if (CurrentStamina == MaxStamina)

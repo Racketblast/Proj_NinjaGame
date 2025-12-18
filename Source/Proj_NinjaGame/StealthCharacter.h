@@ -162,6 +162,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Audio")
 	USoundBase* JumpSound;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Audio")
+	USoundBase* OutOfStaminaSound;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Audio")
 	USoundBase* TakeDamageSound;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Audio")
 	UAudioComponent* PlayerActionAudioComponent;
