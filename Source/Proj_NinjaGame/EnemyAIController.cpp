@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "AIController.h"
+#include "EnumSavedProperties.h"
 #include "NavigationPath.h"
 #include "NavigationSystem.h"
 #include "PatrolPoint.h"
@@ -1289,6 +1290,24 @@ void AEnemyAIController::StartMissionMoveTo(FVector Location)
 			return;
 		}
 	}
+
+	switch (CurrentMission)
+	{
+	case EEnemyMission::Patrol:
+		break;
+	case EEnemyMission::Sprinkler:
+		ControlledEnemy->SetStartDialogueRowName("Sprinklers");
+		ControlledEnemy->StartDialogue();
+		break;
+	case EEnemyMission::Electrical:
+		ControlledEnemy->SetStartDialogueRowName("Lights");
+		ControlledEnemy->StartDialogue();
+		break;
+	case EEnemyMission::Camera:
+		break;
+	default:
+		break;
+	}
 	
 	ControlledEnemy->UpdateStateVFX(CurrentState);
     ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
@@ -1348,8 +1367,11 @@ void AEnemyAIController::StunEnemy(float Duration, TOptional<EEnemyState> Wanted
 	StateBeforeStun = CurrentState;
 
 	//ControlledEnemy->PlayStateSound(ControlledEnemy->StunnedSound);
-	ControlledEnemy->SetStartDialogueRowName("Stunned");
-	ControlledEnemy->StartDialogue();
+	if (WantedState != EEnemyState::Chasing)
+	{
+		ControlledEnemy->SetStartDialogueRowName("Stunned");
+		ControlledEnemy->StartDialogue();
+	}
 	/*ControlledEnemy->StateVFXComponent->SetAsset(ControlledEnemy->StunnedVFX);
 	ControlledEnemy->StateVFXComponent->Activate(true);*/
 

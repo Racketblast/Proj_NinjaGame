@@ -207,7 +207,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Audio")
 	UAudioComponent* VoiceAudioComponent;
 	
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category="Dialogue")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Dialogue")
 	UDataTable* EnemyVoiceInfo;
 	UPROPERTY(BlueprintReadOnly, Category="Dialogue")
 	FName CurrentDialogueRowName;

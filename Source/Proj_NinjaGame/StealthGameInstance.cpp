@@ -384,6 +384,9 @@ void UStealthGameInstance::SwitchOwnWeapon(EPlayerOwnThrowWeapon WeaponToSwitchT
 			CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::SmokeBomb;
 			CurrentOwnThrowWeapon = Player->SmokeBombWeapon;
 			break;
+		default:
+			CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::None;
+			break;
 		}
 
 		Player->AmountOfOwnWeapon = Player->MaxAmountOfOwnWeapon;

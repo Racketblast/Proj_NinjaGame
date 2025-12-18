@@ -587,7 +587,9 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 		Health = NewHealth;
 		
 
-		PlayHurtSound();
+		SetStartDialogueRowName("TakeDamage");
+		StartDialogue();
+		//PlayHurtSound();
 
 		if (Health <= 0.0f)
 		{
@@ -612,6 +614,9 @@ void AEnemy::Die()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Enemy died!"));
 	bIsDead = true;
+	
+	SetStartDialogueRowName("Death");
+	StartDialogue();
 	bCanPlayDialogue = false;
 	
 	SetActorTickEnabled(false);
@@ -976,7 +981,7 @@ void AEnemy::PlayStateSound(USoundBase* NewSound)
 	if (!NewSound)
 		return;
 	// Gör inget om samma ljud redan spelar 
-	if (StateAudioComponent->Sound == NewSound)
+	if (StateAudioComponent->Sound == NewSound && StateAudioComponent->IsPlaying())
 		return;
 
 	StateAudioComponent->Stop();
