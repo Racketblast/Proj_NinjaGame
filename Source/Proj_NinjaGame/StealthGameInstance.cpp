@@ -405,7 +405,6 @@ bool UStealthGameInstance::TrySetMissionScore(EMission Mission, int32 NewScore)
 	{
 		ScoreMap.Add(Mission, NewScore);
 		UE_LOG(LogTemp, Warning, TEXT("TrySetMissionScore: Saved Score for the first time, score value: %i"), NewScore);
-		SaveGame();
 		return true;
 	}
 
@@ -414,7 +413,6 @@ bool UStealthGameInstance::TrySetMissionScore(EMission Mission, int32 NewScore)
 	{
 		ScoreMap[Mission] = NewScore;
 		UE_LOG(LogTemp, Warning, TEXT("TrySetMissionScore: Saved a better Score, new score value: %i"), NewScore);
-		SaveGame();
 		return true;
 	}
 	
