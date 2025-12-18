@@ -142,7 +142,7 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 	{
 		TimesSpottedScore -= TimesSpotted * 100;
 		Score -= TimesSpottedScore;
-		UE_LOG(LogTemp, Warning, TEXT("Player spotted %d times: -%f"), TimesSpotted, TimesSpottedScore);
+		UE_LOG(LogTemp, Warning, TEXT("Player spotted %d times: -%d"), TimesSpotted, TimesSpottedScore);
 	}
 
 	// ifall man dödade alla fiender

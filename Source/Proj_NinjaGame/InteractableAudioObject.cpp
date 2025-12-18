@@ -54,10 +54,10 @@ void AInteractableAudioObject::OnAudioFinished()
 
 void AInteractableAudioObject::ShowInteractable_Implementation(bool bShow)
 {
-	if (bIsPlaying)
+	/*if (bIsPlaying)
 	{
 		return;
-	}
+	}*/
 	
 	Super::ShowInteractable_Implementation(bShow);
 }

@@ -54,13 +54,13 @@ protected:
 	
 	bool bMissionTimerActive = false;
 
-	float TimeScoreBonus = 0.0f;
+	int32 TimeScoreBonus = 0;
 
 	bool bKilledAllOrNoEnemies = false;
 	
 	int32 TimesSpotted = 0;
 
-	float TimesSpottedScore = 0;
+	int32 TimesSpottedScore = 0;
 	
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Objective")
@@ -92,7 +92,7 @@ public:
 	float GetScore() const { return FinalScore; }
 
 	UFUNCTION(BlueprintCallable, Category="Scoring")
-	float GetTimeScoreBonus() const { return TimeScoreBonus; } 
+	int32 GetTimeScoreBonus() const { return TimeScoreBonus; } 
 
 	UFUNCTION(BlueprintCallable, Category="Scoring")
 	float GetMissionTimeElapsed() const { return MissionTimeElapsed; }
@@ -104,7 +104,7 @@ public:
 	int32 GetTimesSpotted() const { return TimesSpotted; }
 	
 	UFUNCTION(BlueprintCallable, Category="Scoring")
-	float GetTimesSpottedScore() const { return TimesSpottedScore; }
+	int32 GetTimesSpottedScore() const { return TimesSpottedScore; }
 
 	UFUNCTION(BlueprintCallable, Category="Scoring")
 	int32 GetStealthKillScore() const { return StealthKillScore; }
