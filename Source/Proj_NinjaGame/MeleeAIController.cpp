@@ -308,6 +308,18 @@ void AMeleeAIController::StartBackOff(FVector BackLocation)
 		return;
 	}
 
+	float DistToPlayer = FVector::Dist(GetPawn()->GetActorLocation(), Player->GetActorLocation());
+
+	if (DistToPlayer > ControlledEnemy->GetBackOffMaxDistance())
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("Backoff cancelled: Too far from player (%.0f > %.0f)"),
+			DistToPlayer,
+			ControlledEnemy->GetBackOffMaxDistance()
+		);
+		return;
+	}
+
 	/*if (!ControlledEnemy->IsLocationStillSeeingPlayer(FinalLocation))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Backoff cancelled: Would lose line of sight"));

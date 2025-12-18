@@ -260,6 +260,7 @@ public:
 	FORCEINLINE void SetEnemyHandler(AEnemyHandler* NewEnemyHandler) { EnemyHandler = NewEnemyHandler; }
 	FORCEINLINE virtual float GetAttackRange() const { return AttackRange; } 
 	float GetHealth() const { return Health; }
+	virtual float GetBackOffMaxDistance() const {return 0;}
 
 	void UpdateLastSeenPlayerLocation();
 	FVector GetLastSeenPlayerLocation() const { return LastSeenPlayerLocation; }

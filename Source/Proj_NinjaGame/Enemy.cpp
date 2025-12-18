@@ -305,7 +305,7 @@ void AEnemy::CheckPlayerVisibility()
 	ToPlayer.Normalize();
 
 	// Skillnad mellan patrull och chase läge 
-	float EffectiveVisionRange = bIsChasing ? VisionRange * 1.4f : VisionRange * 0.6f; 
+	float EffectiveVisionRange = bIsChasing ? VisionRange : VisionRange * 0.6f; 
 	float EffectiveVisionAngle = bIsChasing ? VisionAngle * 1.5f : VisionAngle * 0.5f; 
 
 	// Rita debug för fiendens synfält, alltså konerna
