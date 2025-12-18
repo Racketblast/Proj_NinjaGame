@@ -93,6 +93,7 @@ void AThrowableWeapon::Drop(AStealthCharacter* Player)
 		ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 		ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 		ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+		ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(TRACE_CHANNEL_CLIMB, ECR_Ignore);
 		ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);
 	}
 	if (Player->AmountOfOwnWeapon > 0)

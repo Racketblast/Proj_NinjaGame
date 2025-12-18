@@ -966,7 +966,7 @@ void AStealthCharacter::Climb()
 		//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.0f,0, 5.f);
 		
 		//If we are at a wall
-		if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+		if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, TRACE_CHANNEL_CLIMB, Params))
 		{
 			if (CurrentMovementState == EPlayerMovementState::Climb)
 			{
@@ -977,7 +977,7 @@ void AStealthCharacter::Climb()
 				//DrawDebugLine(GetWorld(), StartEdge, EndEdge, FColor::Green, false, 0.0f, 0, 5.f);
 				
 				//If we are at a ledge
-				if (!GetWorld()->LineTraceSingleByChannel(HitResult, StartEdge, EndEdge, ECC_Visibility, Params))
+				if (!GetWorld()->LineTraceSingleByChannel(HitResult, StartEdge, EndEdge, TRACE_CHANNEL_CLIMB, Params))
 				{
 					if (!bHitLedge)
 					{

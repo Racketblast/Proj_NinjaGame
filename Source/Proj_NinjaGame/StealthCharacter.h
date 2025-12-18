@@ -20,6 +20,7 @@ struct FInputActionValue;
 //DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 #define TRACE_CHANNEL_INTERACT ECC_GameTraceChannel3
+#define TRACE_CHANNEL_CLIMB ECC_GameTraceChannel4
 
 UENUM(BlueprintType)
 enum class EPlayerMovementState : uint8
