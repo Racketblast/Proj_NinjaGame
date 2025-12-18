@@ -40,6 +40,9 @@ public:
 	EMission CurrentMission;
 
 	EMission GetCurrentMission() const {return CurrentMission;}
+
+	UPROPERTY(EditDefaultsOnly, Category="Achievements")
+	UDataTable* AchievementTable;
 	
 	//Sound
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Options | Sound | Mix")

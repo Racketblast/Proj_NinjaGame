@@ -8,6 +8,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "AchievementSubsystem.generated.h"
 
+class UStealthGameInstance;
 
 UCLASS()
 class PROJ_NINJAGAME_API UAchievementSubsystem : public UGameInstanceSubsystem
@@ -32,11 +33,11 @@ public:
 	void OnEnemyKilled();
 	void OnHelmetRemoved();
 
+	UPROPERTY()
+	UDataTable* AchievementTable;
+	
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override; 
-	
-	UPROPERTY(Transient)
-	UDataTable* AchievementTable;
 
 private:
 	UPROPERTY()

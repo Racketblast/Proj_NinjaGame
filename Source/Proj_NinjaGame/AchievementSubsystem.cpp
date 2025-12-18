@@ -2,6 +2,8 @@
 
 
 #include "AchievementSubsystem.h"
+
+#include "StealthGameInstance.h"
 #include "StealthSaveGame.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -11,18 +13,23 @@ void UAchievementSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	Super::Initialize(Collection);
 	UE_LOG(LogTemp, Warning, TEXT("AchievementSubsystem Initialized"));
 
+	/*
 	const TCHAR* TablePath = TEXT("/Game/DataTables/AchievementInfo.AchievementInfo");
 
 	AchievementTable = LoadObject<UDataTable>(nullptr, TablePath);
+	*/
 
-	if (!AchievementTable)
+	UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance());
+
+	if (!GI || !GI->AchievementTable)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to load Achievement DataTable at path: %s"), TablePath);
+		UE_LOG(LogTemp, Error, TEXT("AchievementTable missing in StealthGameInstance"));
+		return;
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Achievement DataTable loaded successfully"));
-	}
+
+	AchievementTable = GI->AchievementTable;
+
+	UE_LOG(LogTemp, Warning, TEXT("AchievementSubsystem received AchievementTable from GI"));
 }
 
 void UAchievementSubsystem::UnlockAchievement(EAchievementId Id)
