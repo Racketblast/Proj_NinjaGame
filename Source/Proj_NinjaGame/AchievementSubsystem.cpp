@@ -10,6 +10,19 @@ void UAchievementSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 	UE_LOG(LogTemp, Warning, TEXT("AchievementSubsystem Initialized"));
+
+	const TCHAR* TablePath = TEXT("/Game/DataTables/AchievementInfo.AchievementInfo");
+
+	AchievementTable = LoadObject<UDataTable>(nullptr, TablePath);
+
+	if (!AchievementTable)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to load Achievement DataTable at path: %s"), TablePath);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Achievement DataTable loaded successfully"));
+	}
 }
 
 void UAchievementSubsystem::UnlockAchievement(EAchievementId Id)
@@ -46,11 +59,16 @@ void UAchievementSubsystem::GetAllAchievementData(
 	TArray<FAchievementRow>& OutRows) const
 {
 	if (!AchievementTable)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AchievementTable is NULL"));
 		return;
+	}
 
 	static const FString Context(TEXT("AchievementContext"));
 	TArray<FAchievementRow*> Rows;
 	AchievementTable->GetAllRows(Context, Rows);
+
+	UE_LOG(LogTemp, Warning, TEXT("AchievementTable rows: %d"), Rows.Num());
 
 	for (FAchievementRow* Row : Rows)
 	{

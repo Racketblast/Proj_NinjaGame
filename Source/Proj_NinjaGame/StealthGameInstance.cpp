@@ -412,3 +412,19 @@ void UStealthGameInstance::TrySetMissionScore(EMission Mission, int32 NewScore)
 		SaveGame();
 	}
 }
+
+bool UStealthGameInstance::HasMissionScore(EMission Mission) const
+{
+	return ScoreMap.Contains(Mission);
+}
+
+bool UStealthGameInstance::GetMissionScore(EMission Mission, int32& OutScore) const
+{
+	if (const int32* Score = ScoreMap.Find(Mission))
+	{
+		OutScore = *Score;
+		return true;
+	}
+
+	return false;
+}

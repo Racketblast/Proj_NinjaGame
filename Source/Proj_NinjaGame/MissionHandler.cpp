@@ -106,8 +106,6 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 			return Score;
 		}
 	}
-	
-	CheckMissionAchievements(); // För Achievements
 
 	//Lite start score för att man klara av missionet
 	Score += MissionCompleteBonus;
@@ -175,6 +173,8 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 	{
 		GI->TrySetMissionScore(GI->GetCurrentMission(), FMath::RoundToInt(FinalScore));
 	}
+
+	CheckMissionAchievements(); // För Achievements
 	
 	return FinalScore;
 }
@@ -283,6 +283,49 @@ void AMissionHandler::RemoveObjectiveFromTotal(AActor* ThisObject)
 	}
 }
 
+static bool GetMissionAchievements(
+	EMission Mission,
+	EAchievementId& OutClearedAchievement,
+	EAchievementId& OutPlatinumAchievement,
+	EAchievementId& OutNoDamageAchievement,
+	EAchievementId& OutUnSeenAchievement
+)
+{
+	switch (Mission)
+	{
+	case EMission::TutorialMission:
+		OutClearedAchievement   = EAchievementId::Cleared_Mission1;
+		OutPlatinumAchievement  = EAchievementId::Platinum_Mission1;
+		OutNoDamageAchievement  = EAchievementId::NoDamage_Mission1;
+		OutUnSeenAchievement    = EAchievementId::UnSeen_Mission1;
+		return true;
+
+	case EMission::FirstMission:
+		OutClearedAchievement   = EAchievementId::Cleared_Mission2;
+		OutPlatinumAchievement  = EAchievementId::Platinum_Mission2;
+		OutNoDamageAchievement  = EAchievementId::NoDamage_Mission2;
+		OutUnSeenAchievement    = EAchievementId::UnSeen_Mission2;
+		return true;
+
+	case EMission::SecondMission:
+		OutClearedAchievement   = EAchievementId::Cleared_Mission3;
+		OutPlatinumAchievement  = EAchievementId::Platinum_Mission3;
+		OutNoDamageAchievement  = EAchievementId::NoDamage_Mission3;
+		OutUnSeenAchievement    = EAchievementId::UnSeen_Mission3;
+		return true;
+
+	case EMission::ThirdMission:
+		OutClearedAchievement   = EAchievementId::Cleared_Mission4;
+		OutPlatinumAchievement  = EAchievementId::Platinum_Mission4;
+		OutNoDamageAchievement  = EAchievementId::NoDamage_Mission4;
+		OutUnSeenAchievement    = EAchievementId::UnSeen_Mission4;
+		return true;
+
+	default:
+		return false;
+	}
+}
+
 
 void AMissionHandler::CheckMissionAchievements()
 {
@@ -321,52 +364,54 @@ void AMissionHandler::CheckMissionAchievements()
 		}
 	}
 
-
-	// Achievement: Tog ingen skada
-	const bool bFullHealth =
-		Player->GetHealth() >= Player->GetMaxHealth();
-
-	if (!bFullHealth)
-		return;
-
 	const EMission CurrentMission = GI->GetCurrentMission();
-	
-	/*UE_LOG(LogTemp, Warning, TEXT("CheckMissionAchievements: CurrentMission enum = %s"),
-		*UEnum::GetValueAsString(CurrentMission));
 
-	UE_LOG(LogTemp, Warning, TEXT("CheckMissionAchievements: CurrentMission raw value = %d"),
-		static_cast<int32>(CurrentMission));*/
-	
-	switch (CurrentMission)
+	EAchievementId ClearedAchievement;
+	EAchievementId PlatinumAchievement;
+	EAchievementId NoDamageAchievement;
+	EAchievementId UnSeenAchievement;
+
+	if (!GetMissionAchievements(
+		CurrentMission,
+		ClearedAchievement,
+		PlatinumAchievement,
+		NoDamageAchievement,
+		UnSeenAchievement))
 	{
-	case EMission::TutorialMission:
-		Achievements->UnlockAchievement(EAchievementId::NoDamage_Mission1);
-		break;
-
-	case EMission::FirstMission:
-		Achievements->UnlockAchievement(EAchievementId::NoDamage_Mission2);
-		break;
-
-	case EMission::SecondMission:
-		Achievements->UnlockAchievement(EAchievementId::NoDamage_Mission3);
-		break;
-
-	case EMission::ThirdMission:
-		Achievements->UnlockAchievement(EAchievementId::NoDamage_Mission4);
-		break;
-
-	default:
-		UE_LOG(
-			LogTemp,
-			Warning,
-			TEXT("No achievement unlocked. Unsupported mission: %s"),
-			*UEnum::GetValueAsString(CurrentMission)
-		);
-		break; 
+		UE_LOG(LogTemp, Warning, TEXT("Unsupported mission for achievements"));
+		return;
 	}
 
-	// Achievement: Klarade leveln för första gången
+	// Achievement: Klarade missionen
+	Achievements->UnlockAchievement(ClearedAchievement);
+
+
+	// Achievement: Platinum (score >= 40 000)
+	if (FinalScore >= 40000)
+	{
+		Achievements->UnlockAchievement(PlatinumAchievement);
+	}
 	
+	// Achievement: Tog ingen skada
+	const bool bFullHealth = Player->GetHealth() >= Player->GetMaxHealth();
+
+	if (bFullHealth)
+	{
+		Achievements->UnlockAchievement(NoDamageAchievement);
+	}
+
+	// Achievement: Klarade mission utan att bli upptäckt
+	if (EnemyHandler)
+	{
+		if (EnemyHandler->GetAmountOfTimesSpottet() == 0)
+		{
+			Achievements->UnlockAchievement(UnSeenAchievement);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CheckMissionAchievements: EnemyHandler missing, cannot evaluate UnSeen achievement"));
+	}
 }
 
 
