@@ -25,6 +25,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void GetAllAchievementData(TArray<FAchievementRow>& OutRows) const;
+	
+	UFUNCTION(BlueprintCallable)
+	void GetAchievementData(EAchievementId OutRows) const;
 
 	void LoadFromSave(class UStealthSaveGame* Save);
 	void SaveToSave(class UStealthSaveGame* Save);
@@ -38,7 +41,9 @@ public:
 	
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override; 
-
+	
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	class UPopupWidget* PopupWidget;
 private:
 	UPROPERTY()
 	TMap<EAchievementId, bool> AchievementStates;
@@ -48,5 +53,6 @@ private:
 
 	UPROPERTY()
 	int32 TotalHelmetsRemoved = 0;
-	
 };
+
+
