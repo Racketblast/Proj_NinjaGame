@@ -97,8 +97,6 @@ void AThrowableObject::ThrowableOnComponentHit(UPrimitiveComponent* HitComp, AAc
 	
 	Thrown = false;
 	ChangeToThrowCollision(false);
-	StaticMeshComponent->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Block);
-	StaticMeshComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 	SpawnFieldActor();
 	
 	ThrowableOnComponentHitFunction(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
@@ -300,6 +298,7 @@ void AThrowableObject::ChangeToThrowCollision(bool bCond)
 		ThrowCollision->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Ignore);
 		ThrowCollision->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
 		ThrowCollision->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+		ThrowCollision->SetCollisionResponseToChannel(TRACE_CHANNEL_CLIMB, ECR_Ignore);
 	}
 	else
 	{

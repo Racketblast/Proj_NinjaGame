@@ -8,6 +8,7 @@
 #include "InteractableObject.generated.h"
 
 #define TRACE_CHANNEL_INTERACT ECC_GameTraceChannel3
+#define TRACE_CHANNEL_CLIMB ECC_GameTraceChannel4
 
 UCLASS()
 class PROJ_NINJAGAME_API AInteractableObject : public AActor, public IPlayerUseInterface
