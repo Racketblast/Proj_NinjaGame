@@ -61,6 +61,9 @@ protected:
 	int32 TimesSpotted = 0;
 
 	int32 TimesSpottedScore = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category="Score")
+	bool bIsNewHighScore = false;
 	
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Objective")
@@ -114,6 +117,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Scoring")
 	int32 GetMissionCompleteBonus() const { return MissionCompleteBonus; }
+
+	UFUNCTION(BlueprintCallable, Category="Scoring")
+	bool GetIsNewHighScore() const{ return bIsNewHighScore; }
 
 	UFUNCTION(BlueprintCallable, Category="Scoring")
 	FString FormatTime(float TimeTaken) const;

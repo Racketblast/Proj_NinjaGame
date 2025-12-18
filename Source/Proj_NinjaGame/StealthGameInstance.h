@@ -99,7 +99,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool ScoreMapEquals(const TMap<EMission, int> ScoreMap1, const TMap<EMission, int> ScoreMap2);
 	UFUNCTION(BlueprintCallable)
-	void TrySetMissionScore(EMission Mission, int32 NewScore);
+	bool TrySetMissionScore(EMission Mission, int32 NewScore);
 
 	UFUNCTION(BlueprintCallable, Category="Score")
 	bool HasMissionScore(EMission Mission) const;
