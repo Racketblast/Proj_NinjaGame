@@ -96,3 +96,8 @@ void UAchievementSubsystem::SaveToSave(UStealthSaveGame* Save)
 
 	Save->SavedAchievements = AchievementStates;
 }
+
+void UAchievementSubsystem::RestartAchievements()
+{
+	AchievementStates.Empty();
+}
