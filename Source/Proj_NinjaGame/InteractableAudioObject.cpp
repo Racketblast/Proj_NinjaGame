@@ -3,6 +3,7 @@
 
 #include "InteractableAudioObject.h"
 
+#include "AchievementSubsystem.h"
 #include "SoundUtility.h"
 #include "Components/AudioComponent.h"
 
@@ -45,6 +46,17 @@ void AInteractableAudioObject::Use_Implementation(AStealthCharacter* Player)
 
 	bIsPlaying = true;
 	AudioComponent->Play();
+
+	if (bToilet)
+	{
+		if (UGameInstance* GI = GetGameInstance())
+		{
+			if (UAchievementSubsystem* Achievements = GI->GetSubsystem<UAchievementSubsystem>())
+			{
+				Achievements->UnlockAchievement(EAchievementId::Use_The_Toilet);
+			}
+		}
+	}
 }
 
 void AInteractableAudioObject::OnAudioFinished()

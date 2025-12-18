@@ -26,6 +26,7 @@ public:
 	FORCEINLINE virtual float GetThrowRange() const override { return ThrowRange; }
 	FORCEINLINE virtual float GetThrowCooldown() const override { return ThrowCooldown; }
 	FORCEINLINE float GetCanAttack() const { return bCanAttack; }
+	virtual float GetBackOffMaxDistance() const override { return BackOffMaxDistance; } 
 
 	/*bool bCanAttack = true;
 
@@ -94,5 +95,8 @@ protected:
 	FVector SmoothedPlayerVelocity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Throwable")
-	float ProjectileRadius = 58.f;    
+	float ProjectileRadius = 58.f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Combat|Backoff")
+	float BackOffMaxDistance = 500.f;
 };

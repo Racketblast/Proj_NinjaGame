@@ -38,4 +38,7 @@ protected:
 
 	UFUNCTION()
 	void OnAudioFinished();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Achievement")
+	bool bToilet = false;
 };

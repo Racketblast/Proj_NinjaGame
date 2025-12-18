@@ -308,6 +308,18 @@ void AMeleeAIController::StartBackOff(FVector BackLocation)
 		return;
 	}
 
+	float DistToPlayer = FVector::Dist(GetPawn()->GetActorLocation(), Player->GetActorLocation());
+
+	if (DistToPlayer > ControlledEnemy->GetBackOffMaxDistance())
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("Backoff cancelled: Too far from player (%.0f > %.0f)"),
+			DistToPlayer,
+			ControlledEnemy->GetBackOffMaxDistance()
+		);
+		return;
+	}
+
 	/*if (!ControlledEnemy->IsLocationStillSeeingPlayer(FinalLocation))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Backoff cancelled: Would lose line of sight"));
@@ -352,4 +364,22 @@ void AMeleeAIController::StopBackOff()
 	APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(),0);
 	if (!Player) return;
 	StartSmoothRotationTowards(Player->GetActorLocation(), 2.0f);
+}
+
+
+// Används ännu inte
+void AMeleeAIController::MoveCloserToPlayer(APawn* Player)
+{
+	if (!Player) return;
+
+	FVector ToPlayer = Player->GetActorLocation() - GetPawn()->GetActorLocation();
+	ToPlayer.Z = 0.f;
+
+	if (ToPlayer.IsNearlyZero()) return;
+
+	ToPlayer.Normalize();
+
+	FVector TargetLoc = Player->GetActorLocation() - ToPlayer * 300.f;
+
+	MoveToLocation(TargetLoc, 5.f);
 }

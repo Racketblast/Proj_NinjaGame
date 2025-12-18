@@ -39,6 +39,8 @@ protected:
 	
 	bool CannotReachPlayer(APawn* Player);
 
+	void MoveCloserToPlayer(APawn* Player);
+
 	bool bBackingOff = false;
 	float BackOffDuration = 5.0f;
 	FVector BackOffLocation;
