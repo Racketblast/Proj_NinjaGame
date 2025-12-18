@@ -30,8 +30,15 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TMap<EMission, int> SavedScoreMap;
 
+	// Achievements
 	UPROPERTY(SaveGame)
-	TMap<EAchievementId, bool> SavedAchievements; 
+	TMap<EAchievementId, bool> SavedAchievements;
+
+	UPROPERTY(SaveGame)
+	int32 SavedTotalEnemiesKilled = 0;
+
+	UPROPERTY(SaveGame)
+	int32 SavedTotalHelmetsRemoved = 0;
 	
 	//Options saved
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

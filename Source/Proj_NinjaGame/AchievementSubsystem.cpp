@@ -87,6 +87,8 @@ void UAchievementSubsystem::LoadFromSave(UStealthSaveGame* Save)
 		return;
 
 	AchievementStates = Save->SavedAchievements;
+	TotalEnemiesKilled = Save->SavedTotalEnemiesKilled;
+	TotalHelmetsRemoved = Save->SavedTotalHelmetsRemoved;
 }
 
 void UAchievementSubsystem::SaveToSave(UStealthSaveGame* Save)
@@ -95,9 +97,38 @@ void UAchievementSubsystem::SaveToSave(UStealthSaveGame* Save)
 		return;
 
 	Save->SavedAchievements = AchievementStates;
+	Save->SavedTotalEnemiesKilled = TotalEnemiesKilled;
+	Save->SavedTotalHelmetsRemoved = TotalHelmetsRemoved;
 }
 
 void UAchievementSubsystem::RestartAchievements()
 {
 	AchievementStates.Empty();
+	TotalEnemiesKilled = 0;
+	TotalHelmetsRemoved = 0;
+}
+
+
+void UAchievementSubsystem::OnEnemyKilled()
+{
+	TotalEnemiesKilled++;
+
+	UE_LOG(LogTemp, Log, TEXT("Enemy killed. Total kills: %d"), TotalEnemiesKilled);
+
+	if (TotalEnemiesKilled >= 100)
+	{
+		UnlockAchievement(EAchievementId::Killed_OneHundred_Enemies);
+	}
+}
+
+void UAchievementSubsystem::OnHelmetRemoved()
+{
+	TotalHelmetsRemoved++;
+
+	UE_LOG(LogTemp, Log, TEXT("Helmet removed. Total helmets: %d"), TotalHelmetsRemoved);
+
+	if (TotalHelmetsRemoved >= 20)
+	{
+		UnlockAchievement(EAchievementId::Remove_Twenty_Helmets_From_Enemies);
+	}
 }

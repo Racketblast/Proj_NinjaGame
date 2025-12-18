@@ -372,6 +372,16 @@ TArray<AEnemy*> AEnemyHandler::GetTwoClosestEnemies(FVector TargetLocation)
 		if (ATargetEnemy* TargetEnemy = Cast<ATargetEnemy>(Enemy))
 			continue;
 		
+		if (AEnemyAIController* AICon = Cast<AEnemyAIController>(Enemy->GetController()))
+		{
+			EEnemyState CurrentState = AICon->GetCurrentState();
+		
+			if (CurrentState == EEnemyState::Chasing)
+			{
+				continue;
+			}
+		}
+		
 		UNavigationPath* NavPath = NavSys->FindPathToLocationSynchronously(
 			World,
 			Enemy->GetActorLocation(),

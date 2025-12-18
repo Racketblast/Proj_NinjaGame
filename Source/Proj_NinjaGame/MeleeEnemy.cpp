@@ -217,13 +217,17 @@ FOUND_THROW:
 	{
 		UE_LOG(LogTemp, Warning, TEXT("EnemyThrow: No valid throw found, attempting backoff"));
 
-		FVector BackLoc = GetActorLocation() - GetActorForwardVector() * 250.f;
-
 		if (AMeleeAIController* AICon = Cast<AMeleeAIController>(GetController()))
 		{
+			FVector BackLoc = GetActorLocation() - GetActorForwardVector() * 250.f;
 			AICon->StartBackOff(BackLoc);
 		}
-		return;
+
+		// Fallback: kasta rakt mot spelaren
+		BestTargetLocation = PlayerPawn->GetActorLocation();
+		ChosenProjectileSpeed = BaseProjectileSpeed * 0.9f;
+		ChosenArcHeight = 0.f;
+		//return;
 	}
 
 	// Debug 
