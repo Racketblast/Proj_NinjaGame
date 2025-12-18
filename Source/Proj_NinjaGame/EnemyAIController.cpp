@@ -1106,6 +1106,26 @@ void AEnemyAIController::StartSmoothRotationTowards(const FVector& TargetLocatio
 // Kallas just nu från kameran
 void AEnemyAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation)
 {
+	UWorld* World = GetWorld();
+	if (!World || !ControlledEnemy) return;
+
+	UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(World);
+	if (!NavSys) return;
+
+	// Projektera target till navmesh
+	FNavLocation ProjectedLocation;
+	bool bProjected = NavSys->ProjectPointToNavigation(
+		LastSpottedPlayerLocation,
+		ProjectedLocation,
+		FVector(200.f, 200.f, 500.f)
+	);
+
+	if (!bProjected)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CHASE FAILED: Could not project chase target to navmesh (%s)"), *LastSpottedPlayerLocation.ToString());
+		return;
+	}
+	
 	CurrentState = EEnemyState::Chasing;
 	
 	// Clear timers
@@ -1123,8 +1143,8 @@ void AEnemyAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayer
 	{
 		ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
 		ControlledEnemy->bIsChasing = true;
-		LastKnownPlayerLocation = LastSpottedPlayerLocation;
-		ControlledEnemy->SetLastSeenPlayerLocation(LastSpottedPlayerLocation);
+		LastKnownPlayerLocation = ProjectedLocation.Location;
+		ControlledEnemy->SetLastSeenPlayerLocation(LastKnownPlayerLocation);
 		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetRunSpeed();
 		if (ControlledEnemy->GetVisionDebug())
 		{
@@ -1134,12 +1154,10 @@ void AEnemyAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayer
 
 	StopMovement();
 	
-	UE_LOG(LogTemp, Warning, TEXT("CHASE: %s is starting chase to %s"),
-	*ControlledEnemy->GetName(),
-	*LastKnownPlayerLocation.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("CHASE: %s is starting chase to %s"), *ControlledEnemy->GetName(), *LastKnownPlayerLocation.ToString());
 
 	bIsDoingMissionMoveTo = true;
-	MoveToLocation(LastKnownPlayerLocation);
+	MoveToLocation(LastKnownPlayerLocation, 20);
 }
 
 
