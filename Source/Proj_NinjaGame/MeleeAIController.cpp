@@ -39,6 +39,18 @@ void AMeleeAIController::HandleChasing(float DeltaSeconds)
 
 	if (bBackingOff)
 	{
+		/*float Dist = FVector::Dist(
+			GetPawn()->GetActorLocation(),
+			Player->GetActorLocation()
+		);
+		
+		if (Dist > ControlledEnemy->GetBackOffMaxDistance())
+		{
+			UE_LOG(LogTemp, Error, TEXT("Too far for backoff – stepping closer"));
+			MoveCloserToPlayer(Player);
+			return;
+		}*/
+
 		//MoveToLocation(BackOffLocation, 1.f);
 		//UE_LOG(LogTemp, Error, TEXT("HandleChasing: bBackingOff"))
 		return;
@@ -379,7 +391,7 @@ void AMeleeAIController::MoveCloserToPlayer(APawn* Player)
 
 	ToPlayer.Normalize();
 
-	FVector TargetLoc = Player->GetActorLocation() - ToPlayer * 300.f;
+	FVector TargetLoc = Player->GetActorLocation() - ToPlayer * 200.f;
 
 	MoveToLocation(TargetLoc, 5.f);
 }
