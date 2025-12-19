@@ -28,6 +28,5 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
 	TSubclassOf<UUserWidget> LoseScreen;
-
-	bool bPlayerHasLost = false;
+	
 };
