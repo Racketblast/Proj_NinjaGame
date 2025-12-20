@@ -110,7 +110,7 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 	//Lite start score för att man klara av missionet
 	Score += MissionCompleteBonus;
 	
-	float ScoreMultiplier = 1.0f;
+	ScoreMultiplier = 1;
 
 	Score += StealthKillScore;
 
@@ -156,16 +156,17 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 	// ifall inga fiender har dött
 	if (EnemyHandler->GetAreAllEnemiesAlive())
 	{
-		ScoreMultiplier += 1;
+		ScoreMultiplier += 2;
 		bKilledAllOrNoEnemies = true;
-		UE_LOG(LogTemp, Warning, TEXT("All enemies alive: ScoreMultiplier +1"));
+		bKilledNoEnemies = true;
+		UE_LOG(LogTemp, Warning, TEXT("All enemies alive: ScoreMultiplier +2"));
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Final Score before multiplier: %f"), Score);
 	
 	FinalScore = Score *= ScoreMultiplier;
 	
-	UE_LOG(LogTemp, Warning, TEXT("Score Multiplier: %f"), ScoreMultiplier);
+	UE_LOG(LogTemp, Warning, TEXT("Score Multiplier: %d"), ScoreMultiplier);
 	UE_LOG(LogTemp, Warning, TEXT("Final Score: %f"), FinalScore);
 	UE_LOG(LogTemp, Warning, TEXT("MISSION SCORE DEBUG END"));
 
