@@ -88,7 +88,10 @@ void AMeleeWeapon::AssassinateEnemy()
 	{
 		if (AEnemy* Enemy = Cast<AEnemy>(HitActor))
 		{
-			if (Enemy->bCanBeAssassinated && !Enemy->CanSeePlayer())
+			FVector ToPlayer = (GetActorLocation() - Enemy->GetActorLocation()).GetSafeNormal();
+			float Dot = FVector::DotProduct(Enemy->GetActorForwardVector(), ToPlayer);
+			
+			if (Dot < -0.4 && !Enemy->CanSeePlayer())
 			{
 				ThatCanBeStabbed.Add(Enemy);
 			}

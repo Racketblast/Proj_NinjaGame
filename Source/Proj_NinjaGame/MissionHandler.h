@@ -22,6 +22,8 @@ protected:
 	
 	float FinalScore;
 
+	int32 ScoreMultiplier;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Scoring")
 	int32 StealthKillScore = 0;
 	int32 StealthKills = 0;
@@ -57,6 +59,8 @@ protected:
 	int32 TimeScoreBonus = 0;
 
 	bool bKilledAllOrNoEnemies = false;
+
+	bool bKilledNoEnemies = false;
 	
 	int32 TimesSpotted = 0;
 
@@ -95,6 +99,9 @@ public:
 	float GetScore() const { return FinalScore; }
 
 	UFUNCTION(BlueprintCallable, Category="Scoring")
+	int32 GetScoreMultiplier() const { return ScoreMultiplier; }
+
+	UFUNCTION(BlueprintCallable, Category="Scoring")
 	int32 GetTimeScoreBonus() const { return TimeScoreBonus; } 
 
 	UFUNCTION(BlueprintCallable, Category="Scoring")
@@ -102,6 +109,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Scoring") 
 	bool GetKilledAllOrNoEnemies() const { return bKilledAllOrNoEnemies; }
+
+	UFUNCTION(BlueprintCallable, Category="Scoring") 
+	bool GetKilledNoEnemies() const { return bKilledNoEnemies; }
 
 	UFUNCTION(BlueprintCallable, Category="Scoring")
 	int32 GetTimesSpotted() const { return TimesSpotted; }
