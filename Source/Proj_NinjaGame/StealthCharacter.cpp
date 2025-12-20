@@ -91,6 +91,8 @@ AStealthCharacter::AStealthCharacter()
 	GetCharacterMovement()->MaxWalkSpeedCrouched = SneakWalkSpeed;
 	GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
 
+	OnReachedJumpApex.AddDynamic(this, &AStealthCharacter::OnJumpApexReached);
+
 	CurrentStamina = MaxStamina;
 }
 
@@ -192,7 +194,10 @@ void AStealthCharacter::DoJumpStart()
 {
 	// pass Jump to the character
 	Jump();
+	
+	GetCharacterMovement()->bNotifyApex=true;
 	bHoldingJump = true;
+	
 	if (GetCharacterMovement()->MovementMode == MOVE_Walking)
 	{
 		if (JumpSound)
@@ -585,6 +590,7 @@ void AStealthCharacter::UpdateStaminaStart(float InStamina)
 	else
 	{
 		//Lose Stamina
+		UpdateStaminaLoop();
 		GetWorld()->GetTimerManager().SetTimer(StaminaTimer, this, &AStealthCharacter::UpdateStaminaLoop, StaminaRefreshRate, true);
 	}
 }
@@ -732,6 +738,7 @@ void AStealthCharacter::Landed(const FHitResult& Hit)
 
 		bClimbCapsuleShrunk = false;
 		bHitLedge = false;
+		bReachedApex = false;
 	}
 	
 	float NoiseLevel;
@@ -962,8 +969,16 @@ bool AStealthCharacter::CanCrouch() const
 	return Super::CanCrouch();
 }
 
+void AStealthCharacter::OnJumpApexReached()
+{
+	bReachedApex = true;
+}
+
 void AStealthCharacter::Climb()
 {
+	if (!bReachedApex)
+		return;
+	
 	if (CurrentStamina > 0)
 	{
 		FVector Start = GetActorLocation();

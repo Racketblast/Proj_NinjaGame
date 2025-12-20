@@ -360,6 +360,8 @@ protected:
 	virtual bool CanCrouch() const override;
 	
 	UPROPERTY(BlueprintReadWrite, Category = "Climb")
+	bool bReachedApex = false;
+	UPROPERTY(BlueprintReadWrite, Category = "Climb")
 	bool bIsClimbing = false;
 	UPROPERTY(BlueprintReadWrite, Category = "Climb")
 	bool bHitLedge = false;
@@ -379,6 +381,9 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "Climb")
 	EPlayerMovementState RememberedClimbState;
 
+	UFUNCTION()
+	void OnJumpApexReached();
+	
 	void Climb();
 	void ExitClimb();
 
