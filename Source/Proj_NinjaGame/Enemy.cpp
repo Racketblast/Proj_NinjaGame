@@ -480,12 +480,15 @@ bool AEnemy::HasLineOfSightToPlayer()
 	
 	// kamera = huvud
 	TargetPoints.Add(StealthPlayer->GetFirstPersonCameraComponent()->GetComponentLocation());
-	
-	// vänster arm
-	TargetPoints.Add(StealthPlayer->GetLeftArmVisionPoint());
 
-	// höger arm
-	TargetPoints.Add(StealthPlayer->GetRightArmVisionPoint());
+	if (StealthPlayer->GetPlayerMovementState() != EPlayerMovementState::Crouch)
+	{
+		// vänster arm
+		TargetPoints.Add(StealthPlayer->GetLeftArmVisionPoint());
+
+		// höger arm
+		TargetPoints.Add(StealthPlayer->GetRightArmVisionPoint());
+	}
 
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
