@@ -19,9 +19,6 @@ class PROJ_NINJAGAME_API AEnemy : public ACharacter
 public:
 	AEnemy();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
-	bool bCanBeAssassinated = false;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool bAllowedToAttack = true;
 
@@ -162,22 +159,10 @@ protected:
 	float AttackRange = 0.f;
 
 	UPROPERTY(EditDefaultsOnly, Category="Combat")
-	UCapsuleComponent* AssassinationCapsule;
-
-	UPROPERTY(EditDefaultsOnly, Category="Combat")
 	UCapsuleComponent* HeadCapsule;
 
 	UPROPERTY(EditDefaultsOnly)
 	USkeletalMeshComponent* SkeletalMeshComp;
-	
-	UFUNCTION()
-	void OnAssasinationOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-							 UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
-							 bool bFromSweep, const FHitResult& SweepResult);
-	
-	UFUNCTION()
-	void OnAssasinationOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-								UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	// Time handle Funktioner:
 	void ForgetHeardSound();
