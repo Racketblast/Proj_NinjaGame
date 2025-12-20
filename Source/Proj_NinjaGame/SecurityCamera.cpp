@@ -138,7 +138,6 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 
 	if (bIsCameraDisabled)
 		return;
-
 	
 	AStealthCharacter* StealthPlayer = Cast<AStealthCharacter>(PlayerPawn);
 	if (!StealthPlayer) return;
@@ -154,7 +153,12 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 	// Hämta position och forward från socket "Vision" i SKM
 	const FName VisionSocket = FName("Vision");
 
+	
+
 	FVector CameraLocation = CameraMesh->GetSocketLocation(VisionSocket);
+	if (SavedSpottedLocation != FVector::ZeroVector)
+		CameraLocation = SavedSpottedLocation;
+	
 	FVector Forward = CameraMesh->GetSocketRotation(VisionSocket).Vector();
 	
 	// Beräkna riktning och distans till spelaren
@@ -193,6 +197,8 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 		Params
 	);
 
+	UE_LOG(LogTemp, Warning, TEXT("Player hit: %s"), *CameraLocation.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("Player hit: %s"), bHit ? TEXT("true") : TEXT("false"));
 	if (bHit && Hit.GetActor() != PlayerPawn)
 	{
 		bNewPlayerInCone = false;
@@ -214,14 +220,15 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 			0.05f
 		);
 
-		/*DrawDebugLine(GetWorld(), CameraLocation, PlayerPawn->GetActorLocation(),
-		              FColor::Yellow, false, 0.05f);*/
+		DrawDebugLine(GetWorld(), CameraLocation, PlayerPawn->GetActorLocation(),
+		              bNewPlayerInCone ? FColor::Yellow : FColor::Red, false, 0.05f);
 	}
 
 
 	// Uppdatera state
 	if (bNewPlayerInCone)
 	{
+		SavedSpottedLocation = CameraLocation;
 		bPlayerInCone = true;
 		SpotTimer += DeltaTime;
 
@@ -248,6 +255,7 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 	}
 	else
 	{
+		SavedSpottedLocation = FVector::ZeroVector;
 		bPlayerInCone = false;
 		SpotTimer = 0.f;
 

@@ -3,6 +3,7 @@
 
 #include "AchievementSubsystem.h"
 
+#include "PopupWidget.h"
 #include "StealthGameInstance.h"
 #include "StealthSaveGame.h"
 #include "Kismet/GameplayStatics.h"
@@ -45,6 +46,11 @@ void UAchievementSubsystem::UnlockAchievement(EAchievementId Id)
 	bUnlocked = true;
 
 	UE_LOG(LogTemp, Warning, TEXT("Achievement unlocked: %s"), *UEnum::GetValueAsString(Id));
+
+	if (PopupWidget)
+	{
+		PopupWidget->AchievementPopup(Id);
+	}
 }
 
 bool UAchievementSubsystem::IsAchievementUnlocked(EAchievementId Id) const
@@ -84,6 +90,11 @@ void UAchievementSubsystem::GetAllAchievementData(
 			OutRows.Add(*Row);
 		}
 	}
+}
+
+void UAchievementSubsystem::GetAchievementData(EAchievementId OutRows) const
+{
+	
 }
 
 void UAchievementSubsystem::LoadFromSave(UStealthSaveGame* Save)
