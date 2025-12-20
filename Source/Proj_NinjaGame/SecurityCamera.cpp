@@ -166,7 +166,18 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 	/*if (SavedSpottedLocation != FVector::ZeroVector)
 		CameraLocation = SavedSpottedLocation;*/
 	//FVector CameraLocationLinetrace = GetActorLocation() + FVector(0,-25,-5);
-	FVector CameraLocationLinetrace = VisionOrigin->GetComponentLocation();
+	FVector CameraLocationLinetrace;
+	if (VisionOrigin)
+	{
+		CameraLocationLinetrace = VisionOrigin->GetComponentLocation();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("VisionOrigin is null on %s"), *GetName());
+		CameraLocationLinetrace = CameraLocation;
+	}
+
+	//CameraLocationLinetrace = CameraLocation;
 	
 	FVector Forward = CameraMesh->GetSocketRotation(VisionSocket).Vector();
 	//FVector Forward = VisionOrigin->GetForwardVector();
