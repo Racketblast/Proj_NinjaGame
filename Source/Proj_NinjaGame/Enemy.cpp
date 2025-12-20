@@ -38,9 +38,6 @@ AEnemy::AEnemy()
 
 	SkeletalMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComp"));
 	SkeletalMeshComp->SetupAttachment(GetCapsuleComponent());
-	
-	AssassinationCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("AssassinationCapsule"));
-	AssassinationCapsule->SetupAttachment(GetMesh());
 
 	HeadCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("HeadCapsule"));
 	HeadCapsule->SetupAttachment(GetMesh());
@@ -72,13 +69,6 @@ void AEnemy::BeginPlay()
 	PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0);
 
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-
-	
-	if (AssassinationCapsule)
-	{
-		AssassinationCapsule->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::OnAssasinationOverlapBegin);
-		AssassinationCapsule->OnComponentEndOverlap.AddDynamic(this, &AEnemy::OnAssasinationOverlapEnd);
-	}
 
 	OriginalSuspiciousVisionRange = SuspiciousVisionRange;
 	OriginalVisionRange = VisionRange;
@@ -625,13 +615,6 @@ void AEnemy::Die()
 	// Rensa alla timers 
 	GetWorldTimerManager().ClearAllTimersForObject(this);
 
-	if (AssassinationCapsule)
-	{
-		AssassinationCapsule->OnComponentBeginOverlap.Clear(); 
-		AssassinationCapsule->DestroyComponent();
-		AssassinationCapsule = nullptr;
-	}
-
 	// ta bort VFX-komponent
 	if (StateVFXComponent)
 	{
@@ -679,24 +662,6 @@ void AEnemy::Die()
 void AEnemy::StartAttack()
 {
 	// Gör detta i en sub klass
-}
-
-void AEnemy::OnAssasinationOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-                                        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (AStealthCharacter* Player = Cast<AStealthCharacter>(OtherActor))
-	{
-		bCanBeAssassinated = true;
-	}
-}
-
-void AEnemy::OnAssasinationOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if (AStealthCharacter* Player = Cast<AStealthCharacter>(OtherActor))
-	{
-		bCanBeAssassinated = false;
-	}
 }
 
 

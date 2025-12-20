@@ -266,7 +266,10 @@ void AStealthCharacter::Attack()
 					{
 						if (AEnemy* Enemy = Cast<AEnemy>(HitActor))
 						{
-							if (Enemy->bCanBeAssassinated && !Enemy->CanSeePlayer())
+							FVector ToPlayer = (GetActorLocation() - Enemy->GetActorLocation()).GetSafeNormal();
+							float Dot = FVector::DotProduct(Enemy->GetActorForwardVector(), ToPlayer);
+							
+							if (Dot < -0.4f && !Enemy->CanSeePlayer())
 							{
 								CurrentMeleeWeapon->bAssassinatingEnemy = true;
 								CurrentMeleeWeapon->bCanMeleeAttack = false;
@@ -1404,8 +1407,11 @@ void AStealthCharacter::CheckForCanAssassinate()
 	for (AEnemy* Enemy  : EnemiesInAssassinationRange)
 	{
 		if (!Enemy) continue;
-
-		if (!Enemy->CanSeePlayer() && Enemy->bCanBeAssassinated)
+		
+		FVector ToPlayer = (GetActorLocation() - Enemy->GetActorLocation()).GetSafeNormal();
+		float Dot = FVector::DotProduct(Enemy->GetActorForwardVector(), ToPlayer);
+		
+		if (!Enemy->CanSeePlayer() && Dot < -0.4f)
 		{
 			bCanAssassinate = true;
 			return;
