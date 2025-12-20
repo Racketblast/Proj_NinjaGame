@@ -21,6 +21,9 @@ public:
 	void StartMeleeAttack();
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void MeleeAttackEnd();
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void AssassinateEnemy();
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	bool bCanMeleeAttack = true;
@@ -56,9 +59,6 @@ public:
 protected:
 	UPROPERTY(BlueprintReadWrite)
 	class AStealthCharacter* Player;
-
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void AssassinateEnemy();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void SpawnFieldActor();

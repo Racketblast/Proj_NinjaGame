@@ -197,8 +197,6 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 		Params
 	);
 
-	UE_LOG(LogTemp, Warning, TEXT("Player hit: %s"), *CameraLocation.ToString());
-	UE_LOG(LogTemp, Warning, TEXT("Player hit: %s"), bHit ? TEXT("true") : TEXT("false"));
 	if (bHit && Hit.GetActor() != PlayerPawn)
 	{
 		bNewPlayerInCone = false;

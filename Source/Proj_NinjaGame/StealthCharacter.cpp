@@ -273,11 +273,11 @@ void AStealthCharacter::Attack()
 						{
 							FVector ToPlayer = (GetActorLocation() - Enemy->GetActorLocation()).GetSafeNormal();
 							float Dot = FVector::DotProduct(Enemy->GetActorForwardVector(), ToPlayer);
-							
 							if (Dot < -0.4f && !Enemy->CanSeePlayer())
 							{
 								CurrentMeleeWeapon->bAssassinatingEnemy = true;
 								CurrentMeleeWeapon->bCanMeleeAttack = false;
+								CurrentMeleeWeapon->AssassinateEnemy();
 								break;
 							}
 						}
@@ -287,6 +287,7 @@ void AStealthCharacter::Attack()
 					{
 						CurrentMeleeWeapon->bMeleeAttacking = true;
 						CurrentMeleeWeapon->bCanMeleeAttack = false;
+						CurrentMeleeWeapon->StartMeleeAttack();
 					}
 				}
 			}
