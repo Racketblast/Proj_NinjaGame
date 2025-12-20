@@ -33,6 +33,9 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere)
 	USkeletalMeshComponent* CameraMesh;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Vision")
+	USceneComponent* VisionOrigin;
 
 	UPROPERTY(VisibleAnywhere, Category="Collision")
 	class USphereComponent* HitCollision;

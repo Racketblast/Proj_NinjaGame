@@ -7,6 +7,7 @@
 #include "NavigationSystem.h"
 #include "NiagaraFunctionLibrary.h"
 #include "StealthCharacter.h"
+#include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -19,6 +20,12 @@ ASecurityCamera::ASecurityCamera()
 	//Mesh
 	CameraMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CameraMesh"));
 	RootComponent = CameraMesh;
+
+	// Vision origin 
+	VisionOrigin = CreateDefaultSubobject<USceneComponent>(TEXT("VisionOrigin"));
+	VisionOrigin->SetupAttachment(RootComponent);
+	VisionOrigin->SetRelativeLocation(FVector(0.f, -25.f, -5.f));
+	VisionOrigin->SetRelativeRotation(FRotator::ZeroRotator);
 
 	//hitbox
 	HitCollision = CreateDefaultSubobject<USphereComponent>(TEXT("HitCollision"));
@@ -156,10 +163,24 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 	
 
 	FVector CameraLocation = CameraMesh->GetSocketLocation(VisionSocket);
-	if (SavedSpottedLocation != FVector::ZeroVector)
-		CameraLocation = SavedSpottedLocation;
+	/*if (SavedSpottedLocation != FVector::ZeroVector)
+		CameraLocation = SavedSpottedLocation;*/
+	//FVector CameraLocationLinetrace = GetActorLocation() + FVector(0,-25,-5);
+	FVector CameraLocationLinetrace;
+	if (VisionOrigin)
+	{
+		CameraLocationLinetrace = VisionOrigin->GetComponentLocation();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("VisionOrigin is null on %s"), *GetName());
+		CameraLocationLinetrace = CameraLocation;
+	}
+
+	//CameraLocationLinetrace = CameraLocation;
 	
 	FVector Forward = CameraMesh->GetSocketRotation(VisionSocket).Vector();
+	//FVector Forward = VisionOrigin->GetForwardVector();
 	
 	// Beräkna riktning och distans till spelaren
 	FVector ToPlayer = PlayerPawn->GetActorLocation() - CameraLocation;
@@ -185,19 +206,54 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 
 
 	// Linetracekoll
-	FHitResult Hit;
+	//FHitResult Hit;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
+	
+	FVector PlayerBodyLocation = PlayerPawn->GetActorLocation();
+	FVector PlayerHeadLocation = PlayerBodyLocation;
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(
+	if (StealthPlayer->GetFirstPersonCameraComponent())
+	{
+		PlayerHeadLocation = StealthPlayer->GetFirstPersonCameraComponent()->GetComponentLocation();
+	}
+
+	auto HasLineOfSightTo = [&](const FVector& TargetLocation) -> bool
+	{
+		FHitResult Hit;
+		bool bHit = GetWorld()->LineTraceSingleByChannel(
+			Hit,
+			CameraLocationLinetrace,
+			TargetLocation,
+			ECC_Visibility,
+			Params
+		);
+
+		// Ingen träff = fri sikt
+		if (!bHit)
+			return true;
+
+		// Träffade vi spelaren direkt?
+		return Hit.GetActor() == PlayerPawn;
+	};
+
+	/*bool bHit = GetWorld()->LineTraceSingleByChannel(
 		Hit,
-		CameraLocation,
+		CameraLocationLinetrace,
 		PlayerPawn->GetActorLocation(),
 		ECC_Visibility,
 		Params
 	);
 
 	if (bHit && Hit.GetActor() != PlayerPawn)
+	{
+		bNewPlayerInCone = false;
+	}*/
+	
+	bool bHasLOSBody = HasLineOfSightTo(PlayerBodyLocation);
+	bool bHasLOSHead = HasLineOfSightTo(PlayerHeadLocation);
+
+	if (!bHasLOSBody && !bHasLOSHead)
 	{
 		bNewPlayerInCone = false;
 	}
@@ -218,8 +274,13 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 			0.05f
 		);
 
-		DrawDebugLine(GetWorld(), CameraLocation, PlayerPawn->GetActorLocation(),
-		              bNewPlayerInCone ? FColor::Yellow : FColor::Red, false, 0.05f);
+		//DrawDebugLine(GetWorld(), CameraLocation, PlayerPawn->GetActorLocation(), bNewPlayerInCone ? FColor::Yellow : FColor::Red, false, 0.05f);
+		DrawDebugLine(GetWorld(), CameraLocationLinetrace, PlayerBodyLocation,
+			bHasLOSBody ? FColor::Green : FColor::Red, false, 0.05f);
+
+		DrawDebugLine(GetWorld(), CameraLocationLinetrace, PlayerHeadLocation,
+			bHasLOSHead ? FColor::Cyan : FColor::Red, false, 0.05f);
+
 	}
 
 
