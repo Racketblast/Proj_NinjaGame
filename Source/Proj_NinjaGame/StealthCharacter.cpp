@@ -193,9 +193,9 @@ bool AStealthCharacter::CanJumpInternal_Implementation() const
 void AStealthCharacter::DoJumpStart()
 {
 	// pass Jump to the character
+	GetCharacterMovement()->bNotifyApex = true;
 	Jump();
 	
-	GetCharacterMovement()->bNotifyApex=true;
 	bHoldingJump = true;
 	
 	if (GetCharacterMovement()->MovementMode == MOVE_Walking)
@@ -716,6 +716,7 @@ void AStealthCharacter::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
 	UE_LOG(LogTemp, Display, TEXT("Landed"));
+	bReachedApex = false;
 	
 	if (CurrentMovementState == EPlayerMovementState::Climb)
 	{
@@ -738,7 +739,6 @@ void AStealthCharacter::Landed(const FHitResult& Hit)
 
 		bClimbCapsuleShrunk = false;
 		bHitLedge = false;
-		bReachedApex = false;
 	}
 	
 	float NoiseLevel;
