@@ -41,11 +41,14 @@ public:
 
 	EMission GetCurrentMission() const {return CurrentMission;}
 
+	//Achivements
 	UPROPERTY(EditDefaultsOnly, Category="Achievements")
 	UDataTable* AchievementTable;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess = true), Category="Achievements")
+	TSubclassOf<class UPopupWidget> AchivementsPopupWidgetClass;
 	
 	//Sound
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Options | Sound | Mix")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Options | Sound | Scales")
 	USoundMix* SoundMix;
 	
 	//Sound Options
@@ -97,7 +100,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool HasGameChanged();
 	
-	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category="Dialogue")
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly)
 	TMap<EMission, int> ScoreMap;
 	UFUNCTION(BlueprintCallable)
 	bool ScoreMapEquals(const TMap<EMission, int> ScoreMap1, const TMap<EMission, int> ScoreMap2);

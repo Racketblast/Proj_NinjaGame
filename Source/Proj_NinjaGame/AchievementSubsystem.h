@@ -39,11 +39,13 @@ public:
 	UPROPERTY()
 	UDataTable* AchievementTable;
 	
+	UPROPERTY()
+	TSubclassOf<class UPopupWidget> PopupWidgetClass;
+	
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override; 
-	
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true))
-	class UPopupWidget* PopupWidget;
+	UPopupWidget* PopupWidget;
 private:
 	UPROPERTY()
 	TMap<EAchievementId, bool> AchievementStates;

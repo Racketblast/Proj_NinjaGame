@@ -31,6 +31,11 @@ void UAchievementSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	AchievementTable = GI->AchievementTable;
 
 	UE_LOG(LogTemp, Warning, TEXT("AchievementSubsystem received AchievementTable from GI"));
+
+	if (GI->AchivementsPopupWidgetClass)
+	{
+		PopupWidgetClass = GI->AchivementsPopupWidgetClass;
+	}
 }
 
 void UAchievementSubsystem::UnlockAchievement(EAchievementId Id)
@@ -46,10 +51,32 @@ void UAchievementSubsystem::UnlockAchievement(EAchievementId Id)
 	bUnlocked = true;
 
 	UE_LOG(LogTemp, Warning, TEXT("Achievement unlocked: %s"), *UEnum::GetValueAsString(Id));
-
+	
 	if (PopupWidget)
 	{
-		PopupWidget->AchievementPopup(Id);
+		if (PopupWidget->IsInViewport())
+		{
+			PopupWidget->AchievementPopup(Id);
+		}
+		else
+		{
+			PopupWidget->AddToViewport(10);
+			
+			PopupWidget->AchievementPopup(Id);
+		}
+	}
+	else
+	{
+		if (PopupWidgetClass)
+		{
+			if (UPopupWidget* Widget = CreateWidget<UPopupWidget>(GetWorld(), PopupWidgetClass))
+			{
+				PopupWidget = Widget;
+				PopupWidget->AddToViewport(10);
+			
+				PopupWidget->AchievementPopup(Id);
+			}
+		}
 	}
 }
 

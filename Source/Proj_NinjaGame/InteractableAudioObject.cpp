@@ -24,7 +24,6 @@ void AInteractableAudioObject::BeginPlay()
 	if (OneShotSound)
 	{
 		AudioComponent->SetSound(OneShotSound);
-		USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel); 
 	}
 
 	AudioComponent->OnAudioFinished.AddDynamic(this, &AInteractableAudioObject::OnAudioFinished);
@@ -46,6 +45,7 @@ void AInteractableAudioObject::Use_Implementation(AStealthCharacter* Player)
 
 	bIsPlaying = true;
 	AudioComponent->Play();
+	USoundUtility::ReportNoise(GetWorld(), GetActorLocation(), NoiseLevel); 
 
 	if (bToilet)
 	{
