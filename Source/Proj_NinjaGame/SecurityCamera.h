@@ -58,6 +58,7 @@ protected:
 	bool bHasSpottedPlayer = false;
 
 	float SpotTimer = 0.f;
+	FVector SavedSpottedLocation = FVector::ZeroVector;
 	
 	bool bIsAnimationPlaying = true;
 
