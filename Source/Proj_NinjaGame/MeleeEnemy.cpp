@@ -50,6 +50,9 @@ void AMeleeEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (!PlayerPawn)
+		return;
+	
 	SmoothedPlayerVelocity = FMath::VInterpTo(
 		SmoothedPlayerVelocity,
 		PlayerPawn->GetVelocity(),

@@ -170,6 +170,9 @@ void AStealthCharacter::Move(float Right, float Forward)
 		case EPlayerMovementState::Crouch:
 			NoiseLevel *= SneakNoiseMultiplier;
 			break;
+		case EPlayerMovementState::Climb:
+			NoiseLevel *= SneakNoiseMultiplier;
+			break;
 		case EPlayerMovementState::Run:
 			NoiseLevel *= SprintNoiseMultiplier;
 			break;
