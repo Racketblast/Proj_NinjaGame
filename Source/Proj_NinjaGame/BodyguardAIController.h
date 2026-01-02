@@ -19,5 +19,7 @@ protected:
 
 	virtual void HandleFollowing(float DeltaSeconds) override;
 
+	virtual void HandlePatrolling(float DeltaSeconds) override; 
+
 	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
 };

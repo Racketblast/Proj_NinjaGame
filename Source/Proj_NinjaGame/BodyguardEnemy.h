@@ -19,4 +19,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Bodyguard")
 	float FollowDistance = 250.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Bodyguard")
+	FVector FollowOffset = FVector::ZeroVector;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Bodyguard")
+	float SprintCatchUpDistance = 800.f;
 };
