@@ -5,6 +5,7 @@
 
 #include "BodyguardEnemy.h"
 #include "DialogueInfo.h"
+#include "EnemyMarkerWidget.h"
 #include "MeleeEnemy.h"
 #include "MissionHandler.h"
 #include "Kismet/GameplayStatics.h"
@@ -220,11 +221,31 @@ void AEnemyHandler::UpdateEnemyStates()
 
 		if (CurrentState == EEnemyState::Chasing)
 		{
+			AddActorSeesPlayer(Enemy);
 			bAnyChasing = true;
 		}
 
 		if (CurrentState == EEnemyState::Alert)
 		{
+			AddActorSeesPlayer(Enemy);
+			bAnyAlertLocal = true;
+		}
+	}
+
+	for (AActor* CameraActor : AllSecurityCameras)
+	{
+		ASecurityCamera* Camera = Cast<ASecurityCamera>(CameraActor);
+		if (!Camera) continue;
+
+		if (Camera->GetHasSpottedPlayer())
+		{
+			AddActorSeesPlayer(Camera);
+			bAnyChasing = true;
+		}
+
+		if (Camera->GetPlayerInCone())
+		{
+			AddActorSeesPlayer(Camera);
 			bAnyAlertLocal = true;
 		}
 	}
@@ -252,6 +273,26 @@ void AEnemyHandler::UpdateEnemyStates()
 	//UE_LOG(LogTemp, Log, TEXT("EnemyHandler: Alert=%s | Chasing=%s"), bAnyAlert ? TEXT("TRUE") : TEXT("FALSE"), bEnemySeesPlayer ? TEXT("TRUE") : TEXT("FALSE"));
 }
 
+void AEnemyHandler::AddActorSeesPlayer(AActor* Actor)
+{
+	if (!AllSeesPlayer.Contains(Actor))
+	{
+		AllSeesPlayer.Add(Actor);
+		
+		if (EnemyMarkerWidget)
+		{
+			EnemyMarkerWidget->AddNewEnemyMarker(Actor);
+		}
+	}
+}
+
+void AEnemyHandler::RemoveActorSeesPlayer(AActor* Actor)
+{
+	if (AllSeesPlayer.Contains(Actor))
+	{
+		AllSeesPlayer.Remove(Actor);
+	}
+}
 
 
 AEnemy* AEnemyHandler::GetClosestEnemyToLocation(FVector TargetLocation)
