@@ -55,7 +55,8 @@ protected:
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase* SwingSound;
-	
+
+	//Basically 130° behind
 	UPROPERTY(EditDefaultsOnly, Blueprintable, Category = "Weapon")
 	float BehindDotAngle = -0.2f;
 protected:

@@ -1428,8 +1428,11 @@ void AStealthCharacter::CheckForCanAssassinate()
 		if (!Enemy) continue;
 		
 		FVector ToPlayer = (GetActorLocation() - Enemy->GetActorLocation()).GetSafeNormal();
+		ToPlayer.Z = 0;
+		ToPlayer.Normalize();
 		float Dot = FVector::DotProduct(Enemy->GetActorForwardVector(), ToPlayer);
 		
+		//UE_LOG(LogTemp, Display, TEXT("Dot %f"), Dot);
 		if (!Enemy->CanSeePlayer() && Dot < CurrentMeleeWeapon->BehindDotAngle)
 		{
 			bCanAssassinate = true;
