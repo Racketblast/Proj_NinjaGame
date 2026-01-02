@@ -938,6 +938,12 @@ void AEnemy::UpdateStateVFX(EEnemyState NewState)
 		StateVFXComponent->SetAsset(SearchVFX);
 		StateVFXComponent->Activate(true);
 		break;
+		
+	case EEnemyState::Following:
+		// Stäng av VFX
+		StateVFXComponent->SetAsset(nullptr);
+		StateVFXComponent->Deactivate();
+		break;
 
 	default:
 		// Stäng av VFX

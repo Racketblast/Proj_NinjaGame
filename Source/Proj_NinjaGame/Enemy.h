@@ -113,6 +113,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
 	bool bVisionDebug = true;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	float InitialLookAroundDelay = 2.0f;
+
 	// Andra syn sättet för fienden / andra konen
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
 	float SuspiciousVisionRange = 3000.f;
@@ -249,6 +252,8 @@ public:
 
 	void UpdateLastSeenPlayerLocation();
 	FVector GetLastSeenPlayerLocation() const { return LastSeenPlayerLocation; }
+
+	float GetInitialLookAroundDelay() const { return InitialLookAroundDelay; }
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	bool bIsChasing = false;

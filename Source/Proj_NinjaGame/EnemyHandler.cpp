@@ -3,6 +3,7 @@
 
 #include "EnemyHandler.h"
 
+#include "BodyguardEnemy.h"
 #include "DialogueInfo.h"
 #include "MeleeEnemy.h"
 #include "MissionHandler.h"
@@ -285,6 +286,9 @@ AEnemy* AEnemyHandler::GetClosestEnemyToLocation(FVector TargetLocation)
 		
 		if (ATargetEnemy* TargetEnemy = Cast<ATargetEnemy>(EnemyActor))
 			continue;
+
+		if (Cast<ABodyguardEnemy>(EnemyActor))
+			continue;
 		
 		// Skippa fiender som redan har ett mission
 		AAIController* AICon = Cast<AAIController>(Enemy->GetController());
@@ -369,6 +373,9 @@ TArray<AEnemy*> AEnemyHandler::GetTwoClosestEnemies(FVector TargetLocation)
 		if (!Enemy) continue;
 
 		if (Cast<ATargetEnemy>(Enemy))
+			continue;
+
+		if (Cast<ABodyguardEnemy>(Enemy))
 			continue;
 
 		// Skippa fiender som redan jagar spelaren
