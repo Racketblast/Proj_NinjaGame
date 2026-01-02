@@ -125,6 +125,8 @@ public:
 protected:
 	UFUNCTION()
 	void StartMissionMoveTo(FVector Location);
+
+	float InitialLookAroundDelay = 2.0f;
 	
 	// Mission failsafe
 	float MissionFailSafeTime = 5.f; 
@@ -158,7 +160,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category="AI")
 	float SearchFailTime = 5.f; // Hur länge fienden kan vara stilla innan failsafe triggas
-
 	
 	// Chase Failsafe
 	float ChaseFailTime = 5.f;              

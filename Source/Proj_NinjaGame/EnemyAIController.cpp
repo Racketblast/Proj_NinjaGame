@@ -38,6 +38,8 @@ void AEnemyAIController::OnPossess(APawn* InPawn)
 
 		// Vänta en liten stund innan patrullering startar (Det fungerade inte utan denna delay)
 		GetWorldTimerManager().SetTimer(StartPatrolTimerHandle, this, &AEnemyAIController::MoveToNextPatrolPoint, 0.2f, false);
+
+		InitialLookAroundDelay = ControlledEnemy->GetInitialLookAroundDelay();
 	}
 }
 
@@ -786,10 +788,8 @@ void AEnemyAIController::BeginSearch()
 
 	//UE_LOG(LogTemp, Warning, TEXT("AEnemyAIController BeginSearch 1"));
 	
-	LookAround();
-	
 	// kallar på LookAround() några gånger
-	GetWorldTimerManager().SetTimer(LookAroundTimerHandle, this, &AEnemyAIController::LookAround, 1.5f, true);
+	GetWorldTimerManager().SetTimer(LookAroundTimerHandle, this, &AEnemyAIController::LookAround, 1.5f, true, InitialLookAroundDelay);
 	
 	// Efter SearchTime, avsluta sökningen
 	GetWorldTimerManager().SetTimerForNextTick([this]()
