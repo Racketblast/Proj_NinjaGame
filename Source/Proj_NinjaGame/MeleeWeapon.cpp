@@ -92,7 +92,7 @@ void AMeleeWeapon::AssassinateEnemy()
 			float Dot = FVector::DotProduct(Enemy->GetActorForwardVector(), ToPlayer);
 
 			UE_LOG(LogTemp, Display, TEXT("Dot %f"), Dot);
-			if (Dot < -0.4 && !Enemy->CanSeePlayer())
+			if (Dot < BehindDotAngle && !Enemy->CanSeePlayer())
 			{
 				UE_LOG(LogTemp, Display, TEXT("Killed"));
 				ThatCanBeStabbed.Add(Enemy);

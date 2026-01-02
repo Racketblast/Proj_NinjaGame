@@ -56,6 +56,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase* SwingSound;
 	
+	UPROPERTY(EditDefaultsOnly, Blueprintable, Category = "Weapon")
+	float BehindDotAngle = -0.2f;
 protected:
 	UPROPERTY(BlueprintReadWrite)
 	class AStealthCharacter* Player;
