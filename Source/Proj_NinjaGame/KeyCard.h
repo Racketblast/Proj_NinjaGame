@@ -25,7 +25,24 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
 	SpecificKeycard SpecificKeyCardType = SpecificKeycard::None;
+	
 protected:
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float DistFloat = 10;
+	
+	FVector StartVector;
+	
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	FVector MoveVelocity = {0,0,5};
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	FRotator RotationVelocity = {0,90,0};
+	
+	void MoveObject(float DeltaTime);
+	void RotateObject(float DeltaTime);
+	
+	bool ShouldObjectReturn() const;
+	float GetDistanceMoved() const;
+	virtual void Tick(float DeltaSeconds) override;
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 

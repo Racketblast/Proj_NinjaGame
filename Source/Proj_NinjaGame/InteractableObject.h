@@ -36,7 +36,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Interact")
 	USoundBase* HoverSound;
 	
-	UPROPERTY(EditDefaultsOnly, Category="Interact")
+	UPROPERTY(EditAnywhere, Category="Interact")
 	FString InteractText;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Interact")
