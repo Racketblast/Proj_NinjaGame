@@ -110,6 +110,12 @@ void AEnemyAIController::Tick(float DeltaSeconds)
 			HandleSearching(DeltaSeconds);
 			break;
 		}
+	case EEnemyState::Following:
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("Following"));
+			HandleFollowing(DeltaSeconds);
+			break;
+		}
 	}
 	
 	// Om fienden nyligen hört ett ljud
@@ -424,7 +430,10 @@ void AEnemyAIController::HandleSearching(float DeltaSeconds)
 	}
 }
 
-
+void AEnemyAIController::HandleFollowing(float DeltaSeconds)
+{
+	// Används just nu endast i ABodyguardEnemy
+}
 
 
 void AEnemyAIController::StartAlert()

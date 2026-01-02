@@ -12,7 +12,8 @@ enum class EEnemyState : uint8
 	Patrolling,
 	Alert, 
 	Chasing,
-	Searching
+	Searching,
+	Following
 };
 
 UENUM(BlueprintType)
@@ -72,7 +73,8 @@ protected:
 	virtual void HandlePatrolling(float DeltaSeconds); 
 	virtual void HandleAlert(float DeltaSeconds);
 	virtual void HandleChasing(float DeltaSeconds);
-	virtual void HandleSearching(float DeltaSeconds);
+	virtual void HandleSearching(float DeltaSeconds); 
+	virtual void HandleFollowing(float DeltaSeconds);
 	
 	FTimerHandle LoseSightTimerHandle;
 	
