@@ -92,7 +92,7 @@ protected:
 
 	void BeginSearch();
 	void LookAround();
-	void EndSearch();
+	virtual void EndSearch();
 	void OnTargetLost();
 
 	bool bChasingFromExternalOrder = false;

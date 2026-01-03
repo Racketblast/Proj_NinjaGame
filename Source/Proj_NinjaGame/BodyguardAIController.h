@@ -4,8 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "MeleeAIController.h"
+#include "TargetEnemyExit.h"
 #include "BodyguardAIController.generated.h"
 
+enum class EBodyguardState
+{
+	Following,
+	GoingToDeadTarget,
+	SearchingDeadTarget,
+	GuardingExit
+};
 
 UCLASS()
 class PROJ_NINJAGAME_API ABodyguardAIController : public AMeleeAIController
@@ -22,4 +30,12 @@ protected:
 	virtual void HandlePatrolling(float DeltaSeconds) override; 
 
 	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
+
+	void HandleDeadTargetBehaviour(float DeltaSeconds);
+
+	EBodyguardState BodyguardState = EBodyguardState::Following;
+	
+	ATargetEnemyExit* GetClosestExit() const;
+
+	virtual void EndSearch() override;
 };

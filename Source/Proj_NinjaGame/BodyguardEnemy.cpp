@@ -3,3 +3,20 @@
 
 #include "BodyguardEnemy.h"
 
+
+void ABodyguardEnemy::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (ProtectedTarget)
+	{
+		ProtectedTarget->OnTargetEnemyDied.AddDynamic(this, &ABodyguardEnemy::OnProtectedTargetDied);
+	}
+}
+
+void ABodyguardEnemy::OnProtectedTargetDied(FVector DeathLocation)
+{
+	bProtectedTargetIsDead = true;
+	LastKnownTargetDeathLocation = DeathLocation;
+}
+ 

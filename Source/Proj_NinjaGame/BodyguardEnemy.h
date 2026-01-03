@@ -25,4 +25,19 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Bodyguard")
 	float SprintCatchUpDistance = 800.f;
+
+	UPROPERTY()
+	FVector LastKnownTargetDeathLocation;
+
+	UPROPERTY()
+	bool bProtectedTargetIsDead = false;
+
+	UPROPERTY()
+	ATargetEnemyExit* AssignedExit = nullptr;
+
+protected:
+	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void OnProtectedTargetDied(FVector DeathLocation);
 };

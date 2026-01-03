@@ -28,6 +28,12 @@ public:
 	FORCEINLINE class AMissionHandler* GetMissionHandler() const { return MissionHandler; }
 	UFUNCTION(BlueprintCallable)
 	FORCEINLINE void SetMissionHandler(AMissionHandler* NewMissionHandler) { MissionHandler = NewMissionHandler; }
+
+	// För bodyguard
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTargetEnemyDied, FVector, DeathLocation);
+	UPROPERTY(BlueprintAssignable)
+	FOnTargetEnemyDied OnTargetEnemyDied;
+	
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	AMissionHandler* MissionHandler;
