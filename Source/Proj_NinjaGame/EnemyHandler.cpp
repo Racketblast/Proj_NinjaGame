@@ -70,7 +70,7 @@ void AEnemyHandler::BeginPlay()
 
 	for (AEnemy* Enemy : EnemyList)
 	{
-		if (!Enemy->DoesHaveHelmet())
+		if (!Enemy->DoesHaveHelmet() && Enemy->CanHaveHelmet())
 		{
 			WithoutHelmetEnemies.Add(Enemy);
 		}

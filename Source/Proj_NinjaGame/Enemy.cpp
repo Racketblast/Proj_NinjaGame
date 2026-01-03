@@ -1072,6 +1072,11 @@ void AEnemy::RemoveHelmet()
 
 void AEnemy::SetHaveHelmet(bool bHelmet)
 {
+	if (!bCanHaveHelmet)
+	{
+		return;
+	}
+	
 	bHasHelmet = bHelmet;
 
 	if (HelmetMesh)

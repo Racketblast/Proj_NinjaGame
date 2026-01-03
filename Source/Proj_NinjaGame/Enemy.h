@@ -48,6 +48,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Equipment")
 	bool bHasHelmet = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Enemy|Equipment")
+	bool bCanHaveHelmet = true;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|Equipment")
 	UStaticMeshComponent* HelmetMesh;
 
@@ -249,6 +252,7 @@ public:
 	FORCEINLINE virtual float GetAttackRange() const { return AttackRange; } 
 	float GetHealth() const { return Health; }
 	virtual float GetBackOffMaxDistance() const {return 0;}
+	bool CanHaveHelmet() const { return bCanHaveHelmet; }
 
 	void UpdateLastSeenPlayerLocation();
 	FVector GetLastSeenPlayerLocation() const { return LastSeenPlayerLocation; }
