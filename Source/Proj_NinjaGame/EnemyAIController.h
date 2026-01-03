@@ -12,7 +12,8 @@ enum class EEnemyState : uint8
 	Patrolling,
 	Alert, 
 	Chasing,
-	Searching
+	Searching,
+	Following
 };
 
 UENUM(BlueprintType)
@@ -72,7 +73,8 @@ protected:
 	virtual void HandlePatrolling(float DeltaSeconds); 
 	virtual void HandleAlert(float DeltaSeconds);
 	virtual void HandleChasing(float DeltaSeconds);
-	virtual void HandleSearching(float DeltaSeconds);
+	virtual void HandleSearching(float DeltaSeconds); 
+	virtual void HandleFollowing(float DeltaSeconds);
 	
 	FTimerHandle LoseSightTimerHandle;
 	
@@ -90,7 +92,7 @@ protected:
 
 	void BeginSearch();
 	void LookAround();
-	void EndSearch();
+	virtual void EndSearch();
 	void OnTargetLost();
 
 	bool bChasingFromExternalOrder = false;
@@ -125,6 +127,8 @@ public:
 protected:
 	UFUNCTION()
 	void StartMissionMoveTo(FVector Location);
+
+	float InitialLookAroundDelay = 2.0f;
 	
 	// Mission failsafe
 	float MissionFailSafeTime = 5.f; 
@@ -158,7 +162,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category="AI")
 	float SearchFailTime = 5.f; // Hur länge fienden kan vara stilla innan failsafe triggas
-
 	
 	// Chase Failsafe
 	float ChaseFailTime = 5.f;              

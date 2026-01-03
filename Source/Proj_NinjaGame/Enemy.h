@@ -48,6 +48,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Equipment")
 	bool bHasHelmet = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Enemy|Equipment")
+	bool bCanHaveHelmet = true;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|Equipment")
 	UStaticMeshComponent* HelmetMesh;
 
@@ -112,6 +115,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
 	bool bVisionDebug = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	float InitialLookAroundDelay = 2.0f;
 
 	// Andra syn sättet för fienden / andra konen
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
@@ -246,9 +252,12 @@ public:
 	FORCEINLINE virtual float GetAttackRange() const { return AttackRange; } 
 	float GetHealth() const { return Health; }
 	virtual float GetBackOffMaxDistance() const {return 0;}
+	bool CanHaveHelmet() const { return bCanHaveHelmet; }
 
 	void UpdateLastSeenPlayerLocation();
 	FVector GetLastSeenPlayerLocation() const { return LastSeenPlayerLocation; }
+
+	float GetInitialLookAroundDelay() const { return InitialLookAroundDelay; }
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	bool bIsChasing = false;

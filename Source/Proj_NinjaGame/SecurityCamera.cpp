@@ -102,7 +102,7 @@ void ASecurityCamera::BeginPlay()
 		bIsAnimationPlaying = true;
 	}*/
 
-	SetSpotlightColorFromHex(TEXT("FFFFFFFF"));
+	SetSpotlightColorFromHex(TEXT("0066FFFF")); // Blå: 0066FFFF  // Vitt: FFFFFFFF
 	
 	VisionSpotlight->AttachToComponent(CameraMesh,
 	FAttachmentTransformRules::SnapToTargetIncludingScale,
@@ -603,7 +603,7 @@ void ASecurityCamera::SetVFXState(ECameraVFXState NewState)
 		StateVFXComponent->SetAsset(nullptr);
 		StateVFXComponent->Deactivate();
 		
-		SetSpotlightColorFromHex(TEXT("FFFFFFFF"));
+		SetSpotlightColorFromHex(TEXT("0066FFFF")); // Blå: 0066FFFF  // Vitt: FFFFFFFF
 		break;
 
 	case ECameraVFXState::Alert:

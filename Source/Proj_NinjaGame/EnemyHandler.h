@@ -59,6 +59,10 @@ protected:
 	UPROPERTY()
 	TArray<AActor*> AllSecurityCameras;
 
+	
+	UPROPERTY()
+	TArray<AActor*> AllSeesPlayer;
+
 	UPROPERTY()
 	AMissionHandler* MissionHandler = nullptr;
 
@@ -77,5 +81,12 @@ protected:
 	int PreviousVoiceIndex = -1;
 	
 	void UpdateEnemyStates();
+	
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	class UEnemyMarkerWidget* EnemyMarkerWidget;
+	UFUNCTION(BlueprintCallable)
+	void AddActorSeesPlayer(AActor* Actor);
+	UFUNCTION(BlueprintCallable)
+	void RemoveActorSeesPlayer(AActor* Actor);
 };
 

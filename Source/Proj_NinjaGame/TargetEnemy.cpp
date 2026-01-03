@@ -13,6 +13,10 @@ ATargetEnemy::ATargetEnemy()
 
 void ATargetEnemy::Die()
 {
+	// För bodyguard
+	const FVector DeathLocation = GetActorLocation();
+	OnTargetEnemyDied.Broadcast(DeathLocation); 
+	
 	Super::Die();
 	
 

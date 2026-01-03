@@ -147,6 +147,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	
 	FORCEINLINE AEnemyHandler* GetEnemyHandler() const { return EnemyHandler; }
+	FORCEINLINE bool GetPlayerInCone() const { return bPlayerInCone; }
+	FORCEINLINE bool GetHasSpottedPlayer() const { return bHasSpottedPlayer; }
 	FORCEINLINE void SetEnemyHandler(AEnemyHandler* NewEnemyHandler) { EnemyHandler = NewEnemyHandler; }
 	FORCEINLINE bool GetIsDead() const { return bIsCameraDead; }
 
