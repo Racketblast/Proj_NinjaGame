@@ -327,16 +327,25 @@ protected:
 	// FOV
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
 	float SprintFOV = 80.0f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float SavedSprintFOV;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
-	float AimFOV = 80.0f; 
+	float AimFOV = 80.0f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float SavedAimFOV; 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
-	float NormalFOV = 90.0f; 
+	float NormalFOV = 90.0f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float SavedNormalFOV;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
 	float FOVInterpSpeed = 5.0f; // hur snabbt kameran övergår mellan FOV-värden
 
+	UPROPERTY(BlueprintReadWrite, Category="Camera|Sprint")
+	float OptionsFOVPercentageChange = 1.0f;
+	
 	//Is this needed, from here
 	// Sprint Kamera
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
@@ -438,6 +447,8 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	bool bHasCompletedTheMission = false;
 
+	UFUNCTION(BlueprintCallable, Category = "Camera")
+	void UpdateFOV();
 
 	// För HideSpot
 	void SetCustomCameraLocation(USceneComponent* NewCameraComponent);
@@ -467,5 +478,7 @@ public:
 	FVector GetLeftArmVisionPoint() const;
 
 	FVector GetRightArmVisionPoint() const; 
-
+private:
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	class UStealthGameInstance* StealthGameInstance;
 };

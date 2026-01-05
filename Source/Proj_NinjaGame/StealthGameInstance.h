@@ -58,18 +58,24 @@ public:
 	float SFXVolumeScale = 1.0f;
 	UPROPERTY(BlueprintReadWrite, Category="Options | Sound | Scales")
 	float MusicVolumeScale = 1.0f;
+	UPROPERTY(BlueprintReadWrite, Category="Options | Sound | Scales")
+	float SpeechVolumeScale = 1.0f;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Options | Sound | SoundClasses")
 	USoundClass* MasterSoundClass;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Options | Sound | SoundClasses")
 	USoundClass* SFXSoundClass;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Options | Sound | SoundClasses")
 	USoundClass* MusicSoundClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Options | Sound | SoundClasses")
+	USoundClass* SpeechSoundClass;
 	UFUNCTION(BlueprintCallable)
 	void SetAllSoundClassOverride();
 	
 	//Player Options
 	UPROPERTY(BlueprintReadWrite, Category="Options")
 	float SensitivityScale = 1.0f;
+	UPROPERTY(BlueprintReadWrite, Category="Options")
+	float FOVScale = 0.0f;
 	UPROPERTY(BlueprintReadWrite, Category="Options")
 	int CurrentScalabilitySetting;
 	

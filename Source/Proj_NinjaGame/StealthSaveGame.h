@@ -48,7 +48,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float SavedMusicVolumeScale;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SavedSpeechVolumeScale;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float SavedSensitivityScale;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SavedFOVScale;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int SavedCurrentScalabilitySetting;
 };

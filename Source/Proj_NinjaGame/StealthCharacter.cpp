@@ -135,10 +135,10 @@ void AStealthCharacter::Look(float Yaw, float Pitch)
 	if (GetController())
 	{
 		
-		if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+		if (StealthGameInstance)
 		{
-			Yaw *= GI->SensitivityScale;
-			Pitch *= GI->SensitivityScale;
+			Yaw *= StealthGameInstance->SensitivityScale;
+			Pitch *= StealthGameInstance->SensitivityScale;
 		}
 		// pass the rotation inputs
 		AddControllerYawInput(Yaw);
@@ -638,20 +638,27 @@ void AStealthCharacter::UpdateStaminaLoop()
 void AStealthCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+	{
+		StealthGameInstance = GI;
+		
+		if (GI->CurrentOwnThrowWeapon)
+		{
+			CurrentOwnThrowWeapon = GI->CurrentOwnThrowWeapon;
+		}
+	}
 
 	GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
 	
 	if (FirstPersonCameraComponent)
 	{
 		NormalFOV = FirstPersonCameraComponent->FieldOfView;
-	}
-	
-	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
-	{
-		if (GI->CurrentOwnThrowWeapon)
-		{
-			CurrentOwnThrowWeapon = GI->CurrentOwnThrowWeapon;
-		}
+		SavedNormalFOV = NormalFOV;
+		SavedSprintFOV = SprintFOV;
+		SavedAimFOV = AimFOV;
+		
+		UpdateFOV();
 	}
 	
 	if (CurrentOwnThrowWeapon && AmountOfOwnWeapon > 1)
@@ -664,10 +671,10 @@ void AStealthCharacter::BeginPlay()
 		if (KunaiWeapon && AmountOfOwnWeapon > 1)
 		{
 			CurrentOwnThrowWeapon = KunaiWeapon;
-			if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+			if (StealthGameInstance)
 			{
-				GI->CurrentOwnThrowWeapon = CurrentOwnThrowWeapon;
-				GI->CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::Kunai;
+				StealthGameInstance->CurrentOwnThrowWeapon = CurrentOwnThrowWeapon;
+				StealthGameInstance->CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::Kunai;
 			}
 			
 			EquipThrowWeapon(CurrentOwnThrowWeapon);
@@ -714,6 +721,26 @@ void AStealthCharacter::BeginPlay()
 			Object->TurnOnVFX(true);
 		}
 	}
+}
+
+
+void AStealthCharacter::UpdateFOV()
+{
+	//Changes the fov based on what the player has selected
+	if (StealthGameInstance)
+	{
+		NormalFOV = SavedNormalFOV + StealthGameInstance->FOVScale;
+		OptionsFOVPercentageChange = NormalFOV/SavedNormalFOV;
+		AimFOV = SavedAimFOV * OptionsFOVPercentageChange;
+		SprintFOV = SavedSprintFOV * OptionsFOVPercentageChange;
+	}
+
+	//Failsafe for if it is too big
+	if (NormalFOV > 170.0f)
+	{
+		NormalFOV = 170.0f;
+	}
+	FirstPersonCameraComponent->SetFieldOfView(NormalFOV);
 }
 
 void AStealthCharacter::Landed(const FHitResult& Hit)
@@ -809,6 +836,15 @@ void AStealthCharacter::Tick(float DeltaTime)
 			DeltaTime,
 			FOVInterpSpeed
 		);
+		
+		//Failsafe for if it is too big
+		if (NewFOV > 170.0f)
+		{
+			NewFOV = 170.0f;
+		}
+
+		UE_LOG(LogTemp, Display, TEXT("FOV: %f"), NewFOV);
+		UE_LOG(LogTemp, Display, TEXT("Target FOV: %f"), TargetFOV);
 		FirstPersonCameraComponent->SetFieldOfView(NewFOV);
 	}
 }

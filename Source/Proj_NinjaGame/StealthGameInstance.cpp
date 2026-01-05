@@ -79,9 +79,11 @@ void UStealthGameInstance::FillSaveOptions()
 	Save->SavedMasterVolumeScale = MasterVolumeScale;
 	Save->SavedSFXVolumeScale = SFXVolumeScale;
 	Save->SavedMusicVolumeScale = MusicVolumeScale;
+	Save->SavedSpeechVolumeScale = SpeechVolumeScale;
 	
 	//Other
 	Save->SavedSensitivityScale = SensitivityScale;
+	Save->SavedFOVScale = FOVScale;
 	Save->SavedCurrentScalabilitySetting = CurrentScalabilitySetting;
 }
 
@@ -110,9 +112,11 @@ void UStealthGameInstance::FillLoadOptions()
 	MasterVolumeScale = Save->SavedMasterVolumeScale;
 	SFXVolumeScale = Save->SavedSFXVolumeScale;
 	MusicVolumeScale = Save->SavedMusicVolumeScale;
+	SpeechVolumeScale = Save->SavedSpeechVolumeScale;
 
 	//Other
 	SensitivityScale = Save->SavedSensitivityScale;
+	FOVScale = Save->SavedFOVScale;
 	CurrentScalabilitySetting = Save->SavedCurrentScalabilitySetting;
 }
 
@@ -157,6 +161,11 @@ void UStealthGameInstance::SetOptions()
 	{
 		UGameUserSettings::GetGameUserSettings()->SetOverallScalabilityLevel(CurrentScalabilitySetting);
 		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
+	}
+
+	if (AStealthCharacter* Player = Cast<AStealthCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(),0)))
+	{
+		Player->UpdateFOV();
 	}
 	
 	SetAllSoundClassOverride();
@@ -224,6 +233,8 @@ bool UStealthGameInstance::HasGameChanged()
 			
 			if (SensitivityScale != Save->SavedSensitivityScale)
 				return true;
+			if (FOVScale != Save->SavedFOVScale)
+				return true;
 			if (CurrentScalabilitySetting != Save->SavedCurrentScalabilitySetting)
 				return true;
 			if (MasterVolumeScale != Save->SavedMasterVolumeScale)
@@ -231,6 +242,8 @@ bool UStealthGameInstance::HasGameChanged()
 			if (SFXVolumeScale != Save->SavedSFXVolumeScale)
 				return true;
 			if (MusicVolumeScale != Save->SavedMusicVolumeScale)
+				return true;
+			if (SpeechVolumeScale != Save->SavedSpeechVolumeScale)
 				return true;
 		}
 		return false;
