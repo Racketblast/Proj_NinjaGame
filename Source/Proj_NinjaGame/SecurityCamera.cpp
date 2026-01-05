@@ -153,7 +153,10 @@ void ASecurityCamera::CheckPlayerVisibility(float DeltaTime)
 	if (StealthPlayer->bIsHiddenFromEnemy)
 	{
 		SetVFXState(ECameraVFXState::None);
+		SavedSpottedLocation = FVector::ZeroVector;
 		bPlayerInCone = false;
+		SpotTimer = 0.f;
+		bHasSpottedPlayer = false;
 		return;
 	}
 	

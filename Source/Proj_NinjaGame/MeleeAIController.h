@@ -30,7 +30,7 @@ protected:
 	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
 
 	int32 CurrentPatrolIndex = 0;
-	EEnemyState CurrentState = EEnemyState::Patrolling;
+	//EEnemyState CurrentState = EEnemyState::Patrolling;
 	
 	virtual void StartChasing() override;
 	virtual void StopChasing() override;

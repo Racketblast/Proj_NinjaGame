@@ -1101,6 +1101,8 @@ void AStealthCharacter::ExitClimb()
 
 float AStealthCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	if (!bCanTakeDamage) return 0;
+	
 	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
 	Health -= ActualDamage;

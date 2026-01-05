@@ -153,6 +153,9 @@ protected:
 	
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
+	bool bCanTakeDamage = true; // För Hidespot
+
 	void Die();
 	
 	FTimerHandle TempHandle; // Används i Die funktionen
@@ -208,6 +211,7 @@ protected:
 public:
 	float GetHealth() const { return Health; }
 	float GetMaxHealth() const { return MaxHealth; }
+	void SetCanTakeDamage(bool b) { bCanTakeDamage = b; }
 	
 protected:
 

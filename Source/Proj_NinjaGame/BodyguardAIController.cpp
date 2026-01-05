@@ -26,10 +26,11 @@ void ABodyguardAIController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (CurrentState == EEnemyState::Following)
+	/*if (CurrentState == EEnemyState::Following)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Following"));
 		HandleFollowing(DeltaSeconds);
-	}
+	}*/
 }
 
 
@@ -112,6 +113,7 @@ void ABodyguardAIController::OnMoveCompleted(FAIRequestID RequestID, const FPath
 
 void ABodyguardAIController::HandlePatrolling(float DeltaSeconds)
 {
+	//Super::HandlePatrolling(DeltaSeconds);
 	CurrentState = EEnemyState::Following;
 }
 

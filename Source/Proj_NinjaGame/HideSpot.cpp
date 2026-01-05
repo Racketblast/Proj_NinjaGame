@@ -72,7 +72,8 @@ void AHideSpot::EnterHideSpot(AStealthCharacter* Player)
 	PlayerPawn = Player;
 	InteractText = ExitText;
 	Execute_UpdateShowInteractable(this);
-	
+
+	Player->SetCanTakeDamage(false);
 
 	// Stänger av collisions
 	Player->GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -119,6 +120,8 @@ void AHideSpot::ExitHideSpot()
 	ExitBox->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Ignore);
 
 	AStealthCharacter* Player = PlayerPawn;
+
+	Player->SetCanTakeDamage(true);
 	
 	// Återställer movement
 	Player->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
