@@ -12,6 +12,7 @@
 #include "StealthGameInstance.h"
 #include "ThrowableWeapon.h"
 #include "SoundUtility.h"
+#include "TargetEnemy.h"
 #include "ThrowingMarker.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -126,7 +127,22 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 			{
 				if (Enemy->DoesHaveHelmet())        
 				{
-					Enemy->RemoveHelmet();          
+					Enemy->RemoveHelmet();
+
+					ATargetEnemy* TargetEnemy = Cast<ATargetEnemy>(Enemy);
+					if (!TargetEnemy)
+					{
+						if (bIsHelmet)
+						{
+							if (UGameInstance* GI = GetGameInstance())
+							{
+								if (UAchievementSubsystem* Achievements = GI->GetSubsystem<UAchievementSubsystem>())
+								{
+									Achievements->UnlockAchievement(EAchievementId::Helmet_Removed_By_Helmet);
+								}
+							}
+						}
+					}
 				}
 				else
 				{
