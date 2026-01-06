@@ -3,6 +3,7 @@
 
 #include "ThrowableObject.h"
 
+#include "AchievementSubsystem.h"
 #include "BreakableObject.h"
 #include "MeleeEnemy.h"
 #include "SecurityCamera.h"
@@ -138,6 +139,13 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 						this,
 						UDamageType::StaticClass()
 					);
+					if (UGameInstance* GI = GetGameInstance())
+					{
+						if (UAchievementSubsystem* Achievements = GI->GetSubsystem<UAchievementSubsystem>())
+						{
+							Achievements->OnHeadShot();
+						}
+					}
 				}
 			}
 			else

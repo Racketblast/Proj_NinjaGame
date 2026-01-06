@@ -39,6 +39,12 @@ public:
 
 	UPROPERTY(SaveGame)
 	int32 SavedTotalHelmetsRemoved = 0;
+
+	UPROPERTY(SaveGame)
+	int32 SavedTotalHeadShots = 0;
+
+	UPROPERTY(SaveGame)
+	int32 SavedTotalTotalBackStabs = 0;
 	
 	//Options saved
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

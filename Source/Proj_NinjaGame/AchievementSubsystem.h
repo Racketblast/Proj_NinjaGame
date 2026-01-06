@@ -35,6 +35,8 @@ public:
 
 	void OnEnemyKilled();
 	void OnHelmetRemoved();
+	void OnHeadShot();
+	void OnBackStab();
 
 	UPROPERTY()
 	UDataTable* AchievementTable;
@@ -55,6 +57,12 @@ private:
 
 	UPROPERTY()
 	int32 TotalHelmetsRemoved = 0;
+
+	UPROPERTY()
+	int32 TotalHeadShots = 0;
+
+	UPROPERTY()
+	int32 TotalBackStabs = 0;
 };
 
 
