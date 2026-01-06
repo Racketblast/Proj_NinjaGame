@@ -206,3 +206,54 @@ void UAchievementSubsystem::OnBackStab()
 		UnlockAchievement(EAchievementId::Backstab_Fifty_Enemies);
 	}
 }
+
+
+// För widgets
+int32 UAchievementSubsystem::GetTotalAchievementCount() const
+{
+	if (!AchievementTable)
+	{
+		return 0;
+	}
+
+	return AchievementTable->GetRowMap().Num();
+}
+
+int32 UAchievementSubsystem::GetUnlockedAchievementCount() const
+{
+	int32 Count = 0;
+
+	for (const auto& Pair : AchievementStates)
+	{
+		if (Pair.Value)
+		{
+			Count++;
+		}
+	}
+
+	return Count;
+}
+
+FText UAchievementSubsystem::GetAchievementProgressText() const
+{
+	const int32 Unlocked = GetUnlockedAchievementCount();
+	const int32 Total = GetTotalAchievementCount();
+
+	return FText::Format(
+		NSLOCTEXT("Achievements", "ProgressText", "Unlocked {0}/{1}"),
+		Unlocked,
+		Total
+	);
+}
+
+
+float UAchievementSubsystem::GetAchievementProgress() const
+{
+	const int32 Total = GetTotalAchievementCount();
+	if (Total == 0)
+	{
+		return 0.f;
+	}
+
+	return (float)GetUnlockedAchievementCount() / (float)Total;
+}

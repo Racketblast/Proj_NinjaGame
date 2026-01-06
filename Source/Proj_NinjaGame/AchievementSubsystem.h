@@ -43,6 +43,19 @@ public:
 	
 	UPROPERTY()
 	TSubclassOf<class UPopupWidget> PopupWidgetClass;
+
+	// För widgets 
+	UFUNCTION(BlueprintCallable)
+	int32 GetTotalAchievementCount() const;
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetUnlockedAchievementCount() const;
+
+	UFUNCTION(BlueprintCallable)
+	FText GetAchievementProgressText() const;
+
+	UFUNCTION(BlueprintCallable)
+	float GetAchievementProgress() const;
 	
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override; 
