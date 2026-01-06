@@ -843,8 +843,8 @@ void AStealthCharacter::Tick(float DeltaTime)
 			NewFOV = 170.0f;
 		}
 
-		UE_LOG(LogTemp, Display, TEXT("FOV: %f"), NewFOV);
-		UE_LOG(LogTemp, Display, TEXT("Target FOV: %f"), TargetFOV);
+		//UE_LOG(LogTemp, Display, TEXT("FOV: %f"), NewFOV);
+		//UE_LOG(LogTemp, Display, TEXT("Target FOV: %f"), TargetFOV);
 		FirstPersonCameraComponent->SetFieldOfView(NewFOV);
 	}
 }
