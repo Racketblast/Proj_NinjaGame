@@ -35,12 +35,27 @@ public:
 
 	void OnEnemyKilled();
 	void OnHelmetRemoved();
+	void OnHeadShot();
+	void OnBackStab();
 
 	UPROPERTY()
 	UDataTable* AchievementTable;
 	
 	UPROPERTY()
 	TSubclassOf<class UPopupWidget> PopupWidgetClass;
+
+	// För widgets 
+	UFUNCTION(BlueprintCallable)
+	int32 GetTotalAchievementCount() const;
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetUnlockedAchievementCount() const;
+
+	UFUNCTION(BlueprintCallable)
+	FText GetAchievementProgressText() const;
+
+	UFUNCTION(BlueprintCallable)
+	float GetAchievementProgress() const;
 	
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override; 
@@ -55,6 +70,12 @@ private:
 
 	UPROPERTY()
 	int32 TotalHelmetsRemoved = 0;
+
+	UPROPERTY()
+	int32 TotalHeadShots = 0;
+
+	UPROPERTY()
+	int32 TotalBackStabs = 0;
 };
 
 

@@ -134,6 +134,8 @@ void UAchievementSubsystem::LoadFromSave(UStealthSaveGame* Save)
 	AchievementStates = Save->SavedAchievements;
 	TotalEnemiesKilled = Save->SavedTotalEnemiesKilled;
 	TotalHelmetsRemoved = Save->SavedTotalHelmetsRemoved;
+	TotalHeadShots = Save->SavedTotalHeadShots;
+	TotalBackStabs = Save->SavedTotalTotalBackStabs;
 }
 
 void UAchievementSubsystem::SaveToSave(UStealthSaveGame* Save)
@@ -144,6 +146,8 @@ void UAchievementSubsystem::SaveToSave(UStealthSaveGame* Save)
 	Save->SavedAchievements = AchievementStates;
 	Save->SavedTotalEnemiesKilled = TotalEnemiesKilled;
 	Save->SavedTotalHelmetsRemoved = TotalHelmetsRemoved;
+	Save->SavedTotalHeadShots = TotalHeadShots;
+	Save->SavedTotalTotalBackStabs = TotalBackStabs;
 }
 
 void UAchievementSubsystem::RestartAchievements()
@@ -151,6 +155,8 @@ void UAchievementSubsystem::RestartAchievements()
 	AchievementStates.Empty();
 	TotalEnemiesKilled = 0;
 	TotalHelmetsRemoved = 0;
+	TotalHeadShots = 0;
+	TotalBackStabs = 0;
 }
 
 
@@ -176,4 +182,78 @@ void UAchievementSubsystem::OnHelmetRemoved()
 	{
 		UnlockAchievement(EAchievementId::Remove_Twenty_Helmets_From_Enemies);
 	}
+}
+
+
+void UAchievementSubsystem::OnHeadShot()
+{
+	TotalHeadShots++;
+	UE_LOG(LogTemp, Log, TEXT("HeadShot. Total HeadShots: %d"), TotalHeadShots);
+
+	if (TotalHeadShots >= 50)
+	{
+		UnlockAchievement(EAchievementId::Headshot_Fifty_Enemies);
+	}
+}
+
+void UAchievementSubsystem::OnBackStab()
+{
+	TotalBackStabs++;
+	UE_LOG(LogTemp, Log, TEXT("BackStab. Total BackStabs: %d"), TotalBackStabs);
+
+	if (TotalBackStabs >= 50)
+	{
+		UnlockAchievement(EAchievementId::Backstab_Fifty_Enemies);
+	}
+}
+
+
+// För widgets
+int32 UAchievementSubsystem::GetTotalAchievementCount() const
+{
+	if (!AchievementTable)
+	{
+		return 0;
+	}
+
+	return AchievementTable->GetRowMap().Num();
+}
+
+int32 UAchievementSubsystem::GetUnlockedAchievementCount() const
+{
+	int32 Count = 0;
+
+	for (const auto& Pair : AchievementStates)
+	{
+		if (Pair.Value)
+		{
+			Count++;
+		}
+	}
+
+	return Count;
+}
+
+FText UAchievementSubsystem::GetAchievementProgressText() const
+{
+	const int32 Unlocked = GetUnlockedAchievementCount();
+	const int32 Total = GetTotalAchievementCount();
+
+	return FText::Format(
+		NSLOCTEXT("Achievements", "ProgressText", "Unlocked {0}/{1}"),
+		Unlocked,
+		Total
+	);
+}
+
+
+float UAchievementSubsystem::GetAchievementProgress() const
+{
+	const int32 Total = GetTotalAchievementCount();
+	if (Total == 0)
+	{
+		return 0.f;
+	}
+
+	return (float)GetUnlockedAchievementCount() / (float)Total;
 }

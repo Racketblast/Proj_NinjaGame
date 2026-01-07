@@ -48,6 +48,10 @@ public:
 
 	void ChangeToThrowCollision(bool bCond);
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsHelmet = false;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

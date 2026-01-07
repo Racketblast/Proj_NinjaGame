@@ -33,6 +33,7 @@ enum class EAchievementId : uint8
 	Remove_Twenty_Helmets_From_Enemies,
 	Headshot_Fifty_Enemies,
 	Backstab_Fifty_Enemies,
-	Use_The_Toilet
+	Use_The_Toilet,
+	Helmet_Removed_By_Helmet
 };
 
