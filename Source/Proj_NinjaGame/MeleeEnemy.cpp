@@ -218,12 +218,16 @@ FOUND_THROW:
 	// Ingen giltig bana, kör backoff
 	if (!bFoundValidThrow)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("EnemyThrow: No valid throw found, attempting backoff"));
+		UE_LOG(LogTemp, Warning, TEXT("EnemyThrow: No valid throw found, attempting strafing"));
 
-		if (AMeleeAIController* AICon = Cast<AMeleeAIController>(GetController()))
+		/*if (AMeleeAIController* AICon = Cast<AMeleeAIController>(GetController()))
 		{
 			FVector BackLoc = GetActorLocation() - GetActorForwardVector() * 250.f;
 			AICon->StartBackOff(BackLoc);
+		}*/
+		if (AMeleeAIController* AICon = Cast<AMeleeAIController>(GetController()))
+		{
+			AICon->StrafeAroundPlayer(PlayerPawn);
 		}
 
 		// Fallback: kasta rakt mot spelaren

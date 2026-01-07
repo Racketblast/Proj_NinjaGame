@@ -333,6 +333,8 @@ public:
 	virtual void EnemyThrow();
 	virtual float GetThrowRange() const;
 	virtual float GetThrowCooldown() const;
+	virtual float GetMinCombatDistance() const  { return 0; }
+	virtual float GetMaxCombatDistance() const  { return 0; } 
 
 	UPROPERTY(BlueprintReadWrite, Category="Combat")
 	bool bIsThrowing = false;

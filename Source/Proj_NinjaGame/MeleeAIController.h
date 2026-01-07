@@ -20,6 +20,7 @@ public:
 	//virtual void StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation) override;
 
 	virtual void StartBackOff(FVector BackLocation) override;
+	void StrafeAroundPlayer(APawn* Player); 
 
 	void StopBackOff();
 	
@@ -38,8 +39,8 @@ protected:
 	virtual void HandleChasing(float DeltaSeconds) override;
 	
 	bool CannotReachPlayer(APawn* Player);
-
-	void MoveCloserToPlayer(APawn* Player);
+	void MaintainCombatDistance(APawn* Player);
+	bool ProjectToNavMesh(const FVector& InLocation, FVector& OutLocation) const;
 
 	bool bBackingOff = false;
 	float BackOffDuration = 5.0f;
