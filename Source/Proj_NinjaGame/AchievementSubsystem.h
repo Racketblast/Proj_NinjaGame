@@ -64,6 +64,10 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	float GetTheAchievementProgress(EAchievementId Id) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Achievements")
+	FText GetTheAchievementProgressText(EAchievementId Id) const;
+
 	
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override; 

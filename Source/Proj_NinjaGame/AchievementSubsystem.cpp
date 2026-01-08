@@ -311,3 +311,44 @@ float UAchievementSubsystem::GetTheAchievementProgress(EAchievementId Id) const
 	);
 }
 
+
+FText UAchievementSubsystem::GetTheAchievementProgressText(EAchievementId Id) const
+{
+	if (!AchievementTable)
+	{
+		return FText::GetEmpty();
+	}
+
+	const UEnum* Enum = StaticEnum<EAchievementId>();
+	if (!Enum)
+	{
+		return FText::GetEmpty();
+	}
+	
+	const FString EnumName = Enum->GetNameStringByValue((int64)Id);
+	const FName RowName(*EnumName);
+
+	static const FString Context(TEXT("AchievementProgressText"));
+	const FAchievementRow* Row =
+		AchievementTable->FindRow<FAchievementRow>(RowName, Context);
+
+	if (!Row)
+	{
+		return FText::GetEmpty();
+	}
+	
+	if (!Row->bHasProgress || Row->RequiredAmount <= 0)
+	{
+		return FText::GetEmpty();
+	}
+	
+	const int32 Current = GetAchievementCurrentValue(Id);
+	const int32 Required = Row->RequiredAmount;
+
+	return FText::Format(
+		NSLOCTEXT("Achievements", "AchievementProgressAmount", "{0} / {1}"),
+		Current,
+		Required
+	);
+}
+
