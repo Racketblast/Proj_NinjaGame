@@ -586,6 +586,8 @@ void AStealthCharacter::UpdateProjectilePrediction()
 void AStealthCharacter::UpdateStaminaStart(float InStamina)
 {
 	UpdateStaminaAmount = InStamina;
+	GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
+
 	if (UpdateStaminaAmount >= 0)
 	{
 		//Regain Stamina
@@ -594,7 +596,7 @@ void AStealthCharacter::UpdateStaminaStart(float InStamina)
 	else
 	{
 		//Lose Stamina
-		UpdateStaminaLoop();
+		CurrentStamina += UpdateStaminaAmount;
 		GetWorld()->GetTimerManager().SetTimer(StaminaTimer, this, &AStealthCharacter::UpdateStaminaLoop, StaminaRefreshRate, true);
 	}
 }
@@ -624,7 +626,7 @@ void AStealthCharacter::UpdateStaminaLoop()
 		{
 			StopSprint();
 		}
-		
+
 		UpdateStaminaStart(RegainStaminaAmount);
 	}
 	else if (CurrentStamina == MaxStamina)
@@ -1088,7 +1090,6 @@ void AStealthCharacter::Climb()
 							PlayerActionAudioComponent->SetSound(ClimbSound);
 							PlayerActionAudioComponent->Play();
 						}
-						UpdateStaminaStart(ClimbStaminaAmount);
 						GetMovementComponent()->Velocity = {};
 						CurrentMovementState = EPlayerMovementState::Climb;
 						bIsClimbing = true;
@@ -1096,6 +1097,8 @@ void AStealthCharacter::Climb()
 						ShowWeaponActors(false);
 						
 						GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+						
+						UpdateStaminaStart(ClimbStaminaAmount);
 					}
 				}
 			}
@@ -1129,9 +1132,10 @@ void AStealthCharacter::ExitClimb()
 		
 		ShowWeaponActors(true);
 		
-		UpdateStaminaStart(RegainStaminaAmount);
 		GetCharacterMovement()->SetMovementMode(MOVE_Falling);
 		LaunchCharacter({0,0,500},true, true);
+		
+		UpdateStaminaStart(RegainStaminaAmount);
 	}
 }
 
@@ -1305,32 +1309,27 @@ void AStealthCharacter::StartSprint()
 	
 		if (CurrentStamina > 0)
 		{
-			if (CurrentStamina > 0)
+			// Om spelaren är i crouch så lämna det läget först
+			if (CurrentMovementState == EPlayerMovementState::Crouch)
 			{
-				// Om spelaren är i crouch så lämna det läget först
-				if (CurrentMovementState == EPlayerMovementState::Crouch)
+				if (CanUnCrouch())
 				{
-					if (CanUnCrouch())
-					{
-						UnCrouch();
-						UpdateStaminaStart(SprintStaminaAmount);
-				
-						GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
-						CurrentMovementState = EPlayerMovementState::Run;
-						AimEndAction();
-					}
-				}
-				else
-				{
-					UpdateStaminaStart(SprintStaminaAmount);
-	
+					UnCrouch();
 					GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 					CurrentMovementState = EPlayerMovementState::Run;
 					AimEndAction();
+					UpdateStaminaStart(SprintStaminaAmount);
 				}
-	
-				//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
 			}
+			else
+			{
+				GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+				CurrentMovementState = EPlayerMovementState::Run;
+				AimEndAction();
+				UpdateStaminaStart(SprintStaminaAmount);
+			}
+	
+			//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
 		}
 	}
 }
@@ -1356,30 +1355,29 @@ void AStealthCharacter::LoopSprint()
 	
 			if (CurrentStamina > 0)
 			{
-				if (CurrentStamina > 0)
+				// Om spelaren är i crouch så lämna det läget först
+				if (CurrentMovementState == EPlayerMovementState::Crouch)
 				{
-					// Om spelaren är i crouch så lämna det läget först
-					if (CurrentMovementState == EPlayerMovementState::Crouch)
+					if (CanUnCrouch())
 					{
-						if (CanUnCrouch())
-						{
-							UnCrouch();
-							UpdateStaminaStart(SprintStaminaAmount);
-				
-							GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
-							CurrentMovementState = EPlayerMovementState::Run;
-						}
-					}
-					else
-					{
-						UpdateStaminaStart(SprintStaminaAmount);
-	
+						UnCrouch();
 						GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 						CurrentMovementState = EPlayerMovementState::Run;
+						AimEndAction();
+						
+						UpdateStaminaStart(SprintStaminaAmount);
 					}
-	
-					//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
 				}
+				else
+				{
+					GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+					CurrentMovementState = EPlayerMovementState::Run;
+					AimEndAction();
+
+					UpdateStaminaStart(SprintStaminaAmount);
+				}
+	
+				//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
 			}
 		}
 	}
@@ -1389,10 +1387,11 @@ void AStealthCharacter::StopSprint()
 {
 	if (CurrentMovementState == EPlayerMovementState::Run)
 	{
-		UpdateStaminaStart(RegainStaminaAmount);
 		
 		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
 		CurrentMovementState = EPlayerMovementState::Walk;
+		
+		UpdateStaminaStart(RegainStaminaAmount);
 		//UE_LOG(LogTemp, Warning, TEXT("Player stopped sprinting."));
 	}
 }
