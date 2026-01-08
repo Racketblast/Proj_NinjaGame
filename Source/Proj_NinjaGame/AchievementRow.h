@@ -23,6 +23,14 @@ struct FAchievementRow : public FTableRowBase
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	UTexture2D* Icon = nullptr;
+
+
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	bool bHasProgress = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (EditCondition = "bHasProgress"))
+	int32 RequiredAmount = 0;
 };
 
 
