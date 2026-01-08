@@ -321,6 +321,20 @@ static bool GetMissionAchievements(
 		OutNoDamageAchievement  = EAchievementId::NoDamage_Mission4;
 		OutUnSeenAchievement    = EAchievementId::UnSeen_Mission4;
 		return true;
+		
+	case EMission::FourthMission:
+		OutClearedAchievement   = EAchievementId::Cleared_Mission5;
+		OutPlatinumAchievement  = EAchievementId::Platinum_Mission5;
+		OutNoDamageAchievement  = EAchievementId::NoDamage_Mission5;
+		OutUnSeenAchievement    = EAchievementId::UnSeen_Mission5;
+		return true;
+		
+	case EMission::FifthMission:
+		OutClearedAchievement   = EAchievementId::Cleared_Mission5;
+		OutPlatinumAchievement  = EAchievementId::Platinum_Mission5;
+		OutNoDamageAchievement  = EAchievementId::NoDamage_Mission5;
+		OutUnSeenAchievement    = EAchievementId::UnSeen_Mission5;
+		return true;
 
 	default:
 		return false;
