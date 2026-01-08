@@ -152,7 +152,12 @@ void ADoor::BeginPlay()
 void ADoor::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	
+
+	MoveDoor(DeltaSeconds);
+}
+
+void ADoor::MoveDoor(float DeltaSeconds)
+{
 	if (!bIsMoving) return;
 
 	FRotator CurrentRotation = StaticMeshComponent->GetRelativeRotation();
@@ -254,7 +259,6 @@ void ADoor::DoorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* O
 		PushDirection *= -1.f;
 	}
 	
-	float PushStrength = 10.f;
 	if (CanPushCharacter(Character, PushDirection, (PushDirection * PushStrength).Length()))
 	{
 		Character->LaunchCharacter(PushDirection * PushStrength, false, false);
