@@ -40,6 +40,8 @@ enum class EAchievementId : uint8
 	RatMan_Two,
 	RatMan_Three,
 	RatMan_Four,
-	RatMan_CompletedAll
+	RatMan_CompletedAll,
+
+	Valve_Achievement
 };
 

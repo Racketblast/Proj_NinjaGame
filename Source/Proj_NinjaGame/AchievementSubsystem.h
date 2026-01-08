@@ -16,6 +16,7 @@ class PROJ_NINJAGAME_API UAchievementSubsystem : public UGameInstanceSubsystem
 	GENERATED_BODY()
 
 public:
+	UFUNCTION(BlueprintCallable)
 	void UnlockAchievement(EAchievementId Id);
 
 	UFUNCTION(BlueprintCallable)
