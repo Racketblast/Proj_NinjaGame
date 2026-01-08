@@ -34,6 +34,14 @@ enum class EAchievementId : uint8
 	Headshot_Fifty_Enemies,
 	Backstab_Fifty_Enemies,
 	Use_The_Toilet,
-	Helmet_Removed_By_Helmet
+	Helmet_Removed_By_Helmet,
+
+	RatMan_One,
+	RatMan_Two,
+	RatMan_Three,
+	RatMan_Four,
+	RatMan_CompletedAll,
+
+	Valve_Achievement
 };
 

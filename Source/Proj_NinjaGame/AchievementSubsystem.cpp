@@ -108,7 +108,7 @@ void UAchievementSubsystem::GetAllAchievementData(
 	TArray<FAchievementRow*> Rows;
 	AchievementTable->GetAllRows(Context, Rows);
 
-	UE_LOG(LogTemp, Warning, TEXT("AchievementTable rows: %d"), Rows.Num());
+	//UE_LOG(LogTemp, Warning, TEXT("AchievementTable rows: %d"), Rows.Num());
 
 	for (FAchievementRow* Row : Rows)
 	{

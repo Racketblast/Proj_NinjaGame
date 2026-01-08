@@ -59,6 +59,29 @@ void AEnemyAIController::Tick(float DeltaSeconds)
 	{
 		if (bIsRotating)
 		{
+			if (ControlledEnemy->bPlayerInAlertCone) 
+			{
+				bHasLookAroundTarget = false;
+				bIsDoingLookAroundMove = false;
+
+				// Stoppa rotation 
+				bIsRotating = false;
+				
+				CurrentState = EEnemyState::Alert;
+				StartAlert();
+				//UE_LOG(LogTemp, Warning, TEXT("StartAlert"));
+			}
+			else if (ControlledEnemy->CanSeePlayer())
+			{
+				bHasLookAroundTarget = false;
+				bIsDoingLookAroundMove = false;
+
+				// Stoppa rotation 
+				bIsRotating = false;
+				
+				StartChasing();
+			}
+			
 			FRotator Current = ControlledEnemy->GetActorRotation();
 			FRotator Interp = FMath::RInterpTo(Current, DesiredRotation, DeltaSeconds, CurrentRotationSpeed);
 

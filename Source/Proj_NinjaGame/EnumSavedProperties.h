@@ -16,6 +16,7 @@ enum class EMission : uint8
 	SecondMission		UMETA(DisplayName = "SecondMission"),
 	ThirdMission		UMETA(DisplayName = "ThirdMission"),
 	FourthMission		UMETA(DisplayName = "FourthMission"),
+	FifthMission		UMETA(DisplayName = "FifthMission"),
 };
 
 UENUM(BlueprintType)
