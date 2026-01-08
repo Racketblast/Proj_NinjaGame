@@ -257,3 +257,57 @@ float UAchievementSubsystem::GetAchievementProgress() const
 
 	return (float)GetUnlockedAchievementCount() / (float)Total;
 }
+
+
+int32 UAchievementSubsystem::GetAchievementCurrentValue(EAchievementId Id) const
+{
+	switch (Id)
+	{
+	case EAchievementId::Killed_OneHundred_Enemies:
+		return TotalEnemiesKilled;
+
+	case EAchievementId::Remove_Twenty_Helmets_From_Enemies:
+		return TotalHelmetsRemoved;
+
+	case EAchievementId::Headshot_Fifty_Enemies:
+		return TotalHeadShots;
+
+	case EAchievementId::Backstab_Fifty_Enemies:
+		return TotalBackStabs;
+
+	default:
+		return IsAchievementUnlocked(Id) ? 1 : 0;
+	}
+}
+
+float UAchievementSubsystem::GetTheAchievementProgress(EAchievementId Id) const
+{
+	if (!AchievementTable)
+		return 0.f;
+
+	UEnum* Enum = StaticEnum<EAchievementId>();
+	if (!Enum)
+		return 0.f;
+
+	const FString EnumName = Enum->GetNameStringByValue((int64)Id);
+	const FName RowName(*EnumName);
+
+	static const FString Context(TEXT("AchievementProgress"));
+	const FAchievementRow* Row =
+		AchievementTable->FindRow<FAchievementRow>(RowName, Context);
+
+	//UE_LOG(LogTemp, Warning, TEXT("Looking for row: %s"), *RowName.ToString());
+	
+	if (!Row || !Row->bHasProgress || Row->RequiredAmount <= 0)
+	{
+		return IsAchievementUnlocked(Id) ? 1.f : 0.f;
+	}
+
+	const int32 Current = GetAchievementCurrentValue(Id);
+	return FMath::Clamp(
+		(float)Current / (float)Row->RequiredAmount,
+		0.f,
+		1.f
+	);
+}
+

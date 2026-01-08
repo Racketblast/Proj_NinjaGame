@@ -58,6 +58,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetAchievementProgress() const;
 	
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetAchievementCurrentValue(EAchievementId Id) const; 
+
+	UFUNCTION(BlueprintCallable)
+	float GetTheAchievementProgress(EAchievementId Id) const;
+	
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override; 
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true))
