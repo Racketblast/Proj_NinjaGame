@@ -27,7 +27,7 @@ void ATargetEnemyExit::PlayerLoses()
 	{
 		if (UUserWidget* LoseWidget = CreateWidget<UUserWidget>(GetWorld(), LoseScreen))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Player loses"));
+			//UE_LOG(LogTemp, Warning, TEXT("Player loses"));
 			LoseWidget->AddToViewport();
 		}
 	}
@@ -36,12 +36,17 @@ void ATargetEnemyExit::PlayerLoses()
 void ATargetEnemyExit::EnemyBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                          UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (bPlayerHasLost)
+		return;
+	
 	if (ATargetEnemy* TargetEnemy = Cast<ATargetEnemy>(OtherActor))
 	{
 		if (AEnemyAIController* AI = Cast<AEnemyAIController>(TargetEnemy->GetController()))
 		{
 			if (AI->GetCurrentState() == EEnemyState::Chasing)
 			{
+				//UE_LOG(LogTemp, Error, TEXT("Player should lose"));
+				bPlayerHasLost = true;
 				PlayerLoses();
 			}
 		}

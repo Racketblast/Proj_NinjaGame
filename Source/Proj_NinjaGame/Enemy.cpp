@@ -1,16 +1,21 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "Enemy.h"
 
+#include "AchievementSubsystem.h"
+#include "DialogueInfo.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
 #include "EnemyHandler.h"
 #include "MeleeAIController.h"
+#include "SmokeBombObject.h"
 #include "StealthCharacter.h"
+#include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/OverlapResult.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GeometryCollection/GeometryCollectionComponent.h"
 
 
 AEnemy::AEnemy()
@@ -33,9 +38,6 @@ AEnemy::AEnemy()
 
 	SkeletalMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComp"));
 	SkeletalMeshComp->SetupAttachment(GetCapsuleComponent());
-	
-	AssassinationCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("AssassinationCapsule"));
-	AssassinationCapsule->SetupAttachment(GetMesh());
 
 	HeadCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("HeadCapsule"));
 	HeadCapsule->SetupAttachment(GetMesh());
@@ -53,6 +55,11 @@ AEnemy::AEnemy()
 	// För bättre rotation
 	GetCharacterMovement()->bUseControllerDesiredRotation = false;
 	GetCharacterMovement()->bOrientRotationToMovement = false;
+
+	// Helmet
+	HelmetMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HelmetMesh"));
+	HelmetMesh->SetupAttachment(SkeletalMeshComp, TEXT("Head")); 
+	HelmetMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 
@@ -63,17 +70,16 @@ void AEnemy::BeginPlay()
 
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
-	
-	if (AssassinationCapsule)
-	{
-		AssassinationCapsule->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::OnAssasinationOverlapBegin);
-		AssassinationCapsule->OnComponentEndOverlap.AddDynamic(this, &AEnemy::OnAssasinationOverlapEnd);
-	}
-
 	OriginalSuspiciousVisionRange = SuspiciousVisionRange;
 	OriginalVisionRange = VisionRange;
 	
 	OriginalHearingRange = HearingRange;
+
+	//Helmet
+	if (HelmetMesh)
+	{
+		HelmetMesh->SetVisibility(bHasHelmet);
+	}
 }
 
 void AEnemy::FaceRotation(FRotator NewRotation, float DeltaTime)
@@ -105,6 +111,12 @@ void AEnemy::Tick(float DeltaTime)
 	CheckCloseDetection();
 
 	SpreadAgroToNearbyEnemies();
+
+	// Används just nu bara för debug
+	if (AEnemyAIController* AI = Cast<AEnemyAIController>(GetController()))
+	{
+		State = AI->GetCurrentState();
+	}
 }
 
 void AEnemy::CheckChaseProximityDetection()
@@ -188,7 +200,7 @@ void AEnemy::CheckCloseDetection()
 	{
 		// kontrollera att spelaren faktiskt är i boxen
 		TArray<FOverlapResult> Results;
-		bool bOverlap = GetWorld()->OverlapMultiByObjectType(
+		GetWorld()->OverlapMultiByObjectType(
 			Results,
 			BoxCenter,
 			BoxRotation,
@@ -200,7 +212,7 @@ void AEnemy::CheckCloseDetection()
 		{
 			if (R.GetActor() == PlayerPawn)
 			{
-				FVector Start = GetActorLocation() + FVector(0, 0, 65.f);
+				/*FVector Start = GetActorLocation() + FVector(0, 0, 65.f);
 				FVector End = PlayerPawn->GetActorLocation() + FVector(0, 0, 50.f);
 
 				FHitResult Hit;
@@ -222,6 +234,13 @@ void AEnemy::CheckCloseDetection()
 
 				// Kålla om linetracen träffar spelaren 
 				if (!bLineHit || Hit.GetActor() == PlayerPawn)
+				{
+					bCanSeePlayer = true;
+					UpdateLastSeenPlayerLocation();
+				}*/
+
+				// Kålla om linetracen träffar spelaren 
+				if (HasLineOfSightToPlayer())
 				{
 					bCanSeePlayer = true;
 					UpdateLastSeenPlayerLocation();
@@ -323,7 +342,7 @@ void AEnemy::CheckPlayerVisibility()
 			FCollisionQueryParams Params;
 			Params.AddIgnoredActor(this);
 
-			bool bHit = GetWorld()->LineTraceSingleByChannel(
+			/*bool bHit = GetWorld()->LineTraceSingleByChannel(
 				Hit,
 				EnemyLocation,
 				PlayerPawn->GetActorLocation(),
@@ -343,7 +362,18 @@ void AEnemy::CheckPlayerVisibility()
 					DrawDebugLine(GetWorld(), EnemyLocation, PlayerPawn->GetActorLocation(), FColor::Green, false, 0.1f);
 				}
 				return;
+			}*/
+
+			if (HasLineOfSightToPlayer())
+			{
+				bCanSeePlayer = true;
+				bHasDirectVisualOnPlayer = true;
+				bIsSuspicious = false;
+				SuspiciousTimer = 0.f;
+				UpdateLastSeenPlayerLocation();
+				return;
 			}
+
 		}
 	}
 
@@ -362,17 +392,18 @@ void AEnemy::CheckPlayerVisibility()
 			FCollisionQueryParams Params;
 			Params.AddIgnoredActor(this);
 
-			bool bHit = GetWorld()->LineTraceSingleByChannel(
+			/*bool bHit = GetWorld()->LineTraceSingleByChannel(
 				Hit,
 				EnemyLocation,
 				PlayerPawn->GetActorLocation(),
 				ECC_Visibility,
 				Params
-			);
+			);*/
 
-			if (!bHit || Hit.GetActor() == PlayerPawn)
+			if (HasLineOfSightToPlayer()) // !bHit || Hit.GetActor() == PlayerPawn
 			{
 				bPlayerInSuspiciousZone = true;
+				bHasDirectVisualOnPlayer = true;
 				bIsSuspicious = true;
 				SuspiciousTimer += GetWorld()->GetDeltaSeconds();
 				bPlayerInAlertCone = true;
@@ -424,13 +455,76 @@ void AEnemy::CheckPlayerVisibility()
 		SuspiciousTimer = 0.f;
 	}
 
-	if (!bPlayerWithinChaseProximity)
+	if (!bPlayerWithinChaseProximity && State == EEnemyState::Chasing)
 	{
 		bCanSeePlayer = false;
 	}
+	bHasDirectVisualOnPlayer = false;
 	bPlayerInSuspiciousZone = false;
 	bPlayerInAlertCone = false;
 }
+
+
+bool AEnemy::HasLineOfSightToPlayer()
+{
+	if (!PlayerPawn) return false;
+	AStealthCharacter* StealthPlayer = Cast<AStealthCharacter>(PlayerPawn);
+	if (!StealthPlayer) return false;
+
+	FVector EnemyEyes = GetActorLocation() + FVector(0,0,75);
+
+	TArray<FVector> TargetPoints;
+
+	// Mitten av spelaren
+	TargetPoints.Add(PlayerPawn->GetActorLocation());
+	
+	// kamera = huvud
+	TargetPoints.Add(StealthPlayer->GetFirstPersonCameraComponent()->GetComponentLocation());
+
+	if (StealthPlayer->GetPlayerMovementState() != EPlayerMovementState::Crouch)
+	{
+		// vänster arm
+		TargetPoints.Add(StealthPlayer->GetLeftArmVisionPoint());
+
+		// höger arm
+		TargetPoints.Add(StealthPlayer->GetRightArmVisionPoint());
+	}
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	Params.AddIgnoredActor(PlayerPawn);
+
+	for (const FVector& Point : TargetPoints)
+	{
+		FHitResult Hit;
+
+		bool bHit = GetWorld()->LineTraceSingleByChannel(
+			Hit,
+			EnemyEyes,
+			Point,
+			ECC_Visibility,
+			Params
+		);
+
+		// Om det inte träffade något, eller träffade player först
+		if (!bHit || Hit.GetActor() == PlayerPawn)
+		{
+			if (bVisionDebug)
+			{
+				DrawDebugLine(GetWorld(), EnemyEyes, Point, FColor::Green, false, 0.1f);
+			}
+			return true;
+		}
+
+		if (bVisionDebug)
+		{
+			DrawDebugLine(GetWorld(), EnemyEyes, Point, FColor::Red, false, 0.1f);
+		}
+	}
+
+	return false;
+}
+
 
 
 void AEnemy::OnSuspiciousLocationDetected()
@@ -472,10 +566,13 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 			}
 			if (DamageCauser && !DamageCauser->IsA(AStealthCharacter::StaticClass()))
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Enemy hit by throwing object and survived, Enemy spotted player!"));
-				if (AEnemyAIController* AI = Cast<AEnemyAIController>(GetController()))
+				if (!DamageCauser->IsA(ASmokeBombObject::StaticClass()))
 				{
-					AI->StartChasingFromExternalOrder(PlayerPawn->GetActorLocation());
+					UE_LOG(LogTemp, Warning, TEXT("Enemy hit by throwing object and survived, Enemy spotted player!"));
+					if (AEnemyAIController* AI = Cast<AEnemyAIController>(GetController()))
+					{
+						AI->StartChasingFromExternalOrder(PlayerPawn->GetActorLocation());
+					}
 				}
 			}
 		}
@@ -484,17 +581,20 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 		Health = NewHealth;
 		
 
-		PlayHurtSound();
+		SetStartDialogueRowName("TakeDamage");
+		StartDialogue();
+		//PlayHurtSound();
 
 		if (Health <= 0.0f)
 		{
 			Die();
-			
+
+			//For Ragdoll velocity
 			if (DamageCauser)
 			{
 				FVector Direction = GetCapsuleComponent()->GetComponentLocation() - DamageCauser->GetActorLocation();
 				Direction.Normalize();
-				UE_LOG(LogTemp, Warning, TEXT("Direction: %s"), *Direction.ToString());
+				//UE_LOG(LogTemp, Warning, TEXT("Direction: %s"), *Direction.ToString());
 				float ImpulseStrength = 1000.0f;
 				SkeletalMeshComp->AddImpulse(Direction * ImpulseStrength, NAME_None, true);
 			}
@@ -509,17 +609,14 @@ void AEnemy::Die()
 	UE_LOG(LogTemp, Warning, TEXT("Enemy died!"));
 	bIsDead = true;
 	
+	SetStartDialogueRowName("Death");
+	StartDialogue();
+	bCanPlayDialogue = false;
+	
 	SetActorTickEnabled(false);
 
 	// Rensa alla timers 
 	GetWorldTimerManager().ClearAllTimersForObject(this);
-
-	if (AssassinationCapsule)
-	{
-		AssassinationCapsule->OnComponentBeginOverlap.Clear(); 
-		AssassinationCapsule->DestroyComponent();
-		AssassinationCapsule = nullptr;
-	}
 
 	// ta bort VFX-komponent
 	if (StateVFXComponent)
@@ -544,6 +641,15 @@ void AEnemy::Die()
 			EnemyHandler->RemoveEnemy(this);
 		}
 	}
+
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (UAchievementSubsystem* Achievements = GI->GetSubsystem<UAchievementSubsystem>())
+		{
+			Achievements->OnEnemyKilled();
+		}
+	}
+
 	
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	HeadCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -559,24 +665,6 @@ void AEnemy::Die()
 void AEnemy::StartAttack()
 {
 	// Gör detta i en sub klass
-}
-
-void AEnemy::OnAssasinationOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-                                        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (AStealthCharacter* Player = Cast<AStealthCharacter>(OtherActor))
-	{
-		bCanBeAssassinated = true;
-	}
-}
-
-void AEnemy::OnAssasinationOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if (AStealthCharacter* Player = Cast<AStealthCharacter>(OtherActor))
-	{
-		bCanBeAssassinated = false;
-	}
 }
 
 
@@ -646,7 +734,7 @@ void AEnemy::SpreadAgroToNearbyEnemies()
     if (!MyAI) return;
 
     // Endast sprida agro om denna fiende faktiskt jagar
-    if (MyAI->GetCurrentState() != EEnemyState::Chasing)
+    if (MyAI->GetCurrentState() != EEnemyState::Chasing || !bHasDirectVisualOnPlayer)
         return;
 
     UWorld* World = GetWorld();
@@ -749,7 +837,6 @@ void AEnemy::SpreadAgroToNearbyEnemies()
 void AEnemy::OnAgroSpreadTriggered()
 {
 	bCanSeePlayer = true;
-
 	//UE_LOG(LogTemp, Warning, TEXT("%s is now agro and is chasing!"), *GetName());
 }
 
@@ -757,6 +844,20 @@ void AEnemy::OnAgroSpreadTriggered()
 void AEnemy::UpdateStateVFX(EEnemyState NewState)
 {
 	if (!StateVFXComponent) return;
+
+	if (StunnedVFX)
+	{
+		if (AEnemyAIController* AI = Cast<AEnemyAIController>(GetController()))
+		{
+			if (AI->GetIsStunned())
+			{
+				StateVFXComponent->SetAsset(StunnedVFX);
+				StateVFXComponent->Activate(true);
+				PreviousState = EEnemyState::Patrolling;
+				return;
+			}
+		}
+	}
 
 	if (NewState == EEnemyState::Patrolling)
 	{
@@ -793,13 +894,19 @@ void AEnemy::UpdateStateVFX(EEnemyState NewState)
 		switch (NewState)
 		{
 		case EEnemyState::Alert:
-			PlayStateSound(AlertSound);
+			StartDialogueRowName = "Alert";
+			StartDialogue();
+			//PlayStateSound(AlertSound);
 			break;
 		case EEnemyState::Chasing:
+			StartDialogueRowName = "Chasing";
+			StartDialogue();
 			PlayStateSound(ChasingSound);
 			break;
 		case EEnemyState::Searching:
-			PlayStateSound(SearchingSound);
+			StartDialogueRowName = "Searching";
+			StartDialogue();
+			//PlayStateSound(SearchingSound);
 			break;
 		default:
 			// Stoppa ljud 
@@ -831,6 +938,12 @@ void AEnemy::UpdateStateVFX(EEnemyState NewState)
 		StateVFXComponent->SetAsset(SearchVFX);
 		StateVFXComponent->Activate(true);
 		break;
+		
+	case EEnemyState::Following:
+		// Stäng av VFX
+		StateVFXComponent->SetAsset(nullptr);
+		StateVFXComponent->Deactivate();
+		break;
 
 	default:
 		// Stäng av VFX
@@ -849,8 +962,10 @@ void AEnemy::PlayStateSound(USoundBase* NewSound)
 {
 	if (!StateAudioComponent) return;
 
+	if (!NewSound)
+		return;
 	// Gör inget om samma ljud redan spelar 
-	if (StateAudioComponent->Sound == NewSound)
+	if (StateAudioComponent->Sound == NewSound && StateAudioComponent->IsPlaying())
 		return;
 
 	StateAudioComponent->Stop();
@@ -905,6 +1020,73 @@ void AEnemy::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 }
 
+//Helmet
+void AEnemy::RemoveHelmet()
+{
+	if (!bHasHelmet) return;
+
+	bHasHelmet = false;
+
+	if (AEnemyAIController* AI = Cast<AEnemyAIController>(GetController()))
+	{
+		AI->StartChasingFromExternalOrder(PlayerPawn->GetActorLocation());
+		AI->StunEnemy(1.0f, EEnemyState::Chasing); 
+	}
+
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		if (UAchievementSubsystem* Achievements = GI->GetSubsystem<UAchievementSubsystem>())
+		{
+			Achievements->OnHelmetRemoved();
+		}
+	}
+
+	if (HelmetMesh)
+	{
+		FTransform HelmetTransform = HelmetMesh->GetComponentTransform();
+
+		// Dölj hjälm
+		HelmetMesh->SetVisibility(false);
+		HelmetMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		
+		if (HelmetBreakGeoCollection)
+		{
+			UGeometryCollectionComponent* GeoComp =
+				NewObject<UGeometryCollectionComponent>(this, UGeometryCollectionComponent::StaticClass());
+
+			if (GeoComp)
+			{
+				GeoComp->SetupAttachment(GetMesh()); 
+				GeoComp->SetWorldTransform(HelmetTransform);
+				GeoComp->RegisterComponent();
+
+				GeoComp->SetRelativeTransform(FTransform::Identity);
+
+				GeoComp->SetRestCollection(HelmetBreakGeoCollection);
+				GeoComp->SetPerLevelCollisionProfileNames({ "Debris","Debris","Debris"} );
+				GeoComp->SetCanEverAffectNavigation(false);
+			}
+		}
+	}
+}
+
+void AEnemy::SetHaveHelmet(bool bHelmet)
+{
+	if (!bCanHaveHelmet)
+	{
+		return;
+	}
+	
+	bHasHelmet = bHelmet;
+
+	if (HelmetMesh)
+	{
+		HelmetMesh->SetVisibility(bHasHelmet);
+		//HelmetMesh->SetCollisionEnabled(bHasHelmet ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision);
+	}
+}
+
+
 // Time handle Funktioner:
 void AEnemy::ForgetHeardSound()
 {
@@ -928,4 +1110,111 @@ float AEnemy::GetThrowRange() const
 float AEnemy::GetThrowCooldown() const
 {
 	return 0;
+}
+
+bool AEnemy::IsLocationStillSeeingPlayer(const FVector& Location) const
+{
+	return true;
+}
+
+//Enemy Voice
+void AEnemy::StartDialogue()
+{
+	if (!bCanPlayDialogue)
+		return;
+	
+	if (!EnemyVoiceInfo || EnemyVoiceInfo->GetRowStruct() != FDialogueInfo::StaticStruct())
+		return;
+	
+	if (StartDialogueRowName == "")
+		return;
+	
+	CurrentDialogueRowName = StartDialogueRowName;
+
+	if (FDialogueInfo* Row = EnemyVoiceInfo->FindRow<FDialogueInfo>(StartDialogueRowName, TEXT("")))
+	{
+		NextDialogueRowName = Row->NextDialogue;
+
+		//Plays the dialogue for the amount of time the sound plays
+		float TimeUntilNextDialogue = 0.0f;
+		if (Row->DialogueSound)
+		{
+			if (VoiceAudioComponent)
+			{
+				VoiceAudioComponent->SetSound(Row->DialogueSound);
+				VoiceAudioComponent->Play();
+			}
+			
+			TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
+		}
+		//Goes to next dialogue
+		//This is the reason why the dialogue is broken into two functions, because it needs a delay between each dialog
+		GetWorld()->GetTimerManager().SetTimer(DialogueTimerHandle, this, &AEnemy::NextDialogue, TimeUntilNextDialogue, false);
+	}
+}
+
+void AEnemy::NextDialogue()
+{
+	if (!bCanPlayDialogue)
+		return;
+	
+	if (!EnemyVoiceInfo || EnemyVoiceInfo->GetRowStruct() != FDialogueInfo::StaticStruct())
+		return;
+	
+	if (NextDialogueRowName != "")
+	{
+		CurrentDialogueRowName = NextDialogueRowName;
+		if (FDialogueInfo* Row = EnemyVoiceInfo->FindRow<FDialogueInfo>(NextDialogueRowName, TEXT("")))
+		{
+			NextDialogueRowName = Row->NextDialogue;
+			//Plays the dialogue for the amount of time the sound plays
+			float TimeUntilNextDialogue = 0.0f;
+			if (Row->DialogueSound)
+			{
+				if (VoiceAudioComponent)
+				{
+					VoiceAudioComponent->SetSound(Row->DialogueSound);
+					VoiceAudioComponent->Play();
+				}
+				TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
+			}
+			
+			//Goes to next dialogue
+			GetWorld()->GetTimerManager().SetTimer(DialogueTimerHandle, this, &AEnemy::NextDialogue, TimeUntilNextDialogue, false);
+		}
+	}
+}
+
+void AEnemy::StopDialogue()
+{
+	GetWorld()->GetTimerManager().ClearTimer(DialogueTimerHandle);
+
+	if (VoiceAudioComponent && VoiceAudioComponent->IsPlaying())
+	{
+		VoiceAudioComponent->Stop();
+	}
+
+	StartDialogueRowName = "";
+	CurrentDialogueRowName = "";
+	NextDialogueRowName = "";
+}
+
+float AEnemy::GetDialogueDuration()
+{
+	float TimeUntilNextDialogue = 0.0f;
+	
+	if (!EnemyVoiceInfo || EnemyVoiceInfo->GetRowStruct() != FDialogueInfo::StaticStruct())
+		return TimeUntilNextDialogue;
+	
+	if (CurrentDialogueRowName != "")
+	{
+		if (FDialogueInfo* Row = EnemyVoiceInfo->FindRow<FDialogueInfo>(CurrentDialogueRowName, TEXT("")))
+		{
+			if (Row->DialogueSound)
+			{
+				TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
+			}
+		}
+	}
+	return TimeUntilNextDialogue;
 }

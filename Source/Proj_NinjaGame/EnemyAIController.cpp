@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 #include "AIController.h"
+#include "EnumSavedProperties.h"
 #include "NavigationPath.h"
 #include "NavigationSystem.h"
 #include "PatrolPoint.h"
@@ -37,6 +38,8 @@ void AEnemyAIController::OnPossess(APawn* InPawn)
 
 		// Vänta en liten stund innan patrullering startar (Det fungerade inte utan denna delay)
 		GetWorldTimerManager().SetTimer(StartPatrolTimerHandle, this, &AEnemyAIController::MoveToNextPatrolPoint, 0.2f, false);
+
+		InitialLookAroundDelay = ControlledEnemy->GetInitialLookAroundDelay();
 	}
 }
 
@@ -52,33 +55,70 @@ void AEnemyAIController::Tick(float DeltaSeconds)
 	}
 
 	// Rotation
-	if (bIsRotating)
+	if (!ControlledEnemy->CanSeePlayer() || !ControlledEnemy->bPlayerInAlertCone)
 	{
-		FRotator Current = ControlledEnemy->GetActorRotation();
-		FRotator Interp = FMath::RInterpTo(Current, DesiredRotation, DeltaSeconds, CurrentRotationSpeed);
+		if (bIsRotating)
+		{
+			if (ControlledEnemy->bPlayerInAlertCone) 
+			{
+				bHasLookAroundTarget = false;
+				bIsDoingLookAroundMove = false;
 
-		Interp.Pitch = 0.f;
-		Interp.Roll = 0.f;
+				// Stoppa rotation 
+				bIsRotating = false;
+				
+				CurrentState = EEnemyState::Alert;
+				StartAlert();
+				//UE_LOG(LogTemp, Warning, TEXT("StartAlert"));
+			}
+			else if (ControlledEnemy->CanSeePlayer())
+			{
+				bHasLookAroundTarget = false;
+				bIsDoingLookAroundMove = false;
 
-		ControlledEnemy->SetActorRotation(Interp);
+				// Stoppa rotation 
+				bIsRotating = false;
+				
+				StartChasing();
+			}
+			
+			FRotator Current = ControlledEnemy->GetActorRotation();
+			FRotator Interp = FMath::RInterpTo(Current, DesiredRotation, DeltaSeconds, CurrentRotationSpeed);
 
-		if (Interp.Equals(DesiredRotation, 2.0f)) 
+			Interp.Pitch = 0.f;
+			Interp.Roll = 0.f;
+
+			ControlledEnemy->SetActorRotation(Interp);
+
+			if (Interp.Equals(DesiredRotation, 2.0f)) 
+			{
+				bIsRotating = false;
+			}
+
+			//UE_LOG(LogTemp, Warning, TEXT("Rotating: %s"), *DesiredRotation.ToString());
+			//UE_LOG(LogTemp, Warning, TEXT("current Rotation: %s"), *ControlledEnemy->GetActorRotation().ToString());
+			return; // Under rotation gör fienden inget annat
+		}
+	}
+	else
+	{
+		if (bIsRotating)
 		{
 			bIsRotating = false;
 		}
-
-		return; // Under rotation gör fienden inget annat
 	}
 
 	switch (CurrentState)
 	{
 	case EEnemyState::Patrolling:
 		{
+			//UE_LOG(LogTemp, Warning, TEXT("Patrolling"));
 			HandlePatrolling(DeltaSeconds);
 			break;
 		}
 	case EEnemyState::Alert:
 		{
+			//UE_LOG(LogTemp, Warning, TEXT("Alert"));
 			HandleAlert(DeltaSeconds);
 			break;
 		}
@@ -89,7 +129,14 @@ void AEnemyAIController::Tick(float DeltaSeconds)
 		}
 	case EEnemyState::Searching:
 		{
+			//UE_LOG(LogTemp, Warning, TEXT("Searching"));
 			HandleSearching(DeltaSeconds);
+			break;
+		}
+	case EEnemyState::Following:
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("Following"));
+			HandleFollowing(DeltaSeconds);
 			break;
 		}
 	}
@@ -97,7 +144,7 @@ void AEnemyAIController::Tick(float DeltaSeconds)
 	// Om fienden nyligen hört ett ljud
 	if (!bIsInvestigatingSound && ControlledEnemy->bHeardSoundRecently && CurrentState != EEnemyState::Chasing)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("Enemy heard sound at %s"), *ControlledEnemy->LastHeardSoundLocation.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("Enemy heard sound at %s"), *ControlledEnemy->LastHeardSoundLocation.ToString());
 		OnHeardSound(ControlledEnemy->LastHeardSoundLocation);
 		
 		bIsInvestigatingSound = true;
@@ -123,7 +170,7 @@ void AEnemyAIController::HandlePatrolling(float DeltaSeconds)
 	}
 	else if (ControlledEnemy->bHeardSoundRecently && !bIsInvestigatingSound)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("Patrolling: Heard sound at %s"), *ControlledEnemy->LastHeardSoundLocation.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("Patrolling: Heard sound at %s"), *ControlledEnemy->LastHeardSoundLocation.ToString());
 		OnHeardSound(ControlledEnemy->LastHeardSoundLocation);
 		bIsInvestigatingSound = true;
 				
@@ -156,10 +203,25 @@ void AEnemyAIController::HandlePatrolling(float DeltaSeconds)
 		{
 			bIsRotatingTowardPatrolPoint = false;
 
+			const TArray<AActor*>& PatrolPoints = ControlledEnemy->GetPatrolPoints();
+			AActor* TargetPoint = PatrolPoints[CurrentPatrolIndex];
+
+			if (TargetPoint)
+			{
+				const float DistToTarget = FVector::Dist(ControlledEnemy->GetActorLocation(), TargetPoint->GetActorLocation());
+
+				// Om fienden redan är vid denna patrol point, gör ingenting
+				if (DistToTarget < 200.f)  
+				{
+
+					//UE_LOG(LogTemp, Warning, TEXT("Skipping patrol point because enemy is already there. New index: %d"), CurrentPatrolIndex);
+					return;
+				}
+			}
+
 			// När klar så börjar fienden gå
-			MoveToActor(
-				ControlledEnemy->GetPatrolPoints()[CurrentPatrolIndex]
-			);
+			MoveToActor(TargetPoint);
+			//MoveToActor(ControlledEnemy->GetPatrolPoints()[CurrentPatrolIndex]);
 		}
 	}
 }
@@ -217,7 +279,7 @@ void AEnemyAIController::HandleChasing(float DeltaSeconds)
 	if (ControlledEnemy->CanSeePlayer())
 	{
 		float Dist = FVector::Dist(GetPawn()->GetActorLocation(), Player->GetActorLocation());
-		if (Dist <= ControlledEnemy->GetAttackRange())
+		if (Dist <= ControlledEnemy->GetAttackRange() && ControlledEnemy->bAllowedToAttack)
 		{
 			StopMovement();
 			if (ControlledEnemy->bCanAttack)
@@ -271,13 +333,17 @@ void AEnemyAIController::HandleSearching(float DeltaSeconds)
 		//UE_LOG(LogTemp, Error, TEXT("StartAlert"));
 		return;
 	}
+
 	
+	//UE_LOG(LogTemp, Warning, TEXT("HandleSearching"));
 	if (bIsMovingToSound && bIsInvestigatingTarget)
 	{
 		// Gör inget om vi roterar
 		if (!bIsRotating)
 		{
 			bIsDoingMissionMoveTo = false;
+			//StopMovement();
+			//UE_LOG(LogTemp, Warning, TEXT("HandleSearching: Enemy is moving toward sound at %s"), *InvestigateTarget.ToString());
 			MoveToLocation(InvestigateTarget, -1.f, true, true, false, false, 0, true);
 		}
 	}
@@ -387,7 +453,10 @@ void AEnemyAIController::HandleSearching(float DeltaSeconds)
 	}
 }
 
-
+void AEnemyAIController::HandleFollowing(float DeltaSeconds)
+{
+	// Används just nu endast i ABodyguardEnemy
+}
 
 
 void AEnemyAIController::StartAlert()
@@ -487,7 +556,7 @@ void AEnemyAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 	if (Result.Code == EPathFollowingResult::Aborted)
 	{
 		// Endast ignorera aborter från gamla patrull-moves, inte ljud-moves
-		if (CurrentState == EEnemyState::Patrolling)
+		if (CurrentState == EEnemyState::Patrolling && !ControlledEnemy->bHeardSoundRecently)
 		{
 			//UE_LOG(LogTemp, Warning, TEXT("OnMoveCompleted RequestID: %s Result: %d CurrentState: %d bIsMovingToSound: %d"), *RequestID.ToString(), (int)Result.Code, (int)CurrentState, (int)bIsMovingToSound);
 			UE_LOG(LogTemp, Warning, TEXT("Move aborted (ignored patrol move)."));
@@ -523,15 +592,17 @@ void AEnemyAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 	(int)Result.Code, (int)Result.Flags);*/
 
 	// För mission
+	
 	if (Result.IsSuccess() && bHasMission && bIsDoingMissionMoveTo)
 	{
-		if (CurrentMission != EEnemyMission::Patrol) //  && FVector::Dist(ControlledEnemy->GetActorLocation(), CurrentMissionLocation) < 350.f
+		if (CurrentMission == EEnemyMission::Camera) //  && FVector::Dist(ControlledEnemy->GetActorLocation(), CurrentMissionLocation) < 350.f
 		{
 			UE_LOG(LogTemp, Warning, TEXT("OnMoveCompleted: CompleteMission"));
 			bIsDoingMissionMoveTo = false;
 			CompleteMission();
 		}
 	}
+	
 	/*if (Result.IsSuccess() && RequestID == MissionRequestID)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("OnMoveCompleted: CompleteMission"));
@@ -549,7 +620,7 @@ void AEnemyAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 				if (PatrolPoint->bUseCustomRotation)
 				{
 					//ControlledEnemy->SetActorRotation(PatrolPoint->CustomRotation);
-					DesiredLookRotation = PatrolPoint->CustomRotation;
+					DesiredLookRotation = PatrolPoint->GetActorRotation();
 
 					// Tvinga pitch och roll till 0 
 					DesiredLookRotation.Pitch = 0.f;
@@ -584,19 +655,63 @@ void AEnemyAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 				CurrentPatrolIndex,
 				*PatrolPoints[CurrentPatrolIndex]->GetName());
 			
-			FTimerHandle RetryHandle;
-			GetWorldTimerManager().SetTimer(RetryHandle, this, &AEnemyAIController::RetryMoveToNextPatrolPoint, 1.0f, false);
+			GetWorldTimerManager().SetTimer(RetryPatrolPointHandle, this, &AEnemyAIController::RetryMoveToNextPatrolPoint, 1.0f, false);
 		}
 	}
 
 	// när fienden nått ljudkällan 
-	if (CurrentState == EEnemyState::Searching && bIsMovingToSound)
+	/*if (CurrentState == EEnemyState::Searching && bIsMovingToSound)
 	{
 		bIsMovingToSound = false;
 		bIsInvestigatingTarget = false;
-		//UE_LOG(LogTemp, Warning, TEXT("AI finished moving to sound, starting search."));
+		UE_LOG(LogTemp, Error, TEXT("AI finished moving to sound"));
 		bIsMovingToSound = false;
+		
+	}*/
+	bool bWasMovingToSound = (CurrentState == EEnemyState::Searching && bIsMovingToSound);
+
+	if (bWasMovingToSound)
+	{
+		float Dist = FVector::Dist(ControlledEnemy->GetActorLocation(), InvestigateTarget);
+
+		// Succes
+		if (Result.Code == EPathFollowingResult::Success)
+		{
+			if (Dist < 150.f)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Reached sound location successfully"));
+				bIsMovingToSound = false;
+				bIsInvestigatingTarget = false;
+				bIsMovingToSound = false;
+				return;
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("MoveSuccess but still far from sound, retrying"));
+				MoveToLocation(InvestigateTarget);
+				return;
+			}
+		}
+
+		// Abort
+		if (Result.Code == EPathFollowingResult::Aborted)
+		{
+			// Bara avsluta ljudmove om vi ändå är framme
+			if (Dist < 150.f)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("MoveAborted but enemy is close enough to sound location"));
+				bIsMovingToSound = false;
+				bIsInvestigatingTarget = false;
+				bIsMovingToSound = false;
+				return;
+			}
+			
+			//UE_LOG(LogTemp, Warning, TEXT("MoveAborted far from sound, ignoring abort (retrying)"));
+			MoveToLocation(InvestigateTarget);
+			return;
+		}
 	}
+	
 
 	if (bHasLookAroundTarget && CurrentState == EEnemyState::Searching)
 	{
@@ -621,6 +736,15 @@ void AEnemyAIController::StartChasing()
 {
 	CurrentState = EEnemyState::Chasing;
 
+	// Clear timers
+	GetWorldTimerManager().ClearTimer(LoseSightTimerHandle);
+	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
+	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
+	GetWorldTimerManager().ClearTimer(AlertTimerHandle);
+	GetWorldTimerManager().ClearTimer(RetryPatrolPointHandle);
+
+
+	
 	if (ControlledEnemy)
 	{
 		ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
@@ -696,10 +820,8 @@ void AEnemyAIController::BeginSearch()
 
 	//UE_LOG(LogTemp, Warning, TEXT("AEnemyAIController BeginSearch 1"));
 	
-	LookAround();
-	
 	// kallar på LookAround() några gånger
-	GetWorldTimerManager().SetTimer(LookAroundTimerHandle, this, &AEnemyAIController::LookAround, 1.5f, true);
+	GetWorldTimerManager().SetTimer(LookAroundTimerHandle, this, &AEnemyAIController::LookAround, 1.5f, true, InitialLookAroundDelay);
 	
 	// Efter SearchTime, avsluta sökningen
 	GetWorldTimerManager().SetTimerForNextTick([this]()
@@ -850,6 +972,8 @@ void AEnemyAIController::EndSearch()
 	bIsLookingAround = false;
 	//bIsInvestigatingSound = false;
 
+	//UE_LOG(LogTemp, Warning, TEXT("EndSearch!"));
+
 	// Endast återgå till patrull om fienden inte hört något nytt nyligen
 	if (!ControlledEnemy->bHeardSoundRecently)
 	{
@@ -998,6 +1122,8 @@ void AEnemyAIController::StartSmoothRotationTowards(const FVector& TargetLocatio
 {
 	if (!ControlledEnemy) return;
 
+	//UE_LOG(LogTemp, Warning, TEXT("StartSmoothRotationTowards: Enemy is about to move toward sound at %s"), *InvestigateTarget.ToString());
+
 	FVector Dir = TargetLocation - ControlledEnemy->GetActorLocation();
 	Dir.Z = 0.f; 
 
@@ -1012,7 +1138,36 @@ void AEnemyAIController::StartSmoothRotationTowards(const FVector& TargetLocatio
 // Kallas just nu från kameran
 void AEnemyAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation)
 {
+	UWorld* World = GetWorld();
+	if (!World || !ControlledEnemy) return;
+
+	UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(World);
+	if (!NavSys) return;
+
+	// Projektera target till navmesh
+	FNavLocation ProjectedLocation;
+	bool bProjected = NavSys->ProjectPointToNavigation(
+		LastSpottedPlayerLocation,
+		ProjectedLocation,
+		FVector(200.f, 200.f, 500.f)
+	);
+
+	if (!bProjected)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CHASE FAILED: Could not project chase target to navmesh (%s)"), *LastSpottedPlayerLocation.ToString());
+		return;
+	}
+	
 	CurrentState = EEnemyState::Chasing;
+	
+	// Clear timers
+	GetWorldTimerManager().ClearTimer(LoseSightTimerHandle);
+	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
+	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
+	GetWorldTimerManager().ClearTimer(AlertTimerHandle);
+	GetWorldTimerManager().ClearTimer(RetryPatrolPointHandle);
+
+
 	
 	bChasingFromExternalOrder = true; 
 
@@ -1020,8 +1175,8 @@ void AEnemyAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayer
 	{
 		ControlledEnemy->UpdateStateVFX(CurrentState); // För VFX
 		ControlledEnemy->bIsChasing = true;
-		LastKnownPlayerLocation = LastSpottedPlayerLocation;
-		ControlledEnemy->SetLastSeenPlayerLocation(LastSpottedPlayerLocation);
+		LastKnownPlayerLocation = ProjectedLocation.Location;
+		ControlledEnemy->SetLastSeenPlayerLocation(LastKnownPlayerLocation);
 		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetRunSpeed();
 		if (ControlledEnemy->GetVisionDebug())
 		{
@@ -1031,12 +1186,10 @@ void AEnemyAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayer
 
 	StopMovement();
 	
-	UE_LOG(LogTemp, Warning, TEXT("CHASE: %s is starting chase to %s"),
-	*ControlledEnemy->GetName(),
-	*LastKnownPlayerLocation.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("CHASE: %s is starting chase to %s"), *ControlledEnemy->GetName(), *LastKnownPlayerLocation.ToString());
 
 	bIsDoingMissionMoveTo = true;
-	MoveToLocation(LastKnownPlayerLocation);
+	MoveToLocation(LastKnownPlayerLocation, 20);
 }
 
 
@@ -1059,6 +1212,7 @@ void AEnemyAIController::OnUnPossess()
 	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
 	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
 	GetWorldTimerManager().ClearTimer(AlertTimerHandle);
+	GetWorldTimerManager().ClearTimer(RetryPatrolPointHandle);
 	GetWorldTimerManager().ClearTimer(StunTimerHandle);
 }
 
@@ -1186,6 +1340,24 @@ void AEnemyAIController::StartMissionMoveTo(FVector Location)
 			return;
 		}
 	}
+
+	switch (CurrentMission)
+	{
+	case EEnemyMission::Patrol:
+		break;
+	case EEnemyMission::Sprinkler:
+		ControlledEnemy->SetStartDialogueRowName("Sprinklers");
+		ControlledEnemy->StartDialogue();
+		break;
+	case EEnemyMission::Electrical:
+		ControlledEnemy->SetStartDialogueRowName("Lights");
+		ControlledEnemy->StartDialogue();
+		break;
+	case EEnemyMission::Camera:
+		break;
+	default:
+		break;
+	}
 	
 	ControlledEnemy->UpdateStateVFX(CurrentState);
     ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
@@ -1238,10 +1410,22 @@ void AEnemyAIController::StunEnemy(float Duration, TOptional<EEnemyState> Wanted
 	if (bIsStunned) return; 
 
 	bIsStunned = true;
+	ControlledEnemy->bStunned = true;
 
 	UE_LOG(LogTemp, Warning, TEXT("StunEnemy"));
 
 	StateBeforeStun = CurrentState;
+
+	//ControlledEnemy->PlayStateSound(ControlledEnemy->StunnedSound);
+	if (WantedState != EEnemyState::Chasing)
+	{
+		ControlledEnemy->SetStartDialogueRowName("Stunned");
+		ControlledEnemy->StartDialogue();
+	}
+	/*ControlledEnemy->StateVFXComponent->SetAsset(ControlledEnemy->StunnedVFX);
+	ControlledEnemy->StateVFXComponent->Activate(true);*/
+
+	ControlledEnemy->UpdateStateVFX(CurrentState);
 
 	// Stoppa all movement
 	StopMovement();
@@ -1275,6 +1459,7 @@ void AEnemyAIController::StartBackOff(FVector BackLocation)
 // Time handle funktioner:
 void AEnemyAIController::ResetSoundFlag()
 {
+	//UE_LOG(LogTemp, Warning, TEXT("ResetSoundFlag"));
 	bIsInvestigatingSound = false;
 	if (ControlledEnemy && IsValid(ControlledEnemy))
 	{
@@ -1315,6 +1500,7 @@ void AEnemyAIController::EndStun()
 	if (!ControlledEnemy || !IsValid(ControlledEnemy)) return;
 	
 	bIsStunned = false;
+	ControlledEnemy->bStunned = false;
 
 	if (StateBeforeStun == EEnemyState::Chasing && StateAfterStun != EEnemyState::Chasing)
 	{
@@ -1336,6 +1522,7 @@ void AEnemyAIController::EndStun()
 		ControlledEnemy->GetCharacterMovement()->MaxWalkSpeed = ControlledEnemy->GetWalkSpeed();
 	}
 
+	//UE_LOG(LogTemp, Error, TEXT("EndStun"));
 	ControlledEnemy->bRotationLocked = false;
 	CurrentState = StateAfterStun;
 	ControlledEnemy->UpdateStateVFX(CurrentState);

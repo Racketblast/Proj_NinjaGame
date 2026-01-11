@@ -3,6 +3,7 @@
 
 #include "StealthGameInstance.h"
 
+#include "AchievementSubsystem.h"
 #include "DialogueInfo.h"
 #include "StealthCharacter.h"
 #include "Kismet/GameplayStatics.h"
@@ -14,13 +15,7 @@
 void UStealthGameInstance::Init()
 {
 	Super::Init();
-	
-	/*UGameUserSettings* Settings = GEngine->GetGameUserSettings();
-	if (Settings)
-	{
-		Settings->SetOverallScalabilityLevel(0);
-		Settings->ApplySettings(false);
-	}*/
+	CurrentScalabilitySetting = UGameUserSettings::GetGameUserSettings()->GetOverallScalabilityLevel();
 	
 	//Loads the saved game
 	LoadGame();
@@ -40,6 +35,8 @@ void UStealthGameInstance::SaveGame()
 		{
 			FillSaveGame();
 			UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
+			
+			SetOptions();
 		}
 	}
 }
@@ -51,6 +48,8 @@ void UStealthGameInstance::SaveOptions()
 	{
 		FillSaveOptions();
 		UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
+			
+		SetOptions();
 	}
 }
 
@@ -58,18 +57,67 @@ void UStealthGameInstance::FillSaveGame()
 {
 	//Saves Gameplay data
 	Save->SavedCurrentGameFlag = CurrentGameFlag;
+	Save->bSavedFinishedTheGame = bFinishedTheGame;
 	Save->SavedMissionsCleared = MissionsCleared;
 	Save->SavedOwnThrowWeapon = CurrentOwnThrowWeapon;
 	Save->SavedOwnThrowWeaponEnum = CurrentOwnThrowWeaponEnum;
+	Save->SavedScoreMap = ScoreMap;
 	
-	//Saves options data
+	//Saves Options data
 	FillSaveOptions();
+
+	if (UAchievementSubsystem* Achievements = GetSubsystem<UAchievementSubsystem>())
+	{
+		Achievements->SaveToSave(Save);
+	}
+
 }
 
 void UStealthGameInstance::FillSaveOptions()
 {
+	//Sound
 	Save->SavedMasterVolumeScale = MasterVolumeScale;
+	Save->SavedSFXVolumeScale = SFXVolumeScale;
+	Save->SavedMusicVolumeScale = MusicVolumeScale;
+	Save->SavedSpeechVolumeScale = SpeechVolumeScale;
+	
+	//Other
 	Save->SavedSensitivityScale = SensitivityScale;
+	Save->SavedFOVScale = FOVScale;
+	Save->SavedCurrentScalabilitySetting = CurrentScalabilitySetting;
+}
+
+void UStealthGameInstance::FillLoadGame()
+{
+	//Loads Gameplay data
+	CurrentGameFlag = Save->SavedCurrentGameFlag;
+	bFinishedTheGame = Save->bSavedFinishedTheGame;
+	MissionsCleared = Save->SavedMissionsCleared;
+	CurrentOwnThrowWeapon = Save->SavedOwnThrowWeapon;
+	CurrentOwnThrowWeaponEnum = Save->SavedOwnThrowWeaponEnum;
+	ScoreMap = Save->SavedScoreMap;
+
+	//Loads Options data
+	FillLoadOptions();
+
+	if (UAchievementSubsystem* Achievements = GetSubsystem<UAchievementSubsystem>())
+	{
+		Achievements->LoadFromSave(Save);
+	}
+}
+
+void UStealthGameInstance::FillLoadOptions()
+{
+	//Sound
+	MasterVolumeScale = Save->SavedMasterVolumeScale;
+	SFXVolumeScale = Save->SavedSFXVolumeScale;
+	MusicVolumeScale = Save->SavedMusicVolumeScale;
+	SpeechVolumeScale = Save->SavedSpeechVolumeScale;
+
+	//Other
+	SensitivityScale = Save->SavedSensitivityScale;
+	FOVScale = Save->SavedFOVScale;
+	CurrentScalabilitySetting = Save->SavedCurrentScalabilitySetting;
 }
 
 void UStealthGameInstance::LoadGame()
@@ -80,18 +128,14 @@ void UStealthGameInstance::LoadGame()
 		Save = Cast<UStealthSaveGame>(UGameplayStatics::LoadGameFromSlot("Save1",0));
 		if (Save)
 		{
-			CurrentGameFlag = Save->SavedCurrentGameFlag;
-			MissionsCleared = Save->SavedMissionsCleared;
-			CurrentOwnThrowWeapon = Save->SavedOwnThrowWeapon;
-			CurrentOwnThrowWeaponEnum = Save->SavedOwnThrowWeaponEnum;
+			FillLoadGame();
 			
-			SensitivityScale = Save->SavedSensitivityScale;
-			MasterVolumeScale = Save->SavedMasterVolumeScale;
+			SetOptions();
 		}
 	}
+	//For Graphics Hardware Check if we want it
 	/*else
 	{
-		//For Graphics Hardware Check
 		UGameUserSettings::GetGameUserSettings()->RunHardwareBenchmark();
 		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
 	}*/
@@ -104,18 +148,67 @@ void UStealthGameInstance::LoadOptions()
 		Save = Cast<UStealthSaveGame>(UGameplayStatics::LoadGameFromSlot("Save1",0));
 		if (Save)
 		{
-			SensitivityScale = Save->SavedSensitivityScale;
-			MasterVolumeScale = Save->SavedMasterVolumeScale;
+			FillLoadOptions();
+			
+			SetOptions();
 		}
 	}
 }
 
+void UStealthGameInstance::SetOptions()
+{
+	if (UGameUserSettings::GetGameUserSettings()->GetOverallScalabilityLevel() != CurrentScalabilitySetting && CurrentScalabilitySetting >= 0 && CurrentScalabilitySetting <= 4)
+	{
+		UGameUserSettings::GetGameUserSettings()->SetOverallScalabilityLevel(CurrentScalabilitySetting);
+		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
+	}
+
+	if (AStealthCharacter* Player = Cast<AStealthCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(),0)))
+	{
+		Player->UpdateFOV();
+	}
+	
+	SetAllSoundClassOverride();
+}
+
+void UStealthGameInstance::SetAllSoundClassOverride()
+{
+
+	//These all fire each time the game loads
+	if (SoundMix && MasterSoundClass)
+	{
+		UGameplayStatics::SetSoundMixClassOverride(GetWorld(), SoundMix, MasterSoundClass, MasterVolumeScale, 1, 0, true);
+	}
+	
+	if (SoundMix && SFXSoundClass)
+	{
+		UGameplayStatics::SetSoundMixClassOverride(GetWorld(), SoundMix, SFXSoundClass, SFXVolumeScale, 1, 0, true);
+	}
+	
+	if (SoundMix && MusicSoundClass)
+	{
+		UGameplayStatics::SetSoundMixClassOverride(GetWorld(), SoundMix, MusicSoundClass, MusicVolumeScale, 1, 0, true);
+	}
+
+	if (SoundMix)
+	{
+		UGameplayStatics::PushSoundMixModifier(GetWorld(), SoundMix);
+	}
+}
+
+
 void UStealthGameInstance::RestartGame()
 {
 	CurrentGameFlag = 0;
+	bFinishedTheGame = false;
 	MissionsCleared = {};
 	CurrentOwnThrowWeapon = nullptr;
 	CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::None;
+	ScoreMap.Empty();
+	if (UAchievementSubsystem* Achievements = GetSubsystem<UAchievementSubsystem>())
+	{
+		Achievements->RestartAchievements();
+	}
 }
 
 bool UStealthGameInstance::HasGameChanged()
@@ -127,16 +220,30 @@ bool UStealthGameInstance::HasGameChanged()
 		{
 			if (CurrentGameFlag != Save->SavedCurrentGameFlag)
 				return true;
+			if (bFinishedTheGame != Save->bSavedFinishedTheGame)
+				return true;
 			if (MissionsCleared != Save->SavedMissionsCleared)
 				return true;
 			if (CurrentOwnThrowWeapon != Save->SavedOwnThrowWeapon)
 				return true;
 			if (CurrentOwnThrowWeaponEnum != Save->SavedOwnThrowWeaponEnum)
 				return true;
+			if (!ScoreMapEquals(ScoreMap, Save->SavedScoreMap))
+				return true;
 			
 			if (SensitivityScale != Save->SavedSensitivityScale)
 				return true;
+			if (FOVScale != Save->SavedFOVScale)
+				return true;
+			if (CurrentScalabilitySetting != Save->SavedCurrentScalabilitySetting)
+				return true;
 			if (MasterVolumeScale != Save->SavedMasterVolumeScale)
+				return true;
+			if (SFXVolumeScale != Save->SavedSFXVolumeScale)
+				return true;
+			if (MusicVolumeScale != Save->SavedMusicVolumeScale)
+				return true;
+			if (SpeechVolumeScale != Save->SavedSpeechVolumeScale)
 				return true;
 		}
 		return false;
@@ -145,8 +252,24 @@ bool UStealthGameInstance::HasGameChanged()
 	return true;
 }
 
+bool UStealthGameInstance::ScoreMapEquals(const TMap<EMission, int> ScoreMap1, const TMap<EMission, int> ScoreMap2)
+{
+	if (ScoreMap1.Num() != ScoreMap2.Num())
+		return false;
+
+	for (const TPair<EMission, int>& Pair : ScoreMap1)
+	{
+		int OtherValue = *ScoreMap2.Find(Pair.Key);
+		if (!OtherValue || OtherValue != Pair.Value)
+			return false;
+	}
+
+	return true;
+}
+
 void UStealthGameInstance::StartDialogue()
-{if (!EventDialogueInfo)
+{
+	if (!EventDialogueInfo || EventDialogueInfo->GetRowStruct() != FDialogueInfo::StaticStruct())
 	return;
 
 	if (!bCanPlayDialogue)
@@ -189,7 +312,7 @@ void UStealthGameInstance::StartDialogue()
 
 void UStealthGameInstance::PlayNextDialogue()
 {
-	if (!EventDialogueInfo)
+	if (!EventDialogueInfo || EventDialogueInfo->GetRowStruct() != FDialogueInfo::StaticStruct())
 	return;
 	if (NextDialogueRowName != "")
 	{
@@ -243,6 +366,9 @@ float UStealthGameInstance::GetDialogueDuration()
 	//Plays the dialogue for the amount of time the sound plays
 	float TimeUntilNextDialogue = 0.0f;
 	
+	if (!EventDialogueInfo || EventDialogueInfo->GetRowStruct() != FDialogueInfo::StaticStruct())
+		return TimeUntilNextDialogue;
+	
 	if (CurrentDialogueRowName != "")
 	{
 		if (FDialogueInfo* Row = EventDialogueInfo->FindRow<FDialogueInfo>(CurrentDialogueRowName, TEXT("")))
@@ -273,10 +399,51 @@ void UStealthGameInstance::SwitchOwnWeapon(EPlayerOwnThrowWeapon WeaponToSwitchT
 			CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::SmokeBomb;
 			CurrentOwnThrowWeapon = Player->SmokeBombWeapon;
 			break;
+		default:
+			CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::None;
+			break;
 		}
 
 		Player->AmountOfOwnWeapon = Player->MaxAmountOfOwnWeapon;
 		Player->CurrentOwnThrowWeapon = CurrentOwnThrowWeapon;
 		Player->EquipThrowWeapon(Player->CurrentOwnThrowWeapon);
 	}
+}
+
+
+bool UStealthGameInstance::TrySetMissionScore(EMission Mission, int32 NewScore)
+{
+	// Finns inget score ännu 
+	if (!ScoreMap.Contains(Mission))
+	{
+		ScoreMap.Add(Mission, NewScore);
+		UE_LOG(LogTemp, Warning, TEXT("TrySetMissionScore: Saved Score for the first time, score value: %i"), NewScore);
+		return true;
+	}
+
+	// Finns redan score 
+	if (NewScore > ScoreMap[Mission])
+	{
+		ScoreMap[Mission] = NewScore;
+		UE_LOG(LogTemp, Warning, TEXT("TrySetMissionScore: Saved a better Score, new score value: %i"), NewScore);
+		return true;
+	}
+	
+	return false;
+}
+
+bool UStealthGameInstance::HasMissionScore(EMission Mission) const
+{
+	return ScoreMap.Contains(Mission);
+}
+
+bool UStealthGameInstance::GetMissionScore(EMission Mission, int32& OutScore) const
+{
+	if (const int32* Score = ScoreMap.Find(Mission))
+	{
+		OutScore = *Score;
+		return true;
+	}
+
+	return false;
 }

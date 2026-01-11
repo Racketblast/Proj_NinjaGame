@@ -6,6 +6,7 @@
 #include "MeleeAIController.h" // Byt ut till riktiga controller senare 
 #include "GameFramework/Character.h"
 #include "NiagaraComponent.h"
+#include "GeometryCollection/GeometryCollectionObject.h"
 #include "Enemy.generated.h"
 
 class UBoxComponent;
@@ -18,11 +19,23 @@ class PROJ_NINJAGAME_API AEnemy : public ACharacter
 public:
 	AEnemy();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
-	bool bCanBeAssassinated = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	bool bAllowedToAttack = true;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Health")
+	bool bStunned = false;
 
 	UFUNCTION(BlueprintCallable)
 	virtual void StartAttack();
+
+	virtual bool IsLocationStillSeeingPlayer(const FVector& TestLoc) const;
+
+	bool DoesHaveHelmet() const { return bHasHelmet; }
+
+	void SetHaveHelmet(bool bHelmet); 
+
+	UFUNCTION()
+	void RemoveHelmet();
 
 protected:
 	virtual void BeginPlay() override;
@@ -30,6 +43,20 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void FaceRotation(FRotator NewRotation, float DeltaTime) override;
+
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Equipment")
+	bool bHasHelmet = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Enemy|Equipment")
+	bool bCanHaveHelmet = true;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy|Equipment")
+	UStaticMeshComponent* HelmetMesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Enemy|Equipment")
+	UGeometryCollection* HelmetBreakGeoCollection;
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	TArray<AActor*> PatrolPoints;
@@ -75,6 +102,8 @@ protected:
 	APawn* PlayerPawn;
 
 	bool bCanSeePlayer = false;
+	
+	bool bHasDirectVisualOnPlayer = false; 	// Endast true när fienden faktiskt ser spelaren
 
 	virtual void CheckPlayerVisibility();
 
@@ -82,8 +111,13 @@ protected:
 
 	virtual void CheckCloseDetection();
 
+	virtual bool HasLineOfSightToPlayer();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
 	bool bVisionDebug = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	float InitialLookAroundDelay = 2.0f;
 
 	// Andra syn sättet för fienden / andra konen
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Vision")
@@ -131,22 +165,10 @@ protected:
 	float AttackRange = 0.f;
 
 	UPROPERTY(EditDefaultsOnly, Category="Combat")
-	UCapsuleComponent* AssassinationCapsule;
-
-	UPROPERTY(EditDefaultsOnly, Category="Combat")
 	UCapsuleComponent* HeadCapsule;
 
 	UPROPERTY(EditDefaultsOnly)
 	USkeletalMeshComponent* SkeletalMeshComp;
-	
-	UFUNCTION()
-	void OnAssasinationOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-							 UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
-							 bool bFromSweep, const FHitResult& SweepResult);
-	
-	UFUNCTION()
-	void OnAssasinationOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-								UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	// Time handle Funktioner:
 	void ForgetHeardSound();
@@ -167,11 +189,41 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Audio")
 	USoundBase* ChasingSound;
 
+public:
+	UPROPERTY(EditAnywhere, Category="Audio")
+	USoundBase* StunnedSound;
+	
 	void PlayStateSound(USoundBase* NewSound);
-
+protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Audio")
 	UAudioComponent* VoiceAudioComponent;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category="Dialogue")
+	UDataTable* EnemyVoiceInfo;
+	UPROPERTY(BlueprintReadOnly, Category="Dialogue")
+	FName CurrentDialogueRowName;
+	UPROPERTY(BlueprintReadWrite, Category="Dialogue")
+	FName StartDialogueRowName;
+	FName NextDialogueRowName;
+	UPROPERTY(BlueprintReadWrite, Category="Dialogue")
+	bool bCanPlayDialogue = true;
+	FTimerHandle DialogueTimerHandle;
+	
+public:
+	void SetVoiceDataTable(UDataTable* DataTable){EnemyVoiceInfo = DataTable;}
+	UDataTable* GetVoiceDataTable() const {return EnemyVoiceInfo;}
+	void SetStartDialogueRowName(FName RowName){StartDialogueRowName = RowName;}
+	UFUNCTION(BlueprintCallable, Category="Dialogue")
+	void StartDialogue();
+	UFUNCTION(BlueprintCallable, Category="Dialogue")
+	void StopDialogue();
 
+protected:
+	UFUNCTION()
+	void NextDialogue();
+	UFUNCTION(BlueprintPure, Category="Dialogue")
+	float GetDialogueDuration();
+	
 	UPROPERTY(EditAnywhere, Category="Audio")
 	USoundBase* HurtSoundOne;
 
@@ -199,9 +251,13 @@ public:
 	FORCEINLINE void SetEnemyHandler(AEnemyHandler* NewEnemyHandler) { EnemyHandler = NewEnemyHandler; }
 	FORCEINLINE virtual float GetAttackRange() const { return AttackRange; } 
 	float GetHealth() const { return Health; }
+	virtual float GetBackOffMaxDistance() const {return 0;}
+	bool CanHaveHelmet() const { return bCanHaveHelmet; }
 
 	void UpdateLastSeenPlayerLocation();
 	FVector GetLastSeenPlayerLocation() const { return LastSeenPlayerLocation; }
+
+	float GetInitialLookAroundDelay() const { return InitialLookAroundDelay; }
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI")
 	bool bIsChasing = false;
@@ -260,16 +316,28 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
 	UNiagaraSystem* AlertVFX;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
+	UNiagaraSystem* StunnedVFX;
+
 	UFUNCTION(BlueprintCallable, Category="VFX")
 	void UpdateStateVFX(EEnemyState NewState);
 
 	EEnemyState PreviousState = EEnemyState::Patrolling;
-
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="EEnemyState")
+	EEnemyState State = EEnemyState::Patrolling; 	// Används just nu bara för debug
+	
 
 	// Throw:
+	UFUNCTION(BlueprintCallable)
 	virtual void EnemyThrow();
 	virtual float GetThrowRange() const;
 	virtual float GetThrowCooldown() const;
+	virtual float GetMinCombatDistance() const  { return 0; }
+	virtual float GetMaxCombatDistance() const  { return 0; } 
+
+	UPROPERTY(BlueprintReadWrite, Category="Combat")
+	bool bIsThrowing = false;
 
 protected:
 	FVector LastSeenPlayerLocation;

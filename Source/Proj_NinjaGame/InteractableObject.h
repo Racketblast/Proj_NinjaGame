@@ -8,6 +8,7 @@
 #include "InteractableObject.generated.h"
 
 #define TRACE_CHANNEL_INTERACT ECC_GameTraceChannel3
+#define TRACE_CHANNEL_CLIMB ECC_GameTraceChannel4
 
 UCLASS()
 class PROJ_NINJAGAME_API AInteractableObject : public AActor, public IPlayerUseInterface
@@ -35,7 +36,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Interact")
 	USoundBase* HoverSound;
 	
-	UPROPERTY(EditDefaultsOnly, Category="Interact")
+	UPROPERTY(EditAnywhere, Category="Interact")
 	FString InteractText;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Interact")

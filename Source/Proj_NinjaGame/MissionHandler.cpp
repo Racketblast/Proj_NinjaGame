@@ -3,8 +3,11 @@
 
 #include "MissionHandler.h"
 
+#include "AchievementSubsystem.h"
 #include "CollectableMissionObject.h"
+#include "ExtractObject.h"
 #include "StealthCharacter.h"
+#include "StealthGameInstance.h"
 #include "TargetEnemy.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -104,12 +107,10 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 		}
 	}
 
-	//SetMissionTimerActive(false); 
-
 	//Lite start score för att man klara av missionet
-	Score += 5000;
+	Score += MissionCompleteBonus;
 	
-	float ScoreMultiplier = 1.0f;
+	ScoreMultiplier = 1;
 
 	Score += StealthKillScore;
 
@@ -141,7 +142,7 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 	{
 		TimesSpottedScore -= TimesSpotted * 100;
 		Score -= TimesSpottedScore;
-		UE_LOG(LogTemp, Warning, TEXT("Player spotted %d times: -%f"), TimesSpotted, TimesSpottedScore);
+		UE_LOG(LogTemp, Warning, TEXT("Player spotted %d times: -%d"), TimesSpotted, TimesSpottedScore);
 	}
 
 	// ifall man dödade alla fiender
@@ -155,18 +156,26 @@ float AMissionHandler::CalculateScore(float TimeTaken)
 	// ifall inga fiender har dött
 	if (EnemyHandler->GetAreAllEnemiesAlive())
 	{
-		ScoreMultiplier += 1;
+		ScoreMultiplier += 2;
 		bKilledAllOrNoEnemies = true;
-		UE_LOG(LogTemp, Warning, TEXT("All enemies alive: ScoreMultiplier +1"));
+		bKilledNoEnemies = true;
+		UE_LOG(LogTemp, Warning, TEXT("All enemies alive: ScoreMultiplier +2"));
 	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Final Score before multiplier: %f"), Score);
 	
 	FinalScore = Score *= ScoreMultiplier;
 	
-	UE_LOG(LogTemp, Warning, TEXT("Score Multiplier: %f"), ScoreMultiplier);
+	UE_LOG(LogTemp, Warning, TEXT("Score Multiplier: %d"), ScoreMultiplier);
 	UE_LOG(LogTemp, Warning, TEXT("Final Score: %f"), FinalScore);
 	UE_LOG(LogTemp, Warning, TEXT("MISSION SCORE DEBUG END"));
+
+	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(GetGameInstance()))
+	{
+		bIsNewHighScore = GI->TrySetMissionScore(GI->GetCurrentMission(), FMath::RoundToInt(FinalScore));
+	}
+
+	CheckMissionAchievements(); // För Achievements
 	
 	return FinalScore;
 }
@@ -179,7 +188,9 @@ int32 AMissionHandler::CalculateTimeBonus(float TimeTaken) const
 		return BaseTimeBonus;
 	}
 
-	float SecondsOver = TimeTaken - TimeThresholdSeconds;
+	float SecondsOverFloat  = TimeTaken - TimeThresholdSeconds;
+
+	int32 SecondsOver = FMath::FloorToInt(SecondsOverFloat);
 
 	// penalty per sekund 
 	int32 Penalty = SecondsOver * PenaltyPerSecond;
@@ -259,5 +270,164 @@ void AMissionHandler::RemoveObjectiveFromTotal(AActor* ThisObject)
 		{
 			Player->bHasCompletedTheMission = true;
 		}
+
+		TArray<AActor*> AllExtractions;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AExtractObject::StaticClass(), AllExtractions);
+		for (AActor* Extractor : AllExtractions)
+		{
+			if (AExtractObject* ExtractionObject = Cast<AExtractObject>(Extractor))
+			{
+				ExtractionObject->FadeMarkerWidget(true);
+				ExtractionObject->SetMarkerWidgetVisibility(true);
+			}
+		}
 	}
 }
+
+static bool GetMissionAchievements(
+	EMission Mission,
+	EAchievementId& OutClearedAchievement,
+	EAchievementId& OutPlatinumAchievement,
+	EAchievementId& OutNoDamageAchievement,
+	EAchievementId& OutUnSeenAchievement
+)
+{
+	switch (Mission)
+	{
+	case EMission::TutorialMission:
+		OutClearedAchievement   = EAchievementId::Cleared_Mission1;
+		OutPlatinumAchievement  = EAchievementId::Platinum_Mission1;
+		OutNoDamageAchievement  = EAchievementId::NoDamage_Mission1;
+		OutUnSeenAchievement    = EAchievementId::UnSeen_Mission1;
+		return true;
+
+	case EMission::FirstMission:
+		OutClearedAchievement   = EAchievementId::Cleared_Mission2;
+		OutPlatinumAchievement  = EAchievementId::Platinum_Mission2;
+		OutNoDamageAchievement  = EAchievementId::NoDamage_Mission2;
+		OutUnSeenAchievement    = EAchievementId::UnSeen_Mission2;
+		return true;
+
+	case EMission::SecondMission:
+		OutClearedAchievement   = EAchievementId::Cleared_Mission3;
+		OutPlatinumAchievement  = EAchievementId::Platinum_Mission3;
+		OutNoDamageAchievement  = EAchievementId::NoDamage_Mission3;
+		OutUnSeenAchievement    = EAchievementId::UnSeen_Mission3;
+		return true;
+
+	case EMission::ThirdMission:
+		OutClearedAchievement   = EAchievementId::Cleared_Mission4;
+		OutPlatinumAchievement  = EAchievementId::Platinum_Mission4;
+		OutNoDamageAchievement  = EAchievementId::NoDamage_Mission4;
+		OutUnSeenAchievement    = EAchievementId::UnSeen_Mission4;
+		return true;
+		
+	case EMission::FourthMission:
+		OutClearedAchievement   = EAchievementId::Cleared_Mission5;
+		OutPlatinumAchievement  = EAchievementId::Platinum_Mission5;
+		OutNoDamageAchievement  = EAchievementId::NoDamage_Mission5;
+		OutUnSeenAchievement    = EAchievementId::UnSeen_Mission5;
+		return true;
+		
+	case EMission::FifthMission:
+		OutClearedAchievement   = EAchievementId::Cleared_Mission5;
+		OutPlatinumAchievement  = EAchievementId::Platinum_Mission5;
+		OutNoDamageAchievement  = EAchievementId::NoDamage_Mission5;
+		OutUnSeenAchievement    = EAchievementId::UnSeen_Mission5;
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+
+void AMissionHandler::CheckMissionAchievements()
+{
+	AStealthCharacter* Player =
+		Cast<AStealthCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
+	if (!Player)
+		return;
+
+	UAchievementSubsystem* Achievements =
+		GetGameInstance()->GetSubsystem<UAchievementSubsystem>();
+	if (!Achievements)
+		return;
+
+	UStealthGameInstance* GI =
+		Cast<UStealthGameInstance>(GetGameInstance());
+	if (!GI)
+		return;
+
+	// Debug
+	UE_LOG(LogTemp, Warning, TEXT("CURRENT ACHIEVEMENTS"));
+
+	const auto& AllAchievements = Achievements->GetAllAchievements();
+	if (AllAchievements.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No achievements unlocked yet"));
+	}
+	else
+	{
+		for (const auto& Pair : AllAchievements)
+		{
+			if (Pair.Value)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Unlocked: %s"),
+					*UEnum::GetValueAsString(Pair.Key));
+			}
+		}
+	}
+
+	const EMission CurrentMission = GI->GetCurrentMission();
+
+	EAchievementId ClearedAchievement;
+	EAchievementId PlatinumAchievement;
+	EAchievementId NoDamageAchievement;
+	EAchievementId UnSeenAchievement;
+
+	if (!GetMissionAchievements(
+		CurrentMission,
+		ClearedAchievement,
+		PlatinumAchievement,
+		NoDamageAchievement,
+		UnSeenAchievement))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Unsupported mission for achievements"));
+		return;
+	}
+
+	// Achievement: Klarade missionen
+	Achievements->UnlockAchievement(ClearedAchievement);
+
+
+	// Achievement: Platinum (score >= 40 000)
+	if (FinalScore >= 40000)
+	{
+		Achievements->UnlockAchievement(PlatinumAchievement);
+	}
+	
+	// Achievement: Tog ingen skada
+	const bool bFullHealth = Player->GetHealth() >= Player->GetMaxHealth();
+
+	if (bFullHealth)
+	{
+		Achievements->UnlockAchievement(NoDamageAchievement);
+	}
+
+	// Achievement: Klarade mission utan att bli upptäckt
+	if (EnemyHandler)
+	{
+		if (EnemyHandler->GetAmountOfTimesSpottet() == 0)
+		{
+			Achievements->UnlockAchievement(UnSeenAchievement);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CheckMissionAchievements: EnemyHandler missing, cannot evaluate UnSeen achievement"));
+	}
+}
+
+
+

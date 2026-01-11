@@ -91,6 +91,8 @@ AStealthCharacter::AStealthCharacter()
 	GetCharacterMovement()->MaxWalkSpeedCrouched = SneakWalkSpeed;
 	GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
 
+	OnReachedJumpApex.AddDynamic(this, &AStealthCharacter::OnJumpApexReached);
+
 	CurrentStamina = MaxStamina;
 }
 
@@ -133,10 +135,10 @@ void AStealthCharacter::Look(float Yaw, float Pitch)
 	if (GetController())
 	{
 		
-		if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+		if (StealthGameInstance)
 		{
-			Yaw *= GI->SensitivityScale;
-			Pitch *= GI->SensitivityScale;
+			Yaw *= StealthGameInstance->SensitivityScale;
+			Pitch *= StealthGameInstance->SensitivityScale;
 		}
 		// pass the rotation inputs
 		AddControllerYawInput(Yaw);
@@ -168,6 +170,9 @@ void AStealthCharacter::Move(float Right, float Forward)
 		case EPlayerMovementState::Crouch:
 			NoiseLevel *= SneakNoiseMultiplier;
 			break;
+		case EPlayerMovementState::Climb:
+			NoiseLevel *= SneakNoiseMultiplier;
+			break;
 		case EPlayerMovementState::Run:
 			NoiseLevel *= SprintNoiseMultiplier;
 			break;
@@ -191,8 +196,11 @@ bool AStealthCharacter::CanJumpInternal_Implementation() const
 void AStealthCharacter::DoJumpStart()
 {
 	// pass Jump to the character
+	GetCharacterMovement()->bNotifyApex = true;
 	Jump();
+	
 	bHoldingJump = true;
+	
 	if (GetCharacterMovement()->MovementMode == MOVE_Walking)
 	{
 		if (JumpSound)
@@ -266,10 +274,13 @@ void AStealthCharacter::Attack()
 					{
 						if (AEnemy* Enemy = Cast<AEnemy>(HitActor))
 						{
-							if (Enemy->bCanBeAssassinated && !Enemy->CanSeePlayer())
+							FVector ToPlayer = (GetActorLocation() - Enemy->GetActorLocation()).GetSafeNormal();
+							float Dot = FVector::DotProduct(Enemy->GetActorForwardVector(), ToPlayer);
+							if (Dot < CurrentMeleeWeapon->BehindDotAngle && !Enemy->CanSeePlayer())
 							{
 								CurrentMeleeWeapon->bAssassinatingEnemy = true;
 								CurrentMeleeWeapon->bCanMeleeAttack = false;
+								CurrentMeleeWeapon->AssassinateEnemy();
 								break;
 							}
 						}
@@ -279,6 +290,7 @@ void AStealthCharacter::Attack()
 					{
 						CurrentMeleeWeapon->bMeleeAttacking = true;
 						CurrentMeleeWeapon->bCanMeleeAttack = false;
+						CurrentMeleeWeapon->StartMeleeAttack();
 					}
 				}
 			}
@@ -519,11 +531,25 @@ void AStealthCharacter::UpdateProjectilePrediction()
         	{
         		if (PredictedHit.GetComponent() == Enemy->GetHeadComponent())
         		{
-        			SpawnedMarker->SetHeadMaterial();
+			        if (Enemy->DoesHaveHelmet())
+			        {
+        				SpawnedMarker->SetHelmetMaterial();
+			        }
+			        else
+			        {
+        				SpawnedMarker->SetHeadMaterial();
+			        }
         		}
         		else
         		{
-        			SpawnedMarker->SetEnemyMaterial();
+			        if (Enemy->GetHealth() <= HeldThrowableWeapon->ThrowDamage)
+			        {
+        				SpawnedMarker->SetHeadMaterial();
+			        }
+			        else
+			        {
+			        	SpawnedMarker->SetEnemyMaterial();
+			        }
         		}
         	}
 	        else if (Cast<ASecurityCamera>(PredictedHit.GetActor()))
@@ -560,6 +586,8 @@ void AStealthCharacter::UpdateProjectilePrediction()
 void AStealthCharacter::UpdateStaminaStart(float InStamina)
 {
 	UpdateStaminaAmount = InStamina;
+	GetWorld()->GetTimerManager().ClearTimer(StaminaTimer);
+
 	if (UpdateStaminaAmount >= 0)
 	{
 		//Regain Stamina
@@ -568,6 +596,7 @@ void AStealthCharacter::UpdateStaminaStart(float InStamina)
 	else
 	{
 		//Lose Stamina
+		CurrentStamina += UpdateStaminaAmount;
 		GetWorld()->GetTimerManager().SetTimer(StaminaTimer, this, &AStealthCharacter::UpdateStaminaLoop, StaminaRefreshRate, true);
 	}
 }
@@ -587,10 +616,17 @@ void AStealthCharacter::UpdateStaminaLoop()
 
 	if (CurrentStamina == 0)
 	{
+		if (OutOfStaminaSound)
+		{
+			PlayerVoiceAudioComponent->SetSound(OutOfStaminaSound);
+			PlayerVoiceAudioComponent->Play();
+		}
+		
 		if (CurrentMovementState == EPlayerMovementState::Run)
 		{
 			StopSprint();
 		}
+
 		UpdateStaminaStart(RegainStaminaAmount);
 	}
 	else if (CurrentStamina == MaxStamina)
@@ -604,20 +640,27 @@ void AStealthCharacter::UpdateStaminaLoop()
 void AStealthCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+	{
+		StealthGameInstance = GI;
+		
+		if (GI->CurrentOwnThrowWeapon)
+		{
+			CurrentOwnThrowWeapon = GI->CurrentOwnThrowWeapon;
+		}
+	}
 
 	GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
 	
 	if (FirstPersonCameraComponent)
 	{
 		NormalFOV = FirstPersonCameraComponent->FieldOfView;
-	}
-	
-	if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
-	{
-		if (GI->CurrentOwnThrowWeapon)
-		{
-			CurrentOwnThrowWeapon = GI->CurrentOwnThrowWeapon;
-		}
+		SavedNormalFOV = NormalFOV;
+		SavedSprintFOV = SprintFOV;
+		SavedAimFOV = AimFOV;
+		
+		UpdateFOV();
 	}
 	
 	if (CurrentOwnThrowWeapon && AmountOfOwnWeapon > 1)
@@ -630,10 +673,10 @@ void AStealthCharacter::BeginPlay()
 		if (KunaiWeapon && AmountOfOwnWeapon > 1)
 		{
 			CurrentOwnThrowWeapon = KunaiWeapon;
-			if (UStealthGameInstance* GI = Cast<UStealthGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+			if (StealthGameInstance)
 			{
-				GI->CurrentOwnThrowWeapon = CurrentOwnThrowWeapon;
-				GI->CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::Kunai;
+				StealthGameInstance->CurrentOwnThrowWeapon = CurrentOwnThrowWeapon;
+				StealthGameInstance->CurrentOwnThrowWeaponEnum = EPlayerOwnThrowWeapon::Kunai;
 			}
 			
 			EquipThrowWeapon(CurrentOwnThrowWeapon);
@@ -682,10 +725,31 @@ void AStealthCharacter::BeginPlay()
 	}
 }
 
+
+void AStealthCharacter::UpdateFOV()
+{
+	//Changes the fov based on what the player has selected
+	if (StealthGameInstance)
+	{
+		NormalFOV = SavedNormalFOV + StealthGameInstance->FOVScale;
+		OptionsFOVPercentageChange = NormalFOV/SavedNormalFOV;
+		AimFOV = SavedAimFOV * OptionsFOVPercentageChange;
+		SprintFOV = SavedSprintFOV * OptionsFOVPercentageChange;
+	}
+
+	//Failsafe for if it is too big
+	if (NormalFOV > 170.0f)
+	{
+		NormalFOV = 170.0f;
+	}
+	FirstPersonCameraComponent->SetFieldOfView(NormalFOV);
+}
+
 void AStealthCharacter::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
 	UE_LOG(LogTemp, Display, TEXT("Landed"));
+	bReachedApex = false;
 	
 	if (CurrentMovementState == EPlayerMovementState::Climb)
 	{
@@ -774,6 +838,15 @@ void AStealthCharacter::Tick(float DeltaTime)
 			DeltaTime,
 			FOVInterpSpeed
 		);
+		
+		//Failsafe for if it is too big
+		if (NewFOV > 170.0f)
+		{
+			NewFOV = 170.0f;
+		}
+
+		//UE_LOG(LogTemp, Display, TEXT("FOV: %f"), NewFOV);
+		//UE_LOG(LogTemp, Display, TEXT("Target FOV: %f"), TargetFOV);
 		FirstPersonCameraComponent->SetFieldOfView(NewFOV);
 	}
 }
@@ -938,8 +1011,16 @@ bool AStealthCharacter::CanCrouch() const
 	return Super::CanCrouch();
 }
 
+void AStealthCharacter::OnJumpApexReached()
+{
+	bReachedApex = true;
+}
+
 void AStealthCharacter::Climb()
 {
+	if (!bReachedApex)
+		return;
+	
 	if (CurrentStamina > 0)
 	{
 		FVector Start = GetActorLocation();
@@ -952,7 +1033,7 @@ void AStealthCharacter::Climb()
 		//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 0.0f,0, 5.f);
 		
 		//If we are at a wall
-		if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+		if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, TRACE_CHANNEL_CLIMB, Params))
 		{
 			if (CurrentMovementState == EPlayerMovementState::Climb)
 			{
@@ -963,7 +1044,7 @@ void AStealthCharacter::Climb()
 				//DrawDebugLine(GetWorld(), StartEdge, EndEdge, FColor::Green, false, 0.0f, 0, 5.f);
 				
 				//If we are at a ledge
-				if (!GetWorld()->LineTraceSingleByChannel(HitResult, StartEdge, EndEdge, ECC_Visibility, Params))
+				if (!GetWorld()->LineTraceSingleByChannel(HitResult, StartEdge, EndEdge, TRACE_CHANNEL_CLIMB, Params))
 				{
 					if (!bHitLedge)
 					{
@@ -1009,7 +1090,6 @@ void AStealthCharacter::Climb()
 							PlayerActionAudioComponent->SetSound(ClimbSound);
 							PlayerActionAudioComponent->Play();
 						}
-						UpdateStaminaStart(ClimbStaminaAmount);
 						GetMovementComponent()->Velocity = {};
 						CurrentMovementState = EPlayerMovementState::Climb;
 						bIsClimbing = true;
@@ -1017,6 +1097,8 @@ void AStealthCharacter::Climb()
 						ShowWeaponActors(false);
 						
 						GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+						
+						UpdateStaminaStart(ClimbStaminaAmount);
 					}
 				}
 			}
@@ -1050,14 +1132,17 @@ void AStealthCharacter::ExitClimb()
 		
 		ShowWeaponActors(true);
 		
-		UpdateStaminaStart(RegainStaminaAmount);
 		GetCharacterMovement()->SetMovementMode(MOVE_Falling);
 		LaunchCharacter({0,0,500},true, true);
+		
+		UpdateStaminaStart(RegainStaminaAmount);
 	}
 }
 
 float AStealthCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	if (!bCanTakeDamage) return 0;
+	
 	float ActualDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
 	Health -= ActualDamage;
@@ -1224,32 +1309,27 @@ void AStealthCharacter::StartSprint()
 	
 		if (CurrentStamina > 0)
 		{
-			if (CurrentStamina > 0)
+			// Om spelaren är i crouch så lämna det läget först
+			if (CurrentMovementState == EPlayerMovementState::Crouch)
 			{
-				// Om spelaren är i crouch så lämna det läget först
-				if (CurrentMovementState == EPlayerMovementState::Crouch)
+				if (CanUnCrouch())
 				{
-					if (CanUnCrouch())
-					{
-						UnCrouch();
-						UpdateStaminaStart(SprintStaminaAmount);
-				
-						GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
-						CurrentMovementState = EPlayerMovementState::Run;
-						AimEndAction();
-					}
-				}
-				else
-				{
-					UpdateStaminaStart(SprintStaminaAmount);
-	
+					UnCrouch();
 					GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 					CurrentMovementState = EPlayerMovementState::Run;
 					AimEndAction();
+					UpdateStaminaStart(SprintStaminaAmount);
 				}
-	
-				//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
 			}
+			else
+			{
+				GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+				CurrentMovementState = EPlayerMovementState::Run;
+				AimEndAction();
+				UpdateStaminaStart(SprintStaminaAmount);
+			}
+	
+			//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
 		}
 	}
 }
@@ -1275,30 +1355,29 @@ void AStealthCharacter::LoopSprint()
 	
 			if (CurrentStamina > 0)
 			{
-				if (CurrentStamina > 0)
+				// Om spelaren är i crouch så lämna det läget först
+				if (CurrentMovementState == EPlayerMovementState::Crouch)
 				{
-					// Om spelaren är i crouch så lämna det läget först
-					if (CurrentMovementState == EPlayerMovementState::Crouch)
+					if (CanUnCrouch())
 					{
-						if (CanUnCrouch())
-						{
-							UnCrouch();
-							UpdateStaminaStart(SprintStaminaAmount);
-				
-							GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
-							CurrentMovementState = EPlayerMovementState::Run;
-						}
-					}
-					else
-					{
-						UpdateStaminaStart(SprintStaminaAmount);
-	
+						UnCrouch();
 						GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 						CurrentMovementState = EPlayerMovementState::Run;
+						AimEndAction();
+						
+						UpdateStaminaStart(SprintStaminaAmount);
 					}
-	
-					//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
 				}
+				else
+				{
+					GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+					CurrentMovementState = EPlayerMovementState::Run;
+					AimEndAction();
+
+					UpdateStaminaStart(SprintStaminaAmount);
+				}
+	
+				//UE_LOG(LogTemp, Warning, TEXT("Player started sprinting."));
 			}
 		}
 	}
@@ -1308,10 +1387,11 @@ void AStealthCharacter::StopSprint()
 {
 	if (CurrentMovementState == EPlayerMovementState::Run)
 	{
-		UpdateStaminaStart(RegainStaminaAmount);
 		
 		GetCharacterMovement()->MaxWalkSpeed = NormalWalkSpeed;
 		CurrentMovementState = EPlayerMovementState::Walk;
+		
+		UpdateStaminaStart(RegainStaminaAmount);
 		//UE_LOG(LogTemp, Warning, TEXT("Player stopped sprinting."));
 	}
 }
@@ -1349,8 +1429,11 @@ void AStealthCharacter::OnMeleeBoxBeginOverlap(UPrimitiveComponent* OverlappedCo
 {
 	if (AEnemy* Enemy = Cast<AEnemy>(OtherActor))
 	{
-		EnemiesInAssassinationRange.AddUnique(Enemy);
-		CheckForCanAssassinate();
+		if (Enemy->GetCapsuleComponent() == OtherComp)
+		{
+			EnemiesInAssassinationRange.AddUnique(Enemy);
+			CheckForCanAssassinate();
+		}
 	}
 }
 
@@ -1359,8 +1442,11 @@ void AStealthCharacter::OnMeleeBoxEndOverlap(UPrimitiveComponent* OverlappedComp
 {
 	if (AEnemy* Enemy = Cast<AEnemy>(OtherActor))
 	{
-		EnemiesInAssassinationRange.Remove(Enemy);
-		CheckForCanAssassinate();
+		if (Enemy->GetCapsuleComponent() == OtherComp)
+		{
+			EnemiesInAssassinationRange.Remove(Enemy);
+			CheckForCanAssassinate();
+		}
 	}
 }
 
@@ -1371,14 +1457,20 @@ void AStealthCharacter::CheckForCanAssassinate()
 	
 	bCanAssassinate = false;
 
-	if (EnemiesInAssassinationRange.Num() == 0)
+	if (EnemiesInAssassinationRange.Num() <= 0)
 		return;
 
 	for (AEnemy* Enemy  : EnemiesInAssassinationRange)
 	{
 		if (!Enemy) continue;
-
-		if (!Enemy->CanSeePlayer() && Enemy->bCanBeAssassinated)
+		
+		FVector ToPlayer = (GetActorLocation() - Enemy->GetActorLocation()).GetSafeNormal();
+		ToPlayer.Z = 0;
+		ToPlayer.Normalize();
+		float Dot = FVector::DotProduct(Enemy->GetActorForwardVector(), ToPlayer);
+		
+		//UE_LOG(LogTemp, Display, TEXT("Dot %f"), Dot);
+		if (!Enemy->CanSeePlayer() && Dot < CurrentMeleeWeapon->BehindDotAngle)
 		{
 			bCanAssassinate = true;
 			return;
@@ -1427,4 +1519,26 @@ void AStealthCharacter::OnInteractSphereEndOverlap(UPrimitiveComponent* Overlapp
 	{
 		Object->TurnOnVFX(false);
 	}
+}
+
+
+
+
+// För fienden
+FVector AStealthCharacter::GetLeftArmVisionPoint() const
+{
+	if (FirstPersonMesh)
+	{
+		return FirstPersonMesh->GetBoneLocation("L_MetaShoulder");
+	}
+	return GetActorLocation(); // fallback
+}
+
+FVector AStealthCharacter::GetRightArmVisionPoint() const
+{
+	if (FirstPersonMesh)
+	{
+		return FirstPersonMesh->GetBoneLocation("R_MetaShoulder");
+	}
+	return GetActorLocation();
 }

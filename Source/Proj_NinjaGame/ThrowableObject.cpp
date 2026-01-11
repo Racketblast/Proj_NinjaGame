@@ -3,13 +3,16 @@
 
 #include "ThrowableObject.h"
 
+#include "AchievementSubsystem.h"
 #include "BreakableObject.h"
 #include "MeleeEnemy.h"
 #include "SecurityCamera.h"
+#include "SmokeBombObject.h"
 #include "StealthCharacter.h"
 #include "StealthGameInstance.h"
 #include "ThrowableWeapon.h"
 #include "SoundUtility.h"
+#include "TargetEnemy.h"
 #include "ThrowingMarker.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -26,6 +29,11 @@ AThrowableObject::AThrowableObject()
 	ThrowCollision->SetCollisionResponseToAllChannels(ECR_Ignore);
 	StaticMeshComponent->SetupAttachment(ThrowCollision);
 	StaticMeshComponent->SetGenerateOverlapEvents(true);
+
+	
+	BreakVFXComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("BreakVFX"));
+	BreakVFXComponent->SetupAttachment(RootComponent);
+	BreakVFXComponent->bAutoActivate = false;
 }
 
 void AThrowableObject::Use_Implementation(class AStealthCharacter* Player)
@@ -91,8 +99,6 @@ void AThrowableObject::ThrowableOnComponentHit(UPrimitiveComponent* HitComp, AAc
 	
 	Thrown = false;
 	ChangeToThrowCollision(false);
-	StaticMeshComponent->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Block);
-	StaticMeshComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 	SpawnFieldActor();
 	
 	ThrowableOnComponentHitFunction(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
@@ -105,7 +111,7 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 	{
 		if (!Enemy->GetIsDead())
 		{
-			if (Hit.Component == Enemy->GetHeadComponent())
+			/*if (Hit.Component == Enemy->GetHeadComponent())
 			{
 				UGameplayStatics::ApplyPointDamage(
 					Enemy,
@@ -116,6 +122,47 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 					this,
 					UDamageType::StaticClass()
 				);
+			}*/
+			if (Hit.Component == Enemy->GetHeadComponent())
+			{
+				if (Enemy->DoesHaveHelmet())        
+				{
+					Enemy->RemoveHelmet();
+
+					ATargetEnemy* TargetEnemy = Cast<ATargetEnemy>(Enemy);
+					if (!TargetEnemy)
+					{
+						if (bIsHelmet)
+						{
+							if (UGameInstance* GI = GetGameInstance())
+							{
+								if (UAchievementSubsystem* Achievements = GI->GetSubsystem<UAchievementSubsystem>())
+								{
+									Achievements->UnlockAchievement(EAchievementId::Helmet_Removed_By_Helmet);
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					UGameplayStatics::ApplyPointDamage(
+						Enemy,
+						Enemy->GetHealth(),         
+						GetVelocity().GetSafeNormal(),
+						Hit,
+						UGameplayStatics::GetPlayerController(this,0),
+						this,
+						UDamageType::StaticClass()
+					);
+					if (UGameInstance* GI = GetGameInstance())
+					{
+						if (UAchievementSubsystem* Achievements = GI->GetSubsystem<UAchievementSubsystem>())
+						{
+							Achievements->OnHeadShot();
+						}
+					}
+				}
 			}
 			else
 			{
@@ -132,14 +179,17 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 				// Stun
 				if (ShouldApplyDefaultStun())
 				{
-					if (Enemy)
+					if (!Cast<ASmokeBombObject>(this))
 					{
-						AMeleeAIController* EnemyController = Cast<AMeleeAIController>(Enemy->GetController());
-
-						if (EnemyController)
+						if (Enemy)
 						{
-							// Stunna fienden i 1 sekunder 
-							EnemyController->StunEnemy(1.0f, EEnemyState::Chasing); 
+							AMeleeAIController* EnemyController = Cast<AMeleeAIController>(Enemy->GetController());
+
+							if (EnemyController)
+							{
+								// Stunna fienden i 1 sekunder 
+								EnemyController->StunEnemy(1.0f, EEnemyState::Chasing); 
+							}
 						}
 					}
 				}
@@ -205,6 +255,11 @@ void AThrowableObject::ThrowableOnComponentHitFunction(UPrimitiveComponent* HitC
 			ThrowCollision->SetSimulatePhysics(true);
 		}
 	}
+	else if (Cast<AStealthCharacter>(OtherActor))
+	{
+		//Quick fix so that you can hit an enemy if they are in your face
+		Thrown = true;
+	}
 	else
 	{
 		if (ImpactGroundSound)
@@ -267,6 +322,7 @@ void AThrowableObject::ChangeToThrowCollision(bool bCond)
 		ThrowCollision->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Ignore);
 		ThrowCollision->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
 		ThrowCollision->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+		ThrowCollision->SetCollisionResponseToChannel(TRACE_CHANNEL_CLIMB, ECR_Ignore);
 	}
 	else
 	{
@@ -338,6 +394,11 @@ void AThrowableObject::DestroyObject()
 
 			GeoComp->SetPerLevelCollisionProfileNames({"Debris","Debris","Debris"});
 			GeoComp->SetCanEverAffectNavigation(false);
+		}
+		
+		if (BreakVFXComponent && BreakVFXComponent->GetAsset())
+		{
+			BreakVFXComponent->Activate();
 		}
 	}
 }

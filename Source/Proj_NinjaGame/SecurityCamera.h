@@ -33,6 +33,9 @@ protected:
 	
 	UPROPERTY(VisibleAnywhere)
 	USkeletalMeshComponent* CameraMesh;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Vision")
+	USceneComponent* VisionOrigin;
 
 	UPROPERTY(VisibleAnywhere, Category="Collision")
 	class USphereComponent* HitCollision;
@@ -58,6 +61,7 @@ protected:
 	bool bHasSpottedPlayer = false;
 
 	float SpotTimer = 0.f;
+	FVector SavedSpottedLocation = FVector::ZeroVector;
 	
 	bool bIsAnimationPlaying = true;
 
@@ -112,6 +116,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
 	UNiagaraSystem* CameraOfVFX;
 
+	UPROPERTY(EditDefaultsOnly, Category = "VFX")
+	UNiagaraSystem* DeathVFX;
+
 	// Audio
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Audio")
 	UAudioComponent* StateAudioComponent;
@@ -140,6 +147,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	
 	FORCEINLINE AEnemyHandler* GetEnemyHandler() const { return EnemyHandler; }
+	FORCEINLINE bool GetPlayerInCone() const { return bPlayerInCone; }
+	FORCEINLINE bool GetHasSpottedPlayer() const { return bHasSpottedPlayer; }
 	FORCEINLINE void SetEnemyHandler(AEnemyHandler* NewEnemyHandler) { EnemyHandler = NewEnemyHandler; }
 	FORCEINLINE bool GetIsDead() const { return bIsCameraDead; }
 

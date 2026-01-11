@@ -25,12 +25,15 @@ void AMeleeAIController::OnPossess(APawn* InPawn)
 
 void AMeleeAIController::Tick(float DeltaSeconds)
 {
+	if (bBackingOff)
+	{
+		return;
+	}
 	Super::Tick(DeltaSeconds);
 }
 
 void AMeleeAIController::HandleChasing(float DeltaSeconds)
 {
-	//Super::HandleChasing(DeltaSeconds);
 	APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(),0);
 
 	if (bBackingOff)
@@ -49,7 +52,7 @@ void AMeleeAIController::HandleChasing(float DeltaSeconds)
 		{
 			bChasingFromExternalOrder = false;
 		}
-		return; // Va tidigare break, när detta var i tick, vet inte om return fungerar på samma sätt 
+		return; 
 	}
 			
 	// Vanlig chase
@@ -62,7 +65,7 @@ void AMeleeAIController::HandleChasing(float DeltaSeconds)
 		bool bCannotReach = CannotReachPlayer(Player);
 
 		// Melee attack
-		if (bWithinMeleeRange && ControlledEnemy->bCanAttack && !ControlledEnemy->bIsAttacking)
+		if (bWithinMeleeRange && ControlledEnemy->bCanAttack && !ControlledEnemy->bIsAttacking && ControlledEnemy->bAllowedToAttack)
 		{
 			StopMovement();
 			UE_LOG(LogTemp, Error, TEXT("Melee Attack"))
@@ -73,9 +76,10 @@ void AMeleeAIController::HandleChasing(float DeltaSeconds)
 		}
 
 		// Ranged attack
-		if (!bWithinMeleeRange && bWithinThrowRange && bCannotReach)
+		if (!bWithinMeleeRange && bWithinThrowRange && bCannotReach && !ControlledEnemy->bIsThrowing && ControlledEnemy->bAllowedToAttack)
 		{
-			StopMovement();
+			//StopMovement();
+			
 			// Rotation
 			//StartSmoothRotationTowards(Player->GetActorLocation(), 2.0f);
 			FVector ToPlayer = Player->GetActorLocation() - ControlledEnemy->GetActorLocation();
@@ -84,23 +88,60 @@ void AMeleeAIController::HandleChasing(float DeltaSeconds)
 			{
 				ControlledEnemy->SetActorRotation(ToPlayer.Rotation());
 			}
-			
+
+			//UE_LOG(LogTemp, Error, TEXT("Ranged Attack"))
+			ControlledEnemy->bIsThrowing = true;
 			//ControlledEnemy->EnemyThrow();
 			if (RangedThrowCooldown > 2.0f)
 			{
 				//UE_LOG(LogTemp, Error, TEXT("Ranged Attack"))
-				ControlledEnemy->EnemyThrow();
+				//ControlledEnemy->EnemyThrow();
 				RangedThrowCooldown = 0.f; 
 			}
 			else
 			{
 				RangedThrowCooldown += DeltaSeconds;
 			}
+
+			MaintainCombatDistance(Player);
+
+			return;
+		}
+		if (!bWithinMeleeRange && bWithinThrowRange && bCannotReach && ControlledEnemy->bAllowedToAttack)
+		{
+			//StopMovement();
+			FVector ToPlayer = Player->GetActorLocation() - ControlledEnemy->GetActorLocation();
+			ToPlayer.Z = 0.f;
+			if (!ToPlayer.IsNearlyZero())
+			{
+				ControlledEnemy->SetActorRotation(ToPlayer.Rotation());
+			}
+			
+			MaintainCombatDistance(Player);
+			
+			return;
+		}
+		if (ControlledEnemy->bIsThrowing)
+		{
+			//StopMovement();
+			FVector ToPlayer = Player->GetActorLocation() - ControlledEnemy->GetActorLocation();
+			ToPlayer.Z = 0.f;
+			if (!ToPlayer.IsNearlyZero())
+			{
+				ControlledEnemy->SetActorRotation(ToPlayer.Rotation());
+			}
+
+			MaintainCombatDistance(Player);
+			
 			return;
 		}
 
 		// Annars fortsätt springa efter spelaren
-		MoveToActor(Player);
+		if (!bBackingOff)
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("MoveToActor(Player)"));
+			MoveToActor(Player);
+		}
 		GetWorldTimerManager().ClearTimer(LoseSightTimerHandle);
 	}
 	else if (!GetWorldTimerManager().IsTimerActive(LoseSightTimerHandle))
@@ -116,7 +157,25 @@ void AMeleeAIController::OnMoveCompleted(FAIRequestID RequestID, const FPathFoll
 		return;
 	if (GetWorld()->bIsTearingDown)
 		return;
-	
+
+	bool bReachedBackOff = FVector::DistSquared(GetPawn()->GetActorLocation(), BackOffLocation) < FMath::Square(100.f); 
+
+	if (bBackingOff && bReachedBackOff)
+	{
+		UE_LOG(LogTemp, Warning, TEXT(
+		"OnMoveCompleted for BackOff: Result=%s"),
+		*UEnum::GetValueAsString(Result.Code)
+		);
+		
+		//UE_LOG(LogTemp, Warning, TEXT("BackOff move completed"));
+		StopBackOff();
+		return;
+	}
+	/*if (bBackingOff && !bReachedBackOff)
+	{
+		MoveToLocation(BackOffLocation);
+	}*/
+
 	Super::OnMoveCompleted(RequestID, Result);
 }
 
@@ -133,6 +192,10 @@ void AMeleeAIController::StopChasing()
 
 void AMeleeAIController::RefreshChaseTarget()
 {
+	if (bBackingOff)
+	{
+		return;
+	}
 	Super::RefreshChaseTarget();
 }
 
@@ -205,13 +268,92 @@ bool AMeleeAIController::CannotReachPlayer(APawn* Player)
 	return EndDist > AcceptableDistance;
 }
 
+// Denna borde inte användas längre, kan tas bort tror jag
 void AMeleeAIController::StartBackOff(FVector BackLocation)
 {
+	APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(),0);
+	if (!Player) return;
+
+	if (bBackingOff)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Already backing off, ignoring"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("StartBackOff: bBackingOff"))
+	
+	UNavigationSystemV1* Nav = UNavigationSystemV1::GetCurrent(GetWorld());
+	if (!Nav)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("StartBackOff: No NavigationSystem found!"));
+		return;
+	}
+
+	// Project to navmesh
+	FNavLocation ProjectedLoc;
+	bool bValid = Nav->ProjectPointToNavigation(
+		BackLocation,
+		ProjectedLoc,
+		FVector(200.f, 200.f, 300.f) 
+	);
+
+	if (!bValid)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("StartBackOff: Location not valid on NavMesh, cancelling backoff."));
+		return;
+	}
+
+	FVector FinalLocation = ProjectedLoc.Location;
+
+	UE_LOG(LogTemp, Warning, TEXT("StartBackOff: Moving to projected location: %s"),
+		*FinalLocation.ToString()
+	);
+
+	float NewDist = FVector::Dist(FinalLocation, Player->GetActorLocation());
+
+	if (NewDist > ControlledEnemy->GetThrowRange() || NewDist < ControlledEnemy->GetAttackRange())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Backoff cancelled: Out of allowed range"));
+		return;
+	}
+
+	float DistToPlayer = FVector::Dist(GetPawn()->GetActorLocation(), Player->GetActorLocation());
+
+	if (DistToPlayer > ControlledEnemy->GetBackOffMaxDistance())
+	{
+		UE_LOG(LogTemp, Warning,
+			TEXT("Backoff cancelled: Too far from player (%.0f > %.0f)"),
+			DistToPlayer,
+			ControlledEnemy->GetBackOffMaxDistance()
+		);
+		return;
+	}
+
+	/*if (!ControlledEnemy->IsLocationStillSeeingPlayer(FinalLocation))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Backoff cancelled: Would lose line of sight"));
+		return; 
+	}*/
+
+	if (ControlledEnemy->GetVisionDebug())
+	{
+		DrawDebugSphere(
+			GetWorld(),
+			FinalLocation,
+			50.f,
+			12,
+			FColor::Red,
+			false,
+			2.f
+		);
+	}
+
+	
 	bBackingOff = true;
 
-	//UE_LOG(LogTemp, Error, TEXT("StartBackOff: bBackingOff"))
-
-	MoveToLocation(BackLocation, 5.f);
+	StopMovement();
+	BackOffLocation = FinalLocation;
+	MoveToLocation(FinalLocation, 1.f);
 	
 	GetWorldTimerManager().SetTimer(
 		BackOffTimerHandle,
@@ -226,9 +368,138 @@ void AMeleeAIController::StopBackOff()
 {
 	bBackingOff = false;
 	
+	UE_LOG(LogTemp, Warning, TEXT("StopBackOff."));
+	
 	APawn* Player = UGameplayStatics::GetPlayerPawn(GetWorld(),0);
 	if (!Player) return;
 	StartSmoothRotationTowards(Player->GetActorLocation(), 2.0f);
 }
 
 
+
+void AMeleeAIController::MaintainCombatDistance(APawn* Player)
+{
+	if (!Player || !GetPawn()) return;
+
+	//UE_LOG(LogTemp, Warning, TEXT("MaintainCombatDistance!!!!!"));
+
+	FVector EnemyLoc = GetPawn()->GetActorLocation();
+	FVector PlayerLoc = Player->GetActorLocation();
+
+	EnemyLoc.Z = 0.f;
+	PlayerLoc.Z = 0.f;
+
+	FVector ToPlayer = PlayerLoc - EnemyLoc;
+	float Dist = ToPlayer.Size2D();
+
+	if (ToPlayer.IsNearlyZero()) return;
+	ToPlayer.Normalize();
+
+	// backa lite 
+	if (Dist < ControlledEnemy->GetMinCombatDistance() && !bBackingOff)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("Min!!!!!"));
+		bBackingOff = true;
+		
+		FVector RawTarget = EnemyLoc - ToPlayer * ControlledEnemy->GetMinCombatDistance();
+		FVector NavTarget;
+
+		if (ProjectToNavMesh(RawTarget, NavTarget))
+		{
+			BackOffLocation = NavTarget;
+			MoveToLocation(NavTarget, 1.f);
+
+			if (ControlledEnemy->GetVisionDebug())
+			{
+				DrawDebugSphere(GetWorld(), NavTarget, 25.f, 12, FColor::Blue, false, 5.f);
+			}
+			//UE_LOG(LogTemp, Warning, TEXT("Backoff to: %s"), *NavTarget.ToString());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Backoff failed, no navmesh"));
+			bBackingOff = false;
+		}
+
+		GetWorldTimerManager().SetTimer(
+			BackOffTimerHandle,
+			this,
+			&AMeleeAIController::StopBackOff,
+			1,
+			false
+		);
+
+		return;
+	}
+
+	// Gå fram
+	if (Dist > ControlledEnemy->GetMaxCombatDistance())
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("Max!!!!!"));
+		
+		FVector RawTarget  = PlayerLoc - ToPlayer * ControlledEnemy->GetMaxCombatDistance();
+		FVector NavTarget;
+
+		if (ProjectToNavMesh(RawTarget, NavTarget))
+		{
+			MoveToLocation(NavTarget, 5.f);
+			if (ControlledEnemy->GetVisionDebug())
+			{
+				DrawDebugSphere(GetWorld(), NavTarget, 25.f, 12, FColor::Green, false, 2.f);
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Backoff failed, no navmesh"));
+			bBackingOff = false;
+		}
+		
+		return;
+	}
+	
+	StopMovement();
+}
+
+void AMeleeAIController::StrafeAroundPlayer(APawn* Player)
+{
+	if (!Player || !GetPawn()) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("StrafeAroundPlayer."));
+
+	FVector EnemyLoc = GetPawn()->GetActorLocation();
+	FVector PlayerLoc = Player->GetActorLocation();
+
+	EnemyLoc.Z = 0.f;
+	PlayerLoc.Z = 0.f;
+
+	FVector ToPlayer = PlayerLoc - EnemyLoc;
+	if (ToPlayer.IsNearlyZero()) return;
+
+	ToPlayer.Normalize();
+	
+	FVector Right = FVector::CrossProduct(FVector::UpVector, ToPlayer);
+	float Direction = FMath::RandBool() ? 1.f : -1.f;
+
+	FVector StrafeTarget =
+		EnemyLoc + Right * Direction * 150.f;
+
+	MoveToLocation(StrafeTarget, 5.f);
+}
+
+
+bool AMeleeAIController::ProjectToNavMesh(const FVector& InLocation, FVector& OutLocation) const
+{
+	UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
+	if (!NavSys) return false;
+
+	FNavLocation NavLoc;
+	const FVector Extent(100.f, 100.f, 50000.f); 
+
+	if (NavSys->ProjectPointToNavigation(InLocation, NavLoc, Extent))
+	{
+		OutLocation = NavLoc.Location;
+		return true;
+	}
+
+	return false;
+}

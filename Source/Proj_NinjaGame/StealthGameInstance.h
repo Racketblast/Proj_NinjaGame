@@ -4,29 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "EnumSavedProperties.h"
 #include "StealthGameInstance.generated.h"
 
 /**
  * 
  */
-
-UENUM(BlueprintType)
-enum class EMission : uint8
-{
-	None				UMETA(DisplayName = "None"),
-	FirstMission		UMETA(DisplayName = "FirstMission"),
-	SecondMission		UMETA(DisplayName = "SecondMission"),
-	ThirdMission		UMETA(DisplayName = "ThirdMission"),
-	FourthMission		UMETA(DisplayName = "FourthMission"),
-};
-
-UENUM(BlueprintType)
-enum class EPlayerOwnThrowWeapon : uint8
-{
-	None    UMETA(DisplayName = "None"),
-	Kunai     UMETA(DisplayName = "Kunai"),
-	SmokeBomb  UMETA(DisplayName = "SmokeBomb"),
-};
 
 UCLASS()
 class PROJ_NINJAGAME_API UStealthGameInstance : public UGameInstance
@@ -35,10 +18,12 @@ class PROJ_NINJAGAME_API UStealthGameInstance : public UGameInstance
 public:
 	virtual void Init() override;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	bool bUsingGamepad = false;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	bool bUsingGamepad = true;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int CurrentGameFlag;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	bool bFinishedTheGame = false;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TSubclassOf<class AThrowableWeapon> CurrentOwnThrowWeapon;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
@@ -53,18 +38,46 @@ public:
 	FName StartLocation;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	EMission CurrentMission;
+
+	EMission GetCurrentMission() const {return CurrentMission;}
+
+	//Achivements
+	UPROPERTY(EditDefaultsOnly, Category="Achievements")
+	UDataTable* AchievementTable;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess = true), Category="Achievements")
+	TSubclassOf<class UPopupWidget> AchivementsPopupWidgetClass;
 	
 	//Sound
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Sound")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Options | Sound | Scales")
 	USoundMix* SoundMix;
 	
 	//Sound Options
-	UPROPERTY(BlueprintReadWrite, Category="Options")
+	UPROPERTY(BlueprintReadWrite, Category="Options | Sound | Scales")
 	float MasterVolumeScale = 1.0f;
+	UPROPERTY(BlueprintReadWrite, Category="Options | Sound | Scales")
+	float SFXVolumeScale = 1.0f;
+	UPROPERTY(BlueprintReadWrite, Category="Options | Sound | Scales")
+	float MusicVolumeScale = 1.0f;
+	UPROPERTY(BlueprintReadWrite, Category="Options | Sound | Scales")
+	float SpeechVolumeScale = 1.0f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Options | Sound | SoundClasses")
+	USoundClass* MasterSoundClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Options | Sound | SoundClasses")
+	USoundClass* SFXSoundClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Options | Sound | SoundClasses")
+	USoundClass* MusicSoundClass;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Options | Sound | SoundClasses")
+	USoundClass* SpeechSoundClass;
+	UFUNCTION(BlueprintCallable)
+	void SetAllSoundClassOverride();
 	
 	//Player Options
 	UPROPERTY(BlueprintReadWrite, Category="Options")
 	float SensitivityScale = 1.0f;
+	UPROPERTY(BlueprintReadWrite, Category="Options")
+	float FOVScale = 0.0f;
+	UPROPERTY(BlueprintReadWrite, Category="Options")
+	int CurrentScalabilitySetting;
 	
 	//SaveGame
 	UPROPERTY(EditDefaultsOnly)
@@ -79,15 +92,33 @@ public:
 	
 	void FillSaveGame();
 	void FillSaveOptions();
+	void FillLoadGame();
+	void FillLoadOptions();
 	
 	UFUNCTION(BlueprintCallable)
 	void LoadGame();
 	UFUNCTION(BlueprintCallable)
 	void LoadOptions();
 	UFUNCTION(BlueprintCallable)
+	void SetOptions();
+	UFUNCTION(BlueprintCallable)
 	void RestartGame();
 	UFUNCTION(BlueprintCallable)
 	bool HasGameChanged();
+	
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly)
+	TMap<EMission, int> ScoreMap;
+	UFUNCTION(BlueprintCallable)
+	bool ScoreMapEquals(const TMap<EMission, int> ScoreMap1, const TMap<EMission, int> ScoreMap2);
+	UFUNCTION(BlueprintCallable)
+	bool TrySetMissionScore(EMission Mission, int32 NewScore);
+
+	UFUNCTION(BlueprintCallable, Category="Score")
+	bool HasMissionScore(EMission Mission) const;
+
+	UFUNCTION(BlueprintCallable, Category="Score")
+	bool GetMissionScore(EMission Mission, int32& OutScore) const; 
+
 	
 	//Dialogue
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly, Category="Dialogue")

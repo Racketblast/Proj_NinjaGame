@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "EnumSpecificKeycard.h"
 #include "StealthCharacter.generated.h"
 
 class AMeleeWeapon;
@@ -19,6 +20,7 @@ struct FInputActionValue;
 //DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 #define TRACE_CHANNEL_INTERACT ECC_GameTraceChannel3
+#define TRACE_CHANNEL_CLIMB ECC_GameTraceChannel4
 
 UENUM(BlueprintType)
 enum class EPlayerMovementState : uint8
@@ -151,6 +153,9 @@ protected:
 	
 	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats")
+	bool bCanTakeDamage = true; // För Hidespot
+
 	void Die();
 	
 	FTimerHandle TempHandle; // Används i Die funktionen
@@ -159,6 +164,8 @@ protected:
 	UAudioComponent* PlayerVoiceAudioComponent;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Audio")
 	USoundBase* JumpSound;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Audio")
+	USoundBase* OutOfStaminaSound;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Audio")
 	USoundBase* TakeDamageSound;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Audio")
@@ -201,6 +208,12 @@ protected:
 	bool bIsDead = false;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Stats")
 	TSubclassOf<UUserWidget> DeathScreenWidget;
+public:
+	float GetHealth() const { return Health; }
+	float GetMaxHealth() const { return MaxHealth; }
+	void SetCanTakeDamage(bool b) { bCanTakeDamage = b; }
+	
+protected:
 
 	//Use Variables
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
@@ -216,9 +229,9 @@ protected:
 	FTimerHandle AimEndTimer;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	float AimEndTimerSeconds = 0.1f;
-	UPROPERTY(BlueprintReadWrite, Category = "Weapon")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	bool bCanAssassinate;
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TArray<class AEnemy*> EnemiesInAssassinationRange;
 	UFUNCTION()
 	void OnMeleeBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -284,7 +297,7 @@ public:
 	class UBoxComponent* PlayerMeleeBox;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-	TArray<class AKeyCard*> KeyCards;
+	TArray<SpecificKeycard> KeyCards;
 protected:
 	
 	// Sneak
@@ -314,16 +327,25 @@ protected:
 	// FOV
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
 	float SprintFOV = 80.0f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float SavedSprintFOV;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
-	float AimFOV = 80.0f; 
+	float AimFOV = 80.0f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float SavedAimFOV; 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
-	float NormalFOV = 90.0f; 
+	float NormalFOV = 90.0f;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
+	float SavedNormalFOV;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
 	float FOVInterpSpeed = 5.0f; // hur snabbt kameran övergår mellan FOV-värden
 
+	UPROPERTY(BlueprintReadWrite, Category="Camera|Sprint")
+	float OptionsFOVPercentageChange = 1.0f;
+	
 	//Is this needed, from here
 	// Sprint Kamera
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Camera|Sprint")
@@ -351,6 +373,8 @@ protected:
 	virtual bool CanCrouch() const override;
 	
 	UPROPERTY(BlueprintReadWrite, Category = "Climb")
+	bool bReachedApex = false;
+	UPROPERTY(BlueprintReadWrite, Category = "Climb")
 	bool bIsClimbing = false;
 	UPROPERTY(BlueprintReadWrite, Category = "Climb")
 	bool bHitLedge = false;
@@ -370,6 +394,9 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category = "Climb")
 	EPlayerMovementState RememberedClimbState;
 
+	UFUNCTION()
+	void OnJumpApexReached();
+	
 	void Climb();
 	void ExitClimb();
 
@@ -420,6 +447,8 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	bool bHasCompletedTheMission = false;
 
+	UFUNCTION(BlueprintCallable, Category = "Camera")
+	void UpdateFOV();
 
 	// För HideSpot
 	void SetCustomCameraLocation(USceneComponent* NewCameraComponent);
@@ -444,4 +473,12 @@ public:
 	float HideMaxYaw;
 
 	FRotator HideBaseRotation;
+
+	// För fienden
+	FVector GetLeftArmVisionPoint() const;
+
+	FVector GetRightArmVisionPoint() const; 
+private:
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	class UStealthGameInstance* StealthGameInstance;
 };

@@ -20,6 +20,7 @@ public:
 	//virtual void StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation) override;
 
 	virtual void StartBackOff(FVector BackLocation) override;
+	void StrafeAroundPlayer(APawn* Player); 
 
 	void StopBackOff();
 	
@@ -30,7 +31,7 @@ protected:
 	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
 
 	int32 CurrentPatrolIndex = 0;
-	EEnemyState CurrentState = EEnemyState::Patrolling;
+	//EEnemyState CurrentState = EEnemyState::Patrolling;
 	
 	virtual void StartChasing() override;
 	virtual void StopChasing() override;
@@ -38,9 +39,12 @@ protected:
 	virtual void HandleChasing(float DeltaSeconds) override;
 	
 	bool CannotReachPlayer(APawn* Player);
+	void MaintainCombatDistance(APawn* Player);
+	bool ProjectToNavMesh(const FVector& InLocation, FVector& OutLocation) const;
 
 	bool bBackingOff = false;
-	float BackOffDuration = 0.7f;
+	float BackOffDuration = 5.0f;
+	FVector BackOffLocation;
 
 private:
 	FTimerHandle StartPatrolTimerHandle;

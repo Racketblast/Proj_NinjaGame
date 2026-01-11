@@ -4,20 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "InteractableObject.h"
+#include "EnumSpecificKeycard.h"
 #include "KeyCard.generated.h"
 
 /**
  * 
  */
-UENUM(BlueprintType)
-enum class SpecificKeyCard : uint8
-{
-	None    UMETA(DisplayName = "None"),
-	Blue     UMETA(DisplayName = "Blue"),
-	Green  UMETA(DisplayName = "Green"),
-	Yellow  UMETA(DisplayName = "Yellow"),
-	Wrench  UMETA(DisplayName = "Wrench"),
-};
 
 UCLASS()
 class PROJ_NINJAGAME_API AKeyCard : public AInteractableObject
@@ -31,8 +23,26 @@ public:
 
 	bool ContainsDoor(class ADoor* Door);
 
-	SpecificKeyCard SpecificKeyCardType = SpecificKeyCard::None;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
+	SpecificKeycard SpecificKeyCardType = SpecificKeycard::None;
+	
 protected:
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float DistFloat = 10;
+	
+	FVector StartVector;
+	
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	FVector MoveVelocity = {0,0,5};
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	FRotator RotationVelocity = {0,90,0};
+	
+	void MoveObject(float DeltaTime);
+	void RotateObject(float DeltaTime);
+	
+	bool ShouldObjectReturn() const;
+	float GetDistanceMoved() const;
+	virtual void Tick(float DeltaSeconds) override;
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 

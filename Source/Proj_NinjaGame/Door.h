@@ -23,7 +23,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Interact")
 	bool bOpen = false;
 	UFUNCTION(BlueprintCallable, Category="Interact")
-	void OpenCloseDoor();
+	virtual void OpenCloseDoor();
 
 	void UnlockDoor();
 	bool GetUnlockedDoor() const
@@ -33,6 +33,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaSeconds) override;
+	virtual void MoveDoor(float DeltaSeconds);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interact")
 	bool bNeedsToBeUnlocked = false;
@@ -81,8 +82,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	class UNavModifierComponent* DoorNavModifierComponent;
 	
+	UPROPERTY(EditDefaultsOnly)
+	float PushStrength = 10.f;
 	UFUNCTION()
-	void DoorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	virtual void DoorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	
 	UFUNCTION(BlueprintCallable)
@@ -109,4 +112,10 @@ protected:
 	
 	void UpdateDoorVFX();
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="VFX")
+	UMaterial* DoorLockedMaterial;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="VFX")
+	UMaterial* DoorUnlockedMaterial;
+	
+	void UpdateDoorMaterial();
 };

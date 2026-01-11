@@ -26,6 +26,9 @@ public:
 	FORCEINLINE virtual float GetThrowRange() const override { return ThrowRange; }
 	FORCEINLINE virtual float GetThrowCooldown() const override { return ThrowCooldown; }
 	FORCEINLINE float GetCanAttack() const { return bCanAttack; }
+	virtual float GetBackOffMaxDistance() const override { return BackOffMaxDistance; }
+	virtual float GetMinCombatDistance() const override { return MinCombatDistance; }
+	virtual float GetMaxCombatDistance() const override { return MaxCombatDistance; } 
 
 	/*bool bCanAttack = true;
 
@@ -33,6 +36,8 @@ public:
 
 	// Fiende throw
 	virtual void EnemyThrow() override;
+
+	virtual bool IsLocationStillSeeingPlayer(const FVector& TestLoc) const override;
 	
 protected:
 	virtual void BeginPlay() override;
@@ -42,6 +47,7 @@ protected:
 	virtual void CheckPlayerVisibility() override;
 	virtual void CheckChaseProximityDetection() override;
 	virtual void CheckCloseDetection() override;
+	//virtual bool HasLineOfSightToPlayer() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Combat")
 	float AttackCooldown = 1.2f;
@@ -87,5 +93,28 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category="Audio")
 	USoundBase* AttackSound;
-	
+
+	FVector SmoothedPlayerVelocity;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Throwable")
+	float ProjectileRadius = 58.f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Combat|Backoff")
+	float BackOffMaxDistance = 500.f;
+
+
+	UPROPERTY(EditDefaultsOnly, Category="Combat|Positioning")
+	float MinCombatDistance = 150.f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Combat|Positioning")
+	float MaxCombatDistance = 400.f;
+
+	float GetFlatDistanceToPlayer(const FVector& EnemyLoc, const FVector& PlayerLoc) const
+	{
+		FVector A = EnemyLoc;
+		FVector B = PlayerLoc;
+		A.Z = 0.f;
+		B.Z = 0.f;
+		return FVector::Dist(A, B);
+	}
 };

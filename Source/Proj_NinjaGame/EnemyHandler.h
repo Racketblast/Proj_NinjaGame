@@ -23,6 +23,8 @@ public:
 	UFUNCTION(BlueprintPure)
 	bool GetEnemySeesPlayer() const { return bEnemySeesPlayer; }
 	UFUNCTION(BlueprintPure)
+	bool GetEnemyAnyAlert() const { return bAnyAlert; }
+	UFUNCTION(BlueprintPure)
 	TArray<AActor*> GetAllEnemies() const { return AllEnemies; }
 	UFUNCTION(BlueprintCallable)
 	void RemoveEnemy(AActor* EnemyRemoved);
@@ -57,9 +59,34 @@ protected:
 	UPROPERTY()
 	TArray<AActor*> AllSecurityCameras;
 
+	
+	UPROPERTY()
+	TArray<AActor*> AllSeesPlayer;
+
 	UPROPERTY()
 	AMissionHandler* MissionHandler = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Enemy Helmet Settings")
+	float HelmetChancePercent = 30.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Sound")
+	TArray<UDataTable*> EnemyVoiceTables;
+	
+	UDataTable* GetRandomEnemyVoice(TArray<UDataTable*> SelectableVoices);
+	
+	TArray<UDataTable*> GetAllSelectableVoices();
+
+	// PreviousVoiceIndex = -1, because it is always 0 if empty which means that the first random voice is never chosen
+	UPROPERTY()
+	int PreviousVoiceIndex = -1;
 	
 	void UpdateEnemyStates();
+	
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = true))
+	class UEnemyMarkerWidget* EnemyMarkerWidget;
+	UFUNCTION(BlueprintCallable)
+	void AddActorSeesPlayer(AActor* Actor);
+	UFUNCTION(BlueprintCallable)
+	void RemoveActorSeesPlayer(AActor* Actor);
 };
 

@@ -18,7 +18,4 @@ public:
 	// Om denna punkt ska ge fienden en rotation
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
 	bool bUseCustomRotation = false;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol", meta=(EditCondition="bUseCustomRotation"))
-	FRotator CustomRotation;
 };

@@ -3,9 +3,11 @@
 
 #include "AIThrowableObject.h"
 
+#include "BreakableObject.h"
 #include "Enemy.h"
 #include "SoundUtility.h"
 #include "StealthCharacter.h"
+#include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 void AAIThrowableObject::ThrowableOnComponentHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
@@ -44,9 +46,25 @@ void AAIThrowableObject::ThrowableOnComponentHit(UPrimitiveComponent* HitComp, A
 		SpawnFieldActor();
 		DestroyObject();
 	}
-	else if (AEnemy* Enemy = Cast<AEnemy>(OtherActor))
+	else if (Cast<AEnemy>(OtherActor))
 	{
 		
+	}
+	else if (ABreakableObject* Breakable = Cast<ABreakableObject>(OtherActor))
+	{
+		Breakable->BreakObject();
+		if (ImpactGroundSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), ImpactGroundSound, GetActorLocation(), 1, 1,0, ThrowableAttenuation);
+		}
+		if (bBreaksOnImpact)
+		{
+			DestroyObject();
+		}
+		else
+		{
+			ThrowCollision->SetSimulatePhysics(true);
+		}
 	}
 	else
 	{
@@ -72,4 +90,19 @@ void AAIThrowableObject::ThrowableOnComponentHit(UPrimitiveComponent* HitComp, A
 		float NoiseLevel = 4.0f;
 	
 		USoundUtility::ReportNoise(GetWorld(), Hit.ImpactPoint, NoiseLevel, this);*/
+}
+
+
+void AAIThrowableObject::SetRandomMesh()
+{
+	if (PossibleMeshes.Num() == 0 || !StaticMeshComponent)
+		return;
+
+	const int32 Index = FMath::RandRange(0, PossibleMeshes.Num() - 1);
+	UStaticMesh* SelectedMesh = PossibleMeshes[Index];
+
+	if (SelectedMesh)
+	{
+		StaticMeshComponent->SetStaticMesh(SelectedMesh);
+	}
 }

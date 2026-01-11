@@ -3,6 +3,7 @@
 
 #include "MeleeWeapon.h"
 
+#include "AchievementSubsystem.h"
 #include "BreakableObject.h"
 #include "MeleeEnemy.h"
 #include "SecurityCamera.h"
@@ -88,12 +89,18 @@ void AMeleeWeapon::AssassinateEnemy()
 	{
 		if (AEnemy* Enemy = Cast<AEnemy>(HitActor))
 		{
-			if (Enemy->bCanBeAssassinated && !Enemy->CanSeePlayer())
+			FVector ToPlayer = (Player->GetActorLocation() - Enemy->GetActorLocation()).GetSafeNormal();
+			float Dot = FVector::DotProduct(Enemy->GetActorForwardVector(), ToPlayer);
+
+			UE_LOG(LogTemp, Display, TEXT("Dot %f"), Dot);
+			if (Dot < BehindDotAngle && !Enemy->CanSeePlayer())
 			{
+				UE_LOG(LogTemp, Display, TEXT("Killed"));
 				ThatCanBeStabbed.Add(Enemy);
 			}
 			else
 			{
+				UE_LOG(LogTemp, Display, TEXT("Missed"));
 				ThatCannotBeStabbed.Add(Enemy);
 			}
 		}
@@ -119,6 +126,14 @@ void AMeleeWeapon::AssassinateEnemy()
 			UGameplayStatics::GetPlayerCharacter(this,0),
 			UDamageType::StaticClass()
 		);
+
+		if (UGameInstance* GI = GetGameInstance())
+		{
+			if (UAchievementSubsystem* Achievements = GI->GetSubsystem<UAchievementSubsystem>())
+			{
+				Achievements->OnBackStab();
+			}
+		}
 	}
 	//Missed an Assassination
 	else

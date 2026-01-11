@@ -48,15 +48,22 @@ public:
 
 	void ChangeToThrowCollision(bool bCond);
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsHelmet = false;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	TSubclassOf<class AFieldSystemActor> FieldActorClass;
 	UPROPERTY(BlueprintReadWrite)
 	AFieldSystemActor* FieldActor;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="VFX")
+	UNiagaraComponent* BreakVFXComponent;
+
 	
 	UFUNCTION(BlueprintCallable)
 	void SpawnFieldActor();

@@ -30,10 +30,37 @@ void ATargetAIController::HandleChasing(float DeltaSeconds)
 	
 }
 
+void ATargetAIController::HandleSearching(float DeltaSeconds)
+{
+	if (!bIsRunningAway)
+		Super::HandleSearching(DeltaSeconds);
+}
+
+void ATargetAIController::HandleAlert(float DeltaSeconds)
+{
+	if (!bIsRunningAway)
+		Super::HandleAlert(DeltaSeconds);
+}
+
+void ATargetAIController::HandlePatrolling(float DeltaSeconds)
+{
+	if (!bIsRunningAway)
+		Super::HandlePatrolling(DeltaSeconds);
+}
+
+void ATargetAIController::StartChasingFromExternalOrder(FVector LastSpottedPlayerLocation)
+{
+	StartChasing();
+}
+
 void ATargetAIController::StartChasing()
 {
-	
+	GetWorldTimerManager().ClearTimer(LoseSightTimerHandle);
+	GetWorldTimerManager().ClearTimer(LookAroundTimerHandle);
+	GetWorldTimerManager().ClearTimer(EndSearchTimerHandle);
+	GetWorldTimerManager().ClearTimer(AlertTimerHandle);
 	CurrentState = EEnemyState::Chasing;
+	bIsRunningAway = true;
 
 	if (ControlledEnemy)
 	{

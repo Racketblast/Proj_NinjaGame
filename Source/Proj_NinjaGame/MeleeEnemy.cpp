@@ -5,6 +5,7 @@
 
 #include "AIThrowableObject.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/GameplayStaticsTypes.h"
 #include "TimerManager.h"
 #include "DrawDebugHelpers.h"
 #include "StealthCharacter.h"
@@ -49,15 +50,16 @@ void AMeleeEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	/*if (ThrowCooldown > 2.0f)
-	{
-		EnemyThrow();
-		ThrowCooldown = 0.f;
-	}
-	else
-	{
-		ThrowCooldown += DeltaTime;
-	}*/
+	if (!PlayerPawn)
+		return;
+	
+	SmoothedPlayerVelocity = FMath::VInterpTo(
+		SmoothedPlayerVelocity,
+		PlayerPawn->GetVelocity(),
+		DeltaTime,
+		5.f
+	);
+
 }
 
 void AMeleeEnemy::CheckChaseProximityDetection()
@@ -74,6 +76,12 @@ void AMeleeEnemy::CheckPlayerVisibility()
 {
 	Super::CheckPlayerVisibility();
 }
+
+/*bool AMeleeEnemy::HasLineOfSightToPlayer() 
+{
+	Super::HasLineOfSightToPlayer();
+}*/
+
 
 void AMeleeEnemy::StartAttack()
 {
@@ -153,156 +161,158 @@ void AMeleeEnemy::ResetAttackCooldown()
 	bCanAttack = true;
 }
 
-/*void AMeleeEnemy::EnemyThrow()
-{
-	if (!ProjectileSpawnPoint || !ThrowableObject) return;
-
-	FVector Start = GetCapsuleComponent()->GetComponentLocation();
-	FVector End = ProjectileSpawnPoint->GetComponentLocation();
-
-	FHitResult HitResult;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
-
-	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
-	{
-		End = Start;
-	}
-
-	//FVector SpawnLocation = ProjectileSpawnPoint->GetComponentLocation();
-	FVector SpawnLocation = End;
-	FRotator SpawnRotation = (PlayerPawn->GetActorLocation() - SpawnLocation).Rotation();
-
-	AAIThrowableObject* ThrownObject = GetWorld()->SpawnActor<AAIThrowableObject>(
-		ThrowableObject,
-		SpawnLocation,
-		SpawnRotation
-	);
-
-	if (ThrownObject)
-	{
-		ThrownObject->Thrown = true;
-		ThrownObject->SetShowVFX(false);
-		ThrownObject->bBreaksOnImpact = true;
-		ThrownObject->DealtDamage = AttackDamage;
-
-		// velocity
-		FVector Direction = (PlayerPawn->GetActorLocation() - SpawnLocation).GetSafeNormal();
-		ThrownObject->ThrowVelocity = Direction * ThrowVelocity;
-
-		ThrownObject->StaticMeshComponent->SetCollisionResponseToChannel(TRACE_CHANNEL_INTERACT, ECR_Ignore);
-		ThrownObject->StaticMeshComponent->SetSimulatePhysics(true);
-		ThrownObject->StaticMeshComponent->SetNotifyRigidBodyCollision(true);
-		ThrownObject->StaticMeshComponent->SetCanEverAffectNavigation(false);
-		ThrownObject->StaticMeshComponent->SetUseCCD(true);
-
-		ThrownObject->StaticMeshComponent->SetPhysicsLinearVelocity(ThrownObject->ThrowVelocity, false);
-	}
-}*/
 
 void AMeleeEnemy::EnemyThrow()
 {
-	if (!ProjectileSpawnPoint || !ThrowableObject) return;
+	if (!ProjectileSpawnPoint || !ThrowableObject || !PlayerPawn) return;
 
-	FVector SpawnLocation = ProjectileSpawnPoint->GetComponentLocation();
-	FVector PlayerLocation = PlayerPawn->GetActorLocation();
+	UWorld* World = GetWorld();
+	if (!World) return;
 
-	float ProjectileSpeed = 1100.f;
-	FVector PredictedLocation = PredictPlayerLocation(ProjectileSpeed);
+	const FVector SpawnLocation = ProjectileSpawnPoint->GetComponentLocation();
 	
-	/*if (Distance < 300.f)
-	{
-		PredictedLocation = PlayerLocation; // ingen prediction på nära håll
-	}*/
+	float BaseProjectileSpeed = 1100.f;
+	float ChosenProjectileSpeed = BaseProjectileSpeed;
 
-	// Ändrar hur högt fienden vill kasta, tycker inte riktigt att detta fungerar för tillfället
-	float ArcHeight = 0.f;
-	bool bBlocked = IsThrowPathBlocked(SpawnLocation, PredictedLocation, ArcHeight);
+	FVector PredictedLocation = PredictPlayerLocation(BaseProjectileSpeed);
+	FVector BestTargetLocation = PredictedLocation;
+	float ChosenArcHeight = 0.f;
 
-	if (bBlocked)
+	bool bFoundValidThrow = false;
+	
+	// Testkombinationer
+	const TArray<float> SpeedMultipliers = { 1.0f, 1.15f, 1.3f };
+	const TArray<float> ArcHeights = { 0.f, 150.f, 300.f, 450.f, 600.f };
+	const TArray<float> TargetZOffsets = { 0.f, 50.f, 100.f };
+	
+	// ARC sökning
+	for (float SpeedMul : SpeedMultipliers)
 	{
-		ArcHeight = 200.f; 
-		bBlocked = IsThrowPathBlocked(SpawnLocation, PredictedLocation, ArcHeight);
+		float TestSpeed = BaseProjectileSpeed * SpeedMul;
+
+		for (float ZOffset : TargetZOffsets)
+		{
+			FVector TestTarget = PredictedLocation;
+			TestTarget.Z += ZOffset;
+
+			for (float Arc : ArcHeights)
+			{
+				if (!IsThrowPathBlocked(SpawnLocation, TestTarget, Arc))
+				{
+					// Giltig bana hittad
+					bFoundValidThrow = true;
+					ChosenProjectileSpeed = TestSpeed;
+					BestTargetLocation = TestTarget;
+					ChosenArcHeight = Arc;
+
+					//UE_LOG(LogTemp, Warning, TEXT("EnemyThrow: Valid arc found | Speed %.0f | Arc %.0f | ZOffset %.0f"), TestSpeed, Arc, ZOffset);
+
+					goto FOUND_THROW;
+				}
+			}
+		}
 	}
 
-	/*if (bBlocked)
+FOUND_THROW:
+	
+	// Ingen giltig bana, kör backoff
+	if (!bFoundValidThrow)
 	{
-		for (int i = 0; i < 3; i++)
-		{
-			if (!IsThrowPathBlocked(SpawnLocation, PredictedLocation, ArcHeight))
-				break;
+		UE_LOG(LogTemp, Warning, TEXT("EnemyThrow: No valid throw found, attempting strafing"));
 
-			ArcHeight += 150.f; 
-		}
-	}*/
-
-	if (bBlocked)
-	{
-		// Back off, fungerar inte just nu!
-		UE_LOG(LogTemp, Warning, TEXT("EnemyThrow: bBlocked är true"));
-		FVector BackLoc = GetActorLocation() - GetActorForwardVector() * 250.f;
-		AMeleeAIController* AICon = Cast<AMeleeAIController>(GetController());
-		if (AICon)
+		/*if (AMeleeAIController* AICon = Cast<AMeleeAIController>(GetController()))
 		{
-			AICon->StartBackOff(BackLoc); 
+			FVector BackLoc = GetActorLocation() - GetActorForwardVector() * 250.f;
+			AICon->StartBackOff(BackLoc);
+		}*/
+		if (AMeleeAIController* AICon = Cast<AMeleeAIController>(GetController()))
+		{
+			AICon->StrafeAroundPlayer(PlayerPawn);
 		}
-		return;
+
+		// Fallback: kasta rakt mot spelaren
+		BestTargetLocation = PlayerPawn->GetActorLocation();
+		ChosenProjectileSpeed = BaseProjectileSpeed * 0.9f;
+		ChosenArcHeight = 0.f;
+		//return;
 	}
 
+	// Debug 
+	if (bVisionDebug)
+	{
+		const int DebugSamples = 20;
+		FVector PrevPoint = SpawnLocation;
 
-	// Spawn Projectile
-	AAIThrowableObject* ThrownObject = GetWorld()->SpawnActor<AAIThrowableObject>(
+		for (int i = 1; i <= DebugSamples; i++)
+		{
+			float T = (float)i / DebugSamples;
+			FVector Point = FMath::Lerp(SpawnLocation, BestTargetLocation, T);
+			Point.Z += ChosenArcHeight * FMath::Sin(T * PI);
+
+			DrawDebugLine(
+				World,
+				PrevPoint,
+				Point,
+				FColor::Blue,
+				false,
+				2.0f,
+				0,
+				2.5f
+			);
+
+			PrevPoint = Point;
+		}
+
+		DrawDebugSphere(World, BestTargetLocation, 20.f, 12, FColor::Yellow, false, 2.f);
+	}
+	
+	// Spawna Projektil
+	AAIThrowableObject* ThrownObject = World->SpawnActor<AAIThrowableObject>(
 		ThrowableObject,
 		SpawnLocation,
-		(PredictedLocation - SpawnLocation).Rotation()
+		(BestTargetLocation - SpawnLocation).Rotation()
 	);
 
 	if (!ThrownObject) return;
 
-
-	ThrownObject->ChangeToThrowCollision(true);
-	ThrownObject->ThrowCollision->SetUseCCD(true);
+	ThrownObject->SetRandomMesh();
 	ThrownObject->Thrown = true;
 	ThrownObject->SetShowVFX(false);
 	ThrownObject->bBreaksOnImpact = true;
 	ThrownObject->DealtDamage = AttackDamage;
-	ThrownObject->GravityZ = GetWorld()->GetGravityZ();
-
-	// Throw Velocity
-	FVector LaunchVelocity;
-	FVector StartPos = SpawnLocation;
-	FVector EndPos = PredictedLocation;
-
-	FVector AdjustedEndPos = EndPos;
-	AdjustedEndPos.Z -= 40.f; 
-	
-	bool bHasSolution = UGameplayStatics::SuggestProjectileVelocity(
-		this,
-		LaunchVelocity,
-		StartPos,
-		AdjustedEndPos,
-		1100.f,
-		false,
-		0.f,
-		0.f,
-		ESuggestProjVelocityTraceOption::DoNotTrace
-	);
-
-	if (!bHasSolution)
-	{
-		LaunchVelocity = (AdjustedEndPos - StartPos).GetSafeNormal() * ProjectileSpeed;
-	}
-	
-	// LaunchVelocity.Z += 300.f; 
-
-	// Cap Z speed så fienden inte skjuter för högt
-	
-	ThrownObject->ThrowVelocity = LaunchVelocity;
-
+	ThrownObject->GravityZ = World->GetGravityZ();
 	ThrownObject->ChangeToThrowCollision(true);
 	ThrownObject->ThrowCollision->SetUseCCD(true);
 	
+	// Beräkna kasthastighet
+	FVector LaunchVelocity;
+	FVector AdjustedTarget = BestTargetLocation;
+	AdjustedTarget.Z -= 40.f;
 
+	UGameplayStatics::FSuggestProjectileVelocityParameters Params(
+		this,
+		SpawnLocation,
+		AdjustedTarget,
+		ChosenProjectileSpeed
+	);
+
+	Params.TraceOption = ESuggestProjVelocityTraceOption::DoNotTrace;
+	Params.OverrideGravityZ = 0.f;
+	Params.CollisionRadius = 0.f;
+	Params.bFavorHighArc = ChosenArcHeight > 200.f;
+	Params.bDrawDebug = false;
+	Params.bAcceptClosestOnNoSolutions = false;
+
+	bool bHasVelocity = UGameplayStatics::SuggestProjectileVelocity(Params, LaunchVelocity);
+
+	if (!bHasVelocity)
+	{
+		LaunchVelocity = (AdjustedTarget - SpawnLocation).GetSafeNormal() * ChosenProjectileSpeed;
+	}
+
+	ThrownObject->ThrowVelocity = LaunchVelocity;
+	
+	// Ljud
 	if (AttackSound)
 	{
 		ActionAudioComponent->SetSound(AttackSound);
@@ -311,8 +321,7 @@ void AMeleeEnemy::EnemyThrow()
 }
 
 
-
-bool AMeleeEnemy::IsThrowPathBlocked(const FVector& SpawnLocation, const FVector& TargetLocation, float TestArcHeight)
+/*bool AMeleeEnemy::IsThrowPathBlocked(const FVector& SpawnLocation, const FVector& TargetLocation, float TestArcHeight)
 {
 	const int Samples = 10;
 
@@ -330,12 +339,91 @@ bool AMeleeEnemy::IsThrowPathBlocked(const FVector& SpawnLocation, const FVector
 
 		if (GetWorld()->LineTraceSingleByChannel(Hit, SpawnLocation, SamplePoint, ECC_Visibility, Params))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("IsThrowPathBlocked: Något blockerar kastet"));
+			//UE_LOG(LogTemp, Warning, TEXT("IsThrowPathBlocked: Något blockerar kastet"));
 			return true; 
 		}
 	}
 
 	return false; 
+}*/
+
+bool AMeleeEnemy::IsThrowPathBlocked(
+	const FVector& SpawnLocation,
+	const FVector& TargetLocation,
+	float TestArcHeight
+)
+{
+	UWorld* World = GetWorld();
+	if (!World) return true;
+
+	const int Samples = 14;                 
+
+	FVector PreviousPoint = SpawnLocation;
+
+	for (int i = 1; i <= Samples; i++)
+	{
+		float T = (float)i / Samples;
+
+		FVector CurrentPoint = FMath::Lerp(SpawnLocation, TargetLocation, T);
+		CurrentPoint.Z += TestArcHeight * FMath::Sin(T * PI);
+
+		FHitResult Hit;
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+		Params.AddIgnoredActor(PlayerPawn); 
+
+		FCollisionShape Sphere = FCollisionShape::MakeSphere(ProjectileRadius);
+
+		bool bHit = World->SweepSingleByChannel(
+			Hit,
+			PreviousPoint,
+			CurrentPoint,
+			FQuat::Identity,
+			ECC_Visibility,
+			Sphere,
+			Params
+		);
+
+		// Debug
+		if (bHit)
+		{
+			/*DrawDebugSphere(
+				World,
+				Hit.ImpactPoint,
+				ProjectileRadius,
+				12,
+				FColor::Red,
+				false,
+				1.5f
+			);
+
+			DrawDebugLine(
+				World,
+				PreviousPoint,
+				CurrentPoint,
+				FColor::Red,
+				false,
+				1.5f,
+				0,
+				2.f
+			);*/
+
+			return true;
+		}
+		/*DrawDebugLine(
+			World,
+			PreviousPoint,
+			CurrentPoint,
+			FColor::Green,
+			false,
+			0.5f,
+			0,
+			1.5f
+		);*/
+		PreviousPoint = CurrentPoint;
+	}
+
+	return false;
 }
 
 
@@ -353,4 +441,75 @@ FVector AMeleeEnemy::PredictPlayerLocation(float ProjectileSpeed) const
 	float TravelTime = Distance / ProjectileSpeed;
 
 	return PlayerLocation + PlayerVelocity * TravelTime;
+}
+
+/*FVector AMeleeEnemy::PredictPlayerLocation(float ProjectileSpeed) const
+{
+	if (!PlayerPawn || !ProjectileSpawnPoint)
+		return FVector::ZeroVector;
+
+	const FVector Origin = ProjectileSpawnPoint->GetComponentLocation();
+	const FVector PlayerPos = PlayerPawn->GetActorLocation();
+	const FVector PlayerVel = SmoothedPlayerVelocity;
+
+	// Om spelaren nästan står still
+	if (PlayerVel.SizeSquared() < 25.f)
+	{
+		return PlayerPos;
+	}
+
+	const float GravityZ = GetWorld()->GetGravityZ(); 
+	const float MaxLeadTime = 0.8f;
+
+	FVector PredictedPos = PlayerPos;
+	float Time = 0.f;
+
+	for (int i = 0; i < 4; ++i)
+	{
+		const float Distance = FVector::Dist(Origin, PredictedPos);
+		Time = Distance / ProjectileSpeed;
+		Time = FMath::Min(Time, MaxLeadTime);
+
+		// Horisontell prediktion
+		PredictedPos = PlayerPos + PlayerVel * Time;
+		
+		/*const float GravityCompensation = 0.5f * FMath::Abs(GravityZ) * Time * Time;
+		PredictedPos.Z += GravityCompensation;#1#
+	}
+
+	if (bVisionDebug)
+	{
+		DrawDebugSphere(
+			GetWorld(),
+			PredictedPos,
+			20.f,
+			12,
+			FColor::Green,
+			false,
+			1.f
+		);
+	}
+
+
+	return PredictedPos;
+}*/
+
+
+bool AMeleeEnemy::IsLocationStillSeeingPlayer(const FVector& TestLoc) const
+{
+	if (!PlayerPawn) return false;
+
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(
+		Hit,
+		TestLoc,
+		PlayerPawn->GetActorLocation(),
+		ECC_Visibility,
+		Params
+	);
+	
+	return !bHit;
 }

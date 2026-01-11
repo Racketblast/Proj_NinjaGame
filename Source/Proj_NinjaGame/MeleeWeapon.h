@@ -21,6 +21,9 @@ public:
 	void StartMeleeAttack();
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void MeleeAttackEnd();
+
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void AssassinateEnemy();
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Weapon")
 	bool bCanMeleeAttack = true;
@@ -52,13 +55,13 @@ protected:
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
 	USoundBase* SwingSound;
-	
+
+	//Basically 130° behind
+	UPROPERTY(EditDefaultsOnly, Blueprintable, Category = "Weapon")
+	float BehindDotAngle = -0.2f;
 protected:
 	UPROPERTY(BlueprintReadWrite)
 	class AStealthCharacter* Player;
-
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	void AssassinateEnemy();
 
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	void SpawnFieldActor();
