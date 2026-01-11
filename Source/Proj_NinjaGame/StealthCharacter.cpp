@@ -241,6 +241,8 @@ void AStealthCharacter::Attack()
 						PlayerActionAudioComponent->SetSound(AttackSound);
 						PlayerActionAudioComponent->Play();
 					}
+					
+					bCanThrow = false;
 					CurrentInteractState = EPlayerInteractState::Throw;
 				}
 			}
@@ -307,11 +309,11 @@ void AStealthCharacter::StartThrow()
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ThrowSound, GetActorLocation());
 	}
 	HeldThrowableWeapon->Throw(this);
-	bCanThrow = true;
 }
 
 void AStealthCharacter::StopThrow()
 {
+	bCanThrow = true;
 	if (CurrentInteractState == EPlayerInteractState::Throw)
 	{
 		CurrentInteractState = EPlayerInteractState::None;
@@ -325,10 +327,8 @@ void AStealthCharacter::ChangeWeapon()
 	
 	if (HeldThrowableWeapon->bIsOwnThrowWeapon)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Trying"));
 		if (LastHeldWeapon != nullptr)
 		{
-		UE_LOG(LogTemp, Warning, TEXT("succseed"));
 			EquipThrowWeapon(LastHeldWeapon);
 		}
 	}
