@@ -77,11 +77,6 @@ void AMeleeEnemy::CheckPlayerVisibility()
 	Super::CheckPlayerVisibility();
 }
 
-/*bool AMeleeEnemy::HasLineOfSightToPlayer() 
-{
-	Super::HasLineOfSightToPlayer();
-}*/
-
 
 void AMeleeEnemy::StartAttack()
 {
@@ -320,33 +315,6 @@ FOUND_THROW:
 	}
 }
 
-
-/*bool AMeleeEnemy::IsThrowPathBlocked(const FVector& SpawnLocation, const FVector& TargetLocation, float TestArcHeight)
-{
-	const int Samples = 10;
-
-	for (int i = 1; i <= Samples; i++)
-	{
-		float T = (float)i / Samples;
-
-		FVector SamplePoint = FMath::Lerp(SpawnLocation, TargetLocation, T);
-		
-		SamplePoint.Z += TestArcHeight * FMath::Sin(T * PI); 
-
-		FHitResult Hit;
-		FCollisionQueryParams Params;
-		Params.AddIgnoredActor(this);
-
-		if (GetWorld()->LineTraceSingleByChannel(Hit, SpawnLocation, SamplePoint, ECC_Visibility, Params))
-		{
-			//UE_LOG(LogTemp, Warning, TEXT("IsThrowPathBlocked: Något blockerar kastet"));
-			return true; 
-		}
-	}
-
-	return false; 
-}*/
-
 bool AMeleeEnemy::IsThrowPathBlocked(
 	const FVector& SpawnLocation,
 	const FVector& TargetLocation,
@@ -443,58 +411,8 @@ FVector AMeleeEnemy::PredictPlayerLocation(float ProjectileSpeed) const
 	return PlayerLocation + PlayerVelocity * TravelTime;
 }
 
-/*FVector AMeleeEnemy::PredictPlayerLocation(float ProjectileSpeed) const
-{
-	if (!PlayerPawn || !ProjectileSpawnPoint)
-		return FVector::ZeroVector;
 
-	const FVector Origin = ProjectileSpawnPoint->GetComponentLocation();
-	const FVector PlayerPos = PlayerPawn->GetActorLocation();
-	const FVector PlayerVel = SmoothedPlayerVelocity;
-
-	// Om spelaren nästan står still
-	if (PlayerVel.SizeSquared() < 25.f)
-	{
-		return PlayerPos;
-	}
-
-	const float GravityZ = GetWorld()->GetGravityZ(); 
-	const float MaxLeadTime = 0.8f;
-
-	FVector PredictedPos = PlayerPos;
-	float Time = 0.f;
-
-	for (int i = 0; i < 4; ++i)
-	{
-		const float Distance = FVector::Dist(Origin, PredictedPos);
-		Time = Distance / ProjectileSpeed;
-		Time = FMath::Min(Time, MaxLeadTime);
-
-		// Horisontell prediktion
-		PredictedPos = PlayerPos + PlayerVel * Time;
-		
-		/*const float GravityCompensation = 0.5f * FMath::Abs(GravityZ) * Time * Time;
-		PredictedPos.Z += GravityCompensation;#1#
-	}
-
-	if (bVisionDebug)
-	{
-		DrawDebugSphere(
-			GetWorld(),
-			PredictedPos,
-			20.f,
-			12,
-			FColor::Green,
-			false,
-			1.f
-		);
-	}
-
-
-	return PredictedPos;
-}*/
-
-
+// Används inte längre
 bool AMeleeEnemy::IsLocationStillSeeingPlayer(const FVector& TestLoc) const
 {
 	if (!PlayerPawn) return false;
