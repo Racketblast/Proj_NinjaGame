@@ -16,6 +16,7 @@ class PROJ_NINJAGAME_API UAchievementSubsystem : public UGameInstanceSubsystem
 	GENERATED_BODY()
 
 public:
+	UFUNCTION(BlueprintCallable)
 	void UnlockAchievement(EAchievementId Id);
 
 	UFUNCTION(BlueprintCallable)
@@ -56,6 +57,17 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	float GetAchievementProgress() const;
+	
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetAchievementCurrentValue(EAchievementId Id) const; 
+
+	UFUNCTION(BlueprintCallable)
+	float GetTheAchievementProgress(EAchievementId Id) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Achievements")
+	FText GetTheAchievementProgressText(EAchievementId Id) const;
+
 	
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override; 

@@ -26,7 +26,9 @@ public:
 	FORCEINLINE virtual float GetThrowRange() const override { return ThrowRange; }
 	FORCEINLINE virtual float GetThrowCooldown() const override { return ThrowCooldown; }
 	FORCEINLINE float GetCanAttack() const { return bCanAttack; }
-	virtual float GetBackOffMaxDistance() const override { return BackOffMaxDistance; } 
+	virtual float GetBackOffMaxDistance() const override { return BackOffMaxDistance; }
+	virtual float GetMinCombatDistance() const override { return MinCombatDistance; }
+	virtual float GetMaxCombatDistance() const override { return MaxCombatDistance; } 
 
 	/*bool bCanAttack = true;
 
@@ -99,4 +101,20 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category="Combat|Backoff")
 	float BackOffMaxDistance = 500.f;
+
+
+	UPROPERTY(EditDefaultsOnly, Category="Combat|Positioning")
+	float MinCombatDistance = 150.f;
+
+	UPROPERTY(EditDefaultsOnly, Category="Combat|Positioning")
+	float MaxCombatDistance = 400.f;
+
+	float GetFlatDistanceToPlayer(const FVector& EnemyLoc, const FVector& PlayerLoc) const
+	{
+		FVector A = EnemyLoc;
+		FVector B = PlayerLoc;
+		A.Z = 0.f;
+		B.Z = 0.f;
+		return FVector::Dist(A, B);
+	}
 };

@@ -8,8 +8,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2d01b711-ee5e-48d8-970b-ca19847a7d1b" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/Content/Artwork/StoneTexture/StoneTexture1.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/Artwork/StoneTexture/StoneTexture1.uasset" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Content/NiagaraSystems/NS_StoneBreak.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/NiagaraSystems/NS_StoneBreak.uasset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Proj_NinjaGame.dir/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Proj_NinjaGame.dir/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Content/UI_Elements/UI_Widgets/Player/Player_HUD.uasset" beforeDir="false" afterPath="$PROJECT_DIR$/Content/UI_Elements/UI_Widgets/Player/Player_HUD.uasset" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
