@@ -1036,7 +1036,7 @@ void AEnemyAIController::OnHeardSound(FVector SoundLocation)
 	if (NavSys && NavSys->ProjectPointToNavigation(
 			GroundedLocation,
 			Projected,
-			FVector(ControlledEnemy->HearingRange, ControlledEnemy->HearingRange, ControlledEnemy->HearingRange)  
+			FVector(200, 200, ControlledEnemy->HearingRange)  
 		))
 	{
 		GroundedLocation = Projected.Location;
