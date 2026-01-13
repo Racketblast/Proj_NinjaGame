@@ -24,9 +24,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite)
 	bool Thrown = false;
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DealtDamage = 5.f;
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bBreaksOnImpact = true;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<AThrowableWeapon> ThrowableWeapon;
