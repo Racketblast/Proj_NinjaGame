@@ -52,6 +52,7 @@ void AAIThrowableObject::ThrowableOnComponentHit(UPrimitiveComponent* HitComp, A
 	}
 	else if (ABreakableObject* Breakable = Cast<ABreakableObject>(OtherActor))
 	{
+		Thrown = false;
 		Breakable->BreakObject();
 		if (ImpactGroundSound)
 		{
