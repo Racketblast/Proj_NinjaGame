@@ -25,7 +25,7 @@ public:
 	virtual void TurnOnVFX(bool bCond);
 
 	FORCEINLINE void SetShowVFX(bool bShow){bShouldShowVFX = bShow;}
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	UStaticMeshComponent* StaticMeshComponent;
 protected:
 	// Called when the game starts or when spawned
