@@ -15,8 +15,10 @@
 void UStealthGameInstance::Init()
 {
 	Super::Init();
-	
+
+	//Sets the game in fullscreenmode
 	UGameUserSettings::GetGameUserSettings()->SetFullscreenMode(EWindowMode::Fullscreen);
+	
 	//Loads the saved game
 	LoadGame();
 	
@@ -65,7 +67,6 @@ void UStealthGameInstance::SetCurrentToClosestResolution()
 
 	CurrentResolutionSetting = ClosestResolution;
 	
-	UGameUserSettings::GetGameUserSettings()->SetFullscreenMode(EWindowMode::Fullscreen);
 	UGameUserSettings::GetGameUserSettings()->SetScreenResolution(CurrentResolutionSetting);
 	UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
 }
