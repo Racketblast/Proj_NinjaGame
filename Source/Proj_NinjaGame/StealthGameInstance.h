@@ -78,6 +78,10 @@ public:
 	float FOVScale = 0.0f;
 	UPROPERTY(BlueprintReadWrite, Category="Options")
 	int CurrentScalabilitySetting;
+	UPROPERTY(BlueprintReadWrite, Category="Options")
+	FIntPoint CurrentResolutionSetting;
+
+	void SetCurrentToClosestResolution();
 	
 	//SaveGame
 	UPROPERTY(EditDefaultsOnly)

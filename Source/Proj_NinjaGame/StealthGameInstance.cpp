@@ -15,10 +15,59 @@
 void UStealthGameInstance::Init()
 {
 	Super::Init();
-	CurrentScalabilitySetting = UGameUserSettings::GetGameUserSettings()->GetOverallScalabilityLevel();
 	
+	UGameUserSettings::GetGameUserSettings()->SetFullscreenMode(EWindowMode::Fullscreen);
 	//Loads the saved game
 	LoadGame();
+	
+	if (!UGameplayStatics::DoesSaveGameExist("Save1",0))
+	{
+	//For Graphics Hardware Check
+		UGameUserSettings::GetGameUserSettings()->RunHardwareBenchmark();
+		if (UGameUserSettings::GetGameUserSettings()->GetFoliageQuality() < 2)
+		{
+			UGameUserSettings::GetGameUserSettings()->SetShadowQuality(2);
+		}
+		
+		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
+		//Random setting to get scalability settings
+		CurrentScalabilitySetting = UGameUserSettings::GetGameUserSettings()->GetFoliageQuality();
+		CurrentResolutionSetting = UGameUserSettings::GetGameUserSettings()->GetDesktopResolution();
+	}
+	
+	SetCurrentToClosestResolution();
+}
+
+void UStealthGameInstance::SetCurrentToClosestResolution()
+{
+	TArray<FIntPoint> SupportedResolutions;
+	UKismetSystemLibrary::GetSupportedFullscreenResolutions(SupportedResolutions);
+	
+	if (SupportedResolutions.Contains(CurrentResolutionSetting))
+		return;
+	
+
+	FIntPoint ClosestResolution = SupportedResolutions[0];
+	int32 ClosestDistanceSq = TNumericLimits<int32>::Max();
+
+	for (const FIntPoint& Resolution : SupportedResolutions)
+	{
+		const int32 DeltaX = Resolution.X - CurrentResolutionSetting.X;
+		const int32 DeltaY = Resolution.Y - CurrentResolutionSetting.Y;
+		const int32 DistanceSq = DeltaX * DeltaX + DeltaY * DeltaY;
+
+		if (DistanceSq < ClosestDistanceSq)
+		{
+			ClosestDistanceSq = DistanceSq;
+			ClosestResolution = Resolution;
+		}
+	}
+
+	CurrentResolutionSetting = ClosestResolution;
+	
+	UGameUserSettings::GetGameUserSettings()->SetFullscreenMode(EWindowMode::Fullscreen);
+	UGameUserSettings::GetGameUserSettings()->SetScreenResolution(CurrentResolutionSetting);
+	UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
 }
 
 void UStealthGameInstance::SaveGame()
@@ -85,6 +134,7 @@ void UStealthGameInstance::FillSaveOptions()
 	Save->SavedSensitivityScale = SensitivityScale;
 	Save->SavedFOVScale = FOVScale;
 	Save->SavedCurrentScalabilitySetting = CurrentScalabilitySetting;
+	Save->SavedCurrentResolutionSetting = CurrentResolutionSetting;
 }
 
 void UStealthGameInstance::FillLoadGame()
@@ -118,6 +168,7 @@ void UStealthGameInstance::FillLoadOptions()
 	SensitivityScale = Save->SavedSensitivityScale;
 	FOVScale = Save->SavedFOVScale;
 	CurrentScalabilitySetting = Save->SavedCurrentScalabilitySetting;
+	CurrentResolutionSetting = Save->SavedCurrentResolutionSetting;
 }
 
 void UStealthGameInstance::LoadGame()
@@ -133,12 +184,6 @@ void UStealthGameInstance::LoadGame()
 			SetOptions();
 		}
 	}
-	//For Graphics Hardware Check if we want it
-	/*else
-	{
-		UGameUserSettings::GetGameUserSettings()->RunHardwareBenchmark();
-		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
-	}*/
 }
 
 void UStealthGameInstance::LoadOptions()
@@ -157,12 +202,24 @@ void UStealthGameInstance::LoadOptions()
 
 void UStealthGameInstance::SetOptions()
 {
-	if (UGameUserSettings::GetGameUserSettings()->GetOverallScalabilityLevel() != CurrentScalabilitySetting && CurrentScalabilitySetting >= 0 && CurrentScalabilitySetting <= 4)
+	if (UGameUserSettings::GetGameUserSettings()->GetFoliageQuality() != CurrentScalabilitySetting && CurrentScalabilitySetting >= 0 && CurrentScalabilitySetting <= 4)
 	{
 		UGameUserSettings::GetGameUserSettings()->SetOverallScalabilityLevel(CurrentScalabilitySetting);
+		if (UGameUserSettings::GetGameUserSettings()->GetFoliageQuality() < 2)
+		{
+			UGameUserSettings::GetGameUserSettings()->SetShadowQuality(2);
+		}
+		
 		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
 	}
 
+	if (UGameUserSettings::GetGameUserSettings()->GetScreenResolution() != CurrentResolutionSetting)
+	{
+		UGameUserSettings::GetGameUserSettings()->SetFullscreenMode(EWindowMode::Fullscreen);
+		UGameUserSettings::GetGameUserSettings()->SetScreenResolution(CurrentResolutionSetting);
+		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
+	}
+	
 	if (AStealthCharacter* Player = Cast<AStealthCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(),0)))
 	{
 		Player->UpdateFOV();
@@ -244,6 +301,8 @@ bool UStealthGameInstance::HasGameChanged()
 			if (MusicVolumeScale != Save->SavedMusicVolumeScale)
 				return true;
 			if (SpeechVolumeScale != Save->SavedSpeechVolumeScale)
+				return true;
+			if (CurrentResolutionSetting != Save->SavedCurrentResolutionSetting)
 				return true;
 		}
 		return false;

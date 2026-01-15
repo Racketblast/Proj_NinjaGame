@@ -61,4 +61,6 @@ public:
 	float SavedFOVScale;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int SavedCurrentScalabilitySetting;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FIntPoint SavedCurrentResolutionSetting;
 };
