@@ -38,6 +38,7 @@ void UStealthGameInstance::Init()
 		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
 		CurrentScalabilitySetting = UGameUserSettings::GetGameUserSettings()->GetFoliageQuality();
 		CurrentResolutionSetting = UGameUserSettings::GetGameUserSettings()->GetDesktopResolution();
+	UE_LOG(LogTemp, Log, TEXT("CurrentResolutionSetting: %s"), *CurrentResolutionSetting.ToString());
 	}
 	
 	SetCurrentToClosestResolution();
@@ -49,7 +50,15 @@ void UStealthGameInstance::SetCurrentToClosestResolution()
 	UKismetSystemLibrary::GetSupportedFullscreenResolutions(SupportedResolutions);
 	
 	if (SupportedResolutions.Contains(CurrentResolutionSetting))
+	{
+		if (!UGameplayStatics::DoesSaveGameExist("Save1",0))
+		{
+			UGameUserSettings::GetGameUserSettings()->SetScreenResolution(CurrentResolutionSetting);
+			UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
+		}
+		
 		return;
+	}
 	
 
 	FIntPoint ClosestResolution = SupportedResolutions[0];
