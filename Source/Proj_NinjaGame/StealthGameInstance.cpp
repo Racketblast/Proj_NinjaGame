@@ -16,8 +16,11 @@ void UStealthGameInstance::Init()
 {
 	Super::Init();
 
-	//Sets the game in fullscreenmode
-	UGameUserSettings::GetGameUserSettings()->SetFullscreenMode(EWindowMode::Fullscreen);
+	//Sets the game in fullscreen mode
+	if (UGameUserSettings::GetGameUserSettings()->GetFullscreenMode() != EWindowMode::Fullscreen)
+	{
+		UGameUserSettings::GetGameUserSettings()->SetFullscreenMode(EWindowMode::Fullscreen);
+	}
 	
 	//Loads the saved game
 	LoadGame();
@@ -26,13 +29,13 @@ void UStealthGameInstance::Init()
 	{
 	//For Graphics Hardware Check
 		UGameUserSettings::GetGameUserSettings()->RunHardwareBenchmark();
+		//Random Quality setting to get scalability settings
 		if (UGameUserSettings::GetGameUserSettings()->GetFoliageQuality() < 2)
 		{
 			UGameUserSettings::GetGameUserSettings()->SetShadowQuality(2);
 		}
 		
 		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
-		//Random setting to get scalability settings
 		CurrentScalabilitySetting = UGameUserSettings::GetGameUserSettings()->GetFoliageQuality();
 		CurrentResolutionSetting = UGameUserSettings::GetGameUserSettings()->GetDesktopResolution();
 	}
@@ -216,7 +219,10 @@ void UStealthGameInstance::SetOptions()
 
 	if (UGameUserSettings::GetGameUserSettings()->GetScreenResolution() != CurrentResolutionSetting)
 	{
-		UGameUserSettings::GetGameUserSettings()->SetFullscreenMode(EWindowMode::Fullscreen);
+		if (UGameUserSettings::GetGameUserSettings()->GetFullscreenMode() != EWindowMode::Fullscreen)
+		{
+			UGameUserSettings::GetGameUserSettings()->SetFullscreenMode(EWindowMode::Fullscreen);
+		}
 		UGameUserSettings::GetGameUserSettings()->SetScreenResolution(CurrentResolutionSetting);
 		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
 	}
