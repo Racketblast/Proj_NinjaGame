@@ -29,16 +29,11 @@ void UStealthGameInstance::Init()
 	{
 	//For Graphics Hardware Check
 		UGameUserSettings::GetGameUserSettings()->RunHardwareBenchmark();
-		//Random Quality setting to get scalability settings
-		if (UGameUserSettings::GetGameUserSettings()->GetFoliageQuality() < 2)
-		{
-			UGameUserSettings::GetGameUserSettings()->SetShadowQuality(2);
-		}
 		
 		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
+		//Random Quality setting to get scalability settings, because I want to change specific settings I cant use GetOverallScalabilityLevel
 		CurrentScalabilitySetting = UGameUserSettings::GetGameUserSettings()->GetFoliageQuality();
 		CurrentResolutionSetting = UGameUserSettings::GetGameUserSettings()->GetDesktopResolution();
-	UE_LOG(LogTemp, Log, TEXT("CurrentResolutionSetting: %s"), *CurrentResolutionSetting.ToString());
 	}
 	
 	SetCurrentToClosestResolution();
@@ -147,6 +142,7 @@ void UStealthGameInstance::FillSaveOptions()
 	Save->SavedSensitivityScale = SensitivityScale;
 	Save->SavedFOVScale = FOVScale;
 	Save->SavedCurrentScalabilitySetting = CurrentScalabilitySetting;
+	Save->bSavedShadowsOnOff = bShadowsOnOff;
 	Save->SavedCurrentResolutionSetting = CurrentResolutionSetting;
 }
 
@@ -181,6 +177,7 @@ void UStealthGameInstance::FillLoadOptions()
 	SensitivityScale = Save->SavedSensitivityScale;
 	FOVScale = Save->SavedFOVScale;
 	CurrentScalabilitySetting = Save->SavedCurrentScalabilitySetting;
+	bShadowsOnOff = Save->bSavedShadowsOnOff;
 	CurrentResolutionSetting = Save->SavedCurrentResolutionSetting;
 }
 
@@ -215,17 +212,32 @@ void UStealthGameInstance::LoadOptions()
 
 void UStealthGameInstance::SetOptions()
 {
+		//Random Quality setting to get scalability settings, because I want to change specific settings I cant use GetOverallScalabilityLevel
 	if (UGameUserSettings::GetGameUserSettings()->GetFoliageQuality() != CurrentScalabilitySetting && CurrentScalabilitySetting >= 0 && CurrentScalabilitySetting <= 4)
 	{
 		UGameUserSettings::GetGameUserSettings()->SetOverallScalabilityLevel(CurrentScalabilitySetting);
-		if (UGameUserSettings::GetGameUserSettings()->GetFoliageQuality() < 2)
-		{
-			UGameUserSettings::GetGameUserSettings()->SetShadowQuality(2);
-		}
 		
 		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
 	}
 
+	if (UGameUserSettings::GetGameUserSettings()->GetShadowQuality() != 0)
+	{
+		if (!bShadowsOnOff)
+		{
+			UGameUserSettings::GetGameUserSettings()->SetShadowQuality(0);
+			UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
+		}
+	}
+	else
+	{
+		
+		if (bShadowsOnOff)
+		{
+			UGameUserSettings::GetGameUserSettings()->SetShadowQuality(CurrentScalabilitySetting);
+			UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
+		}
+	}
+	
 	if (UGameUserSettings::GetGameUserSettings()->GetScreenResolution() != CurrentResolutionSetting)
 	{
 		if (UGameUserSettings::GetGameUserSettings()->GetFullscreenMode() != EWindowMode::Fullscreen)
@@ -310,6 +322,8 @@ bool UStealthGameInstance::HasGameChanged()
 				return true;
 			if (CurrentScalabilitySetting != Save->SavedCurrentScalabilitySetting)
 				return true;
+			if (bShadowsOnOff != Save->bSavedShadowsOnOff)
+			return true;
 			if (MasterVolumeScale != Save->SavedMasterVolumeScale)
 				return true;
 			if (SFXVolumeScale != Save->SavedSFXVolumeScale)

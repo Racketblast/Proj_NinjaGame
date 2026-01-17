@@ -62,5 +62,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int SavedCurrentScalabilitySetting;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	bool bSavedShadowsOnOff = true;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FIntPoint SavedCurrentResolutionSetting;
 };

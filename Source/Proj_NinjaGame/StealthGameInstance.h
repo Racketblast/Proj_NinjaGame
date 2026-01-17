@@ -79,6 +79,8 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category="Options")
 	int CurrentScalabilitySetting;
 	UPROPERTY(BlueprintReadWrite, Category="Options")
+	bool bShadowsOnOff = true;
+	UPROPERTY(BlueprintReadWrite, Category="Options")
 	FIntPoint CurrentResolutionSetting;
 
 	void SetCurrentToClosestResolution();
